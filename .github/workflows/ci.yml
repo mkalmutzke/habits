@@ -1,0 +1,91 @@
+# Quality checks for every push and pull request.
+# The repository is private on GitHub Free, so the free tools below replace
+# GitHub's paid CodeQL and secret scanning.
+name: CI
+
+on:
+  push:
+    branches: [main, 'release/**', 'feature/**', 'fix/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, unit tests, build, audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      # Fails on known high or critical vulnerabilities in installed packages.
+      - run: npm audit --audit-level=high
+
+  secrets:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # the official gitleaks image (pinned), scanning the whole Git history
+      - run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0 git /repo --no-banner --redact --verbose
+
+  semgrep:
+    name: Code scan (Semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v7
+      - run: semgrep scan --config p/javascript --config p/react --config p/secrets --error --metrics=off --exclude docs --exclude dist
+
+  database:
+    name: Database tests (RLS, pgTAP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # local Supabase stack in Docker, with all migrations applied
+      - run: npm run db:start
+      - run: npm run test:db
+
+  e2e:
+    name: End-to-end tests (Playwright, local stack)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # local push keys for the Edge Functions (written to ignored files only)
+      - run: npm run dev:push-keys
+      - run: npm run db:start
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

@@ -1,0 +1,75 @@
+/* Sign-in page (first start on a device). */
+
+.sign-in-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 100vh;
+  justify-content: center;
+}
+
+.sign-in-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 7vw, 2.8rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.sign-in-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.sign-in-text {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.sign-in-text strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.sign-in-card .button-ghost {
+  align-self: flex-start;
+}
+
+.boot {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+}
+
+/* v3.2: the 8-digit sign-in code */
+.code-input {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+}
+
+.sign-in-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Settings → Change email */
+.change-email {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.change-email .input {
+  width: 100%;
+}

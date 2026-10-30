@@ -1,0 +1,200 @@
+/* Shared buttons: primary (amber), ghost and round icon buttons. */
+
+.button-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  border-radius: 14px;
+  background: var(--amber);
+  color: var(--on-amber);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+.button-primary:hover:not(:disabled) {
+  background: var(--amber-hover);
+}
+
+/* The lift only where there's a real mouse; on touch screens it would "stick" after a tap. */
+@media (hover: hover) {
+  .button-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px -12px var(--amber);
+  }
+}
+
+.button-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.button-primary:focus-visible,
+.button-ghost:focus-visible,
+.icon-button:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
+.icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.icon-button:hover {
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.button-primary,
+.button-ghost {
+  min-height: 44px;
+  padding: 12px 22px;
+  font-size: 1rem;
+}
+
+.button-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* Busy (e.g. "Syncing…"): working, not unavailable - so only slightly dimmed. */
+.button-primary[aria-busy='true'] {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+.button-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: none;
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.button-ghost:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.button-ghost:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+/* Destructive actions (delete): outlined, coral text – never the main button. */
+.button-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--ring);
+  border-radius: 12px;
+  background: none;
+  color: #ff8d70;
+  font: inherit;
+  cursor: pointer;
+}
+
+.button-danger:hover {
+  border-color: #ff8d70;
+}
+
+.button-danger:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
+.delete-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-question {
+  flex: 1 1 100%;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+/* Small round buttons in a section header (＋, chevron): 44px to tap. */
+.section-icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.section-icon-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.section-icon-button.add {
+  color: var(--amber);
+}
+
+.section-icon-button.add svg {
+  stroke-width: 2.2;
+}
+
+.section-icon-button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.section-icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.section-icon-button:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: -2px;
+}
+
+.section-chevron {
+  transition: transform 220ms var(--ease-out);
+}
+
+[aria-expanded='true'] > .section-chevron {
+  transform: rotate(180deg);
+}

@@ -1,0 +1,157 @@
+/* App shell: page layout, header, title row and the view transition. */
+
+/* env(safe-area-inset-*) keeps content clear of the notch, rounded corners and home bar. */
+.app {
+  max-width: 560px;
+  margin: 0 auto;
+  padding:
+    calc(28px + env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    calc(80px + env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+
+/* v3 (design §2.1): the header has the same three lines on every tab page –
+   top bar, small line, title – so its height never changes, and it stays on
+   top while the page scrolls. Nothing below it moves when you switch tabs. */
+.app-header {
+  position: sticky;
+  z-index: 4;
+  top: 0;
+  margin: calc(-28px - env(safe-area-inset-top)) -16px 18px;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  /* solid on purpose: a backdrop-filter here would make the phone tab bar
+     (position: fixed, inside this header) stick to the header, not the screen */
+  background: var(--bg);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 7vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  margin-bottom: 6px;
+}
+
+/* App name: small and quiet – the habits are the star. */
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.wordmark::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 10px -1px var(--amber);
+}
+
+/* One line, always: long text is cut instead of wrapping (fixed height). */
+.header-line {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-top: 4px;
+}
+
+.app-header .view-title {
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* Switching pages: the new page only fades in – it never slides or jumps. */
+.view-panel {
+  animation: view-fade 150ms ease-out;
+}
+
+@keyframes view-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Phones: the tab switch becomes a bar at the bottom, where the thumb is. */
+@media (max-width: 640px) {
+  .app {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom));
+  }
+
+  .tab-dock {
+    position: fixed;
+    z-index: 5;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    padding:
+      10px
+      max(16px, env(safe-area-inset-right))
+      calc(10px + env(safe-area-inset-bottom))
+      max(16px, env(safe-area-inset-left));
+    border-top: 1px solid var(--line-soft);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+  }
+
+  .tab-dock .view-tabs {
+    width: min(100%, 420px);
+    margin: 0;
+  }
+
+  .tab-dock .view-tab {
+    flex: 1;
+    min-height: 44px;
+    font-size: 1rem;
+  }
+}
+
+/* v2: shown while the device is offline (A2: look, but no changes). */
+.offline-banner {
+  position: sticky;
+  z-index: 6;
+  top: calc(8px + env(safe-area-inset-top));
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, var(--line));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--amber) 14%, var(--surface));
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.loading-line {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+

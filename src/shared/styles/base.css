@@ -1,0 +1,166 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Design tokens – dark palette and type follow cv.mkalmutzke.com */
+:root {
+  color-scheme: dark;
+
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Archivo', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Warm charcoal (a little less blue than the CV site's slate). */
+  --bg: #13120f;
+  --glow-warm: rgb(198 138 61 / 0.12);
+  --glow-cool: rgb(214 120 90 / 0.05);
+  --ink: #f1ede6;
+  --ink-soft: #a39d93;
+  --ink-faint: #8a857d; /* >= 4.6:1 on every background (WCAG AA for text) */
+  --surface: #1c1a17;
+  --surface-2: #171613;
+  --line: #2f2c27;
+  --line-soft: #25231f;
+  /* Outlines you need to see to use the app (check circle, text field, missed day,
+     selected tab): >= 3:1 against the cards (WCAG AA for non-text contrast). */
+  --ring: #6e6a64;
+  --amber: #c68a3d;
+  --amber-hover: #d39a4f;
+  --on-amber: #13120f;
+  --teal: #4fa6c4;
+  --success: #5fbf86;
+  --on-success: #13120f;
+  --coral: #ff7a59;
+  --gold: #f2c14e;
+  --gold-deep: #c9962c;
+
+  --shadow-card:
+    0 1px 2px rgb(0 0 0 / 0.3),
+    0 8px 24px -10px rgb(0 0 0 / 0.5);
+  --shadow-card-hover:
+    0 1px 2px rgb(0 0 0 / 0.35),
+    0 14px 32px -12px rgb(0 0 0 / 0.6);
+
+  --radius: 18px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(70vmax 60vmax at 95% -10%, var(--glow-warm), transparent 65%),
+    radial-gradient(60vmax 50vmax at -10% 110%, var(--glow-cool), transparent 65%),
+    var(--bg);
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+html {
+  /* No grey flash when tapping on iOS, and no font inflation in landscape. */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* No double-tap-to-zoom delay on buttons. */
+button {
+  touch-action: manipulation;
+}
+
+/* iOS zooms into any input with text smaller than 16px - never let that happen. */
+input,
+select,
+textarea {
+  font-size: max(16px, 1rem);
+}
+
+/* Small mono label, like the "03 / Experience" labels on the CV site */
+.eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--teal);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* "Reduce motion" (a system setting): nothing moves, bounces, floats or shimmers.
+   Looping animations run once (otherwise a 1ms loop would flicker), and the
+   modals and empty state simply fade in; the page switch has no animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .modal[open],
+  .empty-state {
+    animation: fade-in 200ms ease-out both !important;
+  }
+
+  .view-panel {
+    animation: none !important;
+  }
+
+  /* No lifting, pressing or growing on hover / tap either. */
+  .button-primary:hover:not(:disabled),
+  .idea-chip:active {
+    transform: none !important;
+  }
+
+  .spinner {
+    animation: none !important;
+    border-top-color: var(--ring) !important;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* A small ring spinner for buttons that are busy (sync, sending the sign-in link). */
+.spinner {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

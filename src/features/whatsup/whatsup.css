@@ -1,0 +1,157 @@
+/* What's up? (design v3 §2): the habit section and the ToDo's section. */
+
+.whatsup-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ---- ToDo's (design v3 §2.3; v3.3: a foldable card) ------------------ */
+.todo-section .card-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* First line in the card: "Showing" and the source chip. The list of
+   sources opens below it, in the page (not floating), so it pushes the
+   tasks down and can always be scrolled above the tab bar. */
+.todo-source-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding-left: 6px;
+}
+
+.todo-source-label {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.source-switcher {
+  display: contents;
+}
+
+/* The source switcher: a small chip that opens a list of sources. */
+.source-button {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.source-button > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  max-width: 46vw;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.82rem;
+}
+
+.source-button:focus-visible {
+  outline: none;
+}
+
+.source-button:focus-visible > span {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.source-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.source-button svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* A colour dot (lists) or a small square (groups). */
+.source-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--list, var(--amber));
+}
+
+.source-dot.kind-group {
+  border-radius: 3px;
+  background: var(--ink-soft);
+}
+
+.source-menu {
+  display: flex;
+  flex: 1 0 100%;
+  flex-direction: column;
+  order: 10;
+  gap: 2px;
+  margin: 4px 0 0;
+  padding: 6px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  list-style: none;
+  animation: section-open 180ms var(--ease-out);
+}
+
+.source-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.source-option.nested {
+  padding-left: 30px;
+}
+
+.source-option[aria-current='true'] {
+  background: color-mix(in srgb, var(--amber) 16%, transparent);
+}
+
+.source-option:hover {
+  background: var(--surface-2);
+}
+
+.source-option:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: -2px;
+}
+
+.source-kind {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}

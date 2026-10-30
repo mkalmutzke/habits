@@ -1,0 +1,124 @@
+/* Shopping list on the Week page (design v3 §2.5). */
+
+/* v3.3 (R4): the list sits in a foldable card (CollapsibleSection). */
+.shopping .card-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shopping-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.text-button {
+  min-height: 44px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.text-button:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.text-button:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.shopping-new {
+  display: flex;
+  gap: 8px;
+}
+
+.shopping-new input {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 2px solid var(--amber);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: max(16px, 1rem);
+  outline: none;
+}
+
+.shopping-new .button-primary {
+  min-height: 46px;
+  padding: 0 18px;
+}
+
+.shopping-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shopping-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 8px;
+  border: none;
+  border-top: 1px solid var(--line-soft);
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+.shopping-item:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.shopping-item:disabled {
+  cursor: not-allowed;
+}
+
+.shopping-item.ticked {
+  background: none;
+}
+
+.shopping-box {
+  flex: none;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ring);
+  border-radius: 6px;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+
+.shopping-item.ticked .shopping-box {
+  border-color: var(--success);
+  background: var(--success);
+}
+
+.shopping-title {
+  overflow-wrap: anywhere;
+}
+
+.shopping-item.ticked .shopping-title {
+  color: var(--ink-faint);
+  text-decoration: line-through;
+}

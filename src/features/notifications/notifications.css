@@ -1,0 +1,117 @@
+/* Reminder row in the task details and the Reminders settings (mockups 4, 5). */
+
+.reminder-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.reminder-block .detail-row > svg.icon-teal {
+  stroke: var(--teal);
+}
+
+.reminder-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--teal);
+}
+
+.reminder-status {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.reminder-status.status-failed {
+  color: #ff8d70;
+}
+
+.reminder-time {
+  padding: 0 14px 10px 46px;
+}
+
+.reminder-time .input {
+  width: 100%;
+  max-width: 280px;
+}
+
+.channel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 14px 14px 46px;
+}
+
+.reminder-hint {
+  padding: 0 14px 12px 46px;
+}
+
+.reminder-hint a,
+.settings-hint a {
+  color: var(--amber-hover);
+}
+
+.quiet-row {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.recent-deliveries {
+  margin-top: 4px;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.recent-deliveries summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.recent-deliveries summary:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.recent-deliveries ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-deliveries li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line-soft);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+/* "A new version is ready" bar (service worker update). */
+.update-prompt {
+  position: fixed;
+  z-index: 31;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(calc(100% - 32px), 460px);
+  padding: 8px 8px 8px 16px;
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, var(--line));
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateX(-50%);
+}
+
+.update-prompt span {
+  flex: 1;
+  font-size: 0.92rem;
+}

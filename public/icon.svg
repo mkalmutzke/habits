@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- App icon: dark warm background, amber ring, check mark (design tokens of the app) -->
+  <defs>
+    <radialGradient id="glow" cx="78%" cy="18%" r="75%">
+      <stop offset="0" stop-color="#c68a3d" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#c68a3d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#13120f"/>
+  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+  <circle cx="256" cy="256" r="136" fill="none" stroke="#c68a3d" stroke-width="34"/>
+  <path d="M190 260l46 46 90-100" fill="none" stroke="#f1ede6" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

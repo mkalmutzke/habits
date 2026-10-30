@@ -1,0 +1,13 @@
+<!-- Habits v3.2 – Supabase Auth email template "Change Email Address".
+     Subject: Confirm your new Habits email
+     Sent to the OLD and to the NEW address (secure email change); each gets
+     its own code. Paste the same text into the dashboard of habits-test and
+     production (Authentication → Emails → Change Email Address). -->
+<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#13120f">
+  <p style="margin:0 0 4px;font-size:13px;color:#5a554d">Habits &middot; change email</p>
+  <h1 style="margin:0 0 16px;font-size:22px">Confirm the email change</h1>
+  <p style="margin:0 0 8px">The account is being moved from {{ .Email }} to {{ .NewEmail }}. The code for this address:</p>
+  <p style="margin:0 0 16px;font-size:32px;letter-spacing:6px;font-family:&#39;Courier New&#39;,monospace;font-weight:bold">{{ .Token }}</p>
+  <p style="margin:0 0 8px">Enter it in the app (Settings &rarr; Change email). Codes are needed from both addresses.</p>
+  <p style="margin:0;font-size:12px;color:#5a554d">If you didn&#39;t ask for this, ignore this email &ndash; nothing changes without both codes.</p>
+</div>

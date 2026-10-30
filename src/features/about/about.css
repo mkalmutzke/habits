@@ -1,0 +1,546 @@
+/* "How it's built": the row in Settings and the page it opens (v3). */
+
+.settings-link {
+  box-sizing: border-box;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-link:hover {
+  border-color: var(--line);
+}
+
+.settings-link:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.settings-link svg {
+  flex: none;
+  color: var(--ink-soft);
+}
+
+.settings-link-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Colour of each zone (build, browser, data) – used as a stripe, never for text. */
+.zone-build { --zone: var(--amber); }
+.zone-runtime { --zone: var(--teal); }
+.zone-data { --zone: var(--success); }
+
+/* v3: a page in Settings; the topic is picked from a dropdown. */
+.about-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.about-topic {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.about-topic select {
+  flex: 1;
+  min-height: 44px;
+}
+
+.arch-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.arch-intro {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.arch-footnote {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.arch-footnote code,
+.arch-format code {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  color: var(--ink);
+}
+
+/* Boxes and arrows appear one after another (off with "reduce motion"). */
+.flow-step,
+.layer,
+.stores,
+.data-step,
+.data-divider {
+  animation: arch-in 420ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * 45ms);
+}
+
+@keyframes arch-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ---------- Deploy & network: vertical flow ---------- */
+
+.zone-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.zone-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.zone-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--zone);
+}
+
+.flow {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flow-node {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--zone);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.flow-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--zone) 14%, var(--surface));
+  font-size: 1.3rem;
+}
+
+.flow-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.flow-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.flow-tag {
+  padding: 1px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+.flow-detail {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* The arrow between two boxes, with what travels over it. */
+.flow-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 33px;
+  padding: 6px 0 6px 14px;
+  border-left: 2px dashed var(--ring);
+}
+
+.flow-arrow {
+  margin-left: -22px;
+  padding: 0 2px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.flow-link-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+/* ---------- Building blocks: layers ---------- */
+
+.layers {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.layer {
+  position: relative;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-2);
+}
+
+/* A small "uses ↓" arrow between layers. */
+.layer + .layer::before {
+  content: '↓';
+  position: absolute;
+  top: -17px;
+  left: 50%;
+  translate: -50% 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.layer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 10px;
+}
+
+.layer-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.layer-path {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--teal);
+}
+
+.layer-blocks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.block-name {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.block-role {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.stores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.store {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--zone);
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.store-note {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+/* ---------- Data flow: numbered steps ---------- */
+
+.data-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.data-step {
+  display: grid;
+  grid-template-columns: 28px 64px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--zone);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.data-num {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--zone) 18%, var(--surface));
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+}
+
+.data-who {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.data-text {
+  line-height: 1.45;
+}
+
+.data-divider {
+  margin: 6px 0;
+  padding: 8px 12px;
+  border: 1px dashed var(--ring);
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.arch-format {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.arch-format-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.arch-format code {
+  overflow-wrap: anywhere;
+}
+
+/* Small phones: "who" goes above the text so the sentence has room. */
+@media (max-width: 420px) {
+  .data-step {
+    grid-template-columns: 28px 1fr;
+  }
+
+  .data-text {
+    grid-column: 2;
+  }
+
+  .arch-tabs .view-tab {
+    font-size: 0.82rem;
+  }
+}
+
+/* ---------- Database ---------- */
+.db-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.db-group-title {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.db-tables {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.db-table {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--success);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.db-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.db-what {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.db-columns {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+  color: var(--ink-faint);
+}
+
+.db-relations {
+  margin: 0;
+  padding-left: 18px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+/* ---------- Security & tests, tech stack ---------- */
+.quality-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quality-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quality-title {
+  font-weight: 600;
+}
+
+.quality-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.stack-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.stack-list div {
+  display: grid;
+  grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.stack-list dt {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.stack-list dd {
+  margin: 0;
+  font-size: 0.9rem;
+}

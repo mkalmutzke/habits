@@ -1,0 +1,49 @@
+/* Confetti burst (first check-off of the day, milestones). */
+
+.confetti {
+  position: fixed;
+  z-index: 10;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.confetti span {
+  position: absolute;
+  width: 7px;
+  height: 11px;
+  margin: -5px -3px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti-fly 1300ms both;
+}
+
+.confetti span.round {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+/* Up and out fast, then a slower fall – like a little gravity. */
+@keyframes confetti-fly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(calc(var(--dx) * 0.7), var(--peak)) rotate(calc(var(--spin) * 0.5));
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--fall)) rotate(var(--spin));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti {
+    display: none;
+  }
+}

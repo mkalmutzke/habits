@@ -1,0 +1,34 @@
+/* Week page (design v3.3 §3.4): Habits, Due & overdue and Shopping cards. */
+
+.week-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---- Due & overdue ---------------------------------------------------- */
+.due-overdue {
+  color: var(--coral);
+}
+
+.due-group-label {
+  margin: 12px 6px 4px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.due-group:first-child .due-group-label {
+  margin-top: 0;
+}
+
+.due-group-label.overdue {
+  color: var(--coral);
+}
+
+.due-group-label.today {
+  color: var(--amber);
+}

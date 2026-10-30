@@ -1,0 +1,158 @@
+/* IBKR card on What's up? (v3.4). */
+
+.portfolio-section .card-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.portfolio-section .tone-up {
+  color: var(--success);
+}
+
+.portfolio-section .tone-down {
+  color: var(--coral);
+}
+
+/* Value · day · TWR: three equal tiles. */
+.portfolio-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.portfolio-totals > div {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.portfolio-totals dt {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.portfolio-totals dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.portfolio-big {
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+
+.portfolio-small {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+/* Holdings: name on the left, value and changes on the right. */
+.portfolio-holdings {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portfolio-holding {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.portfolio-holding:first-child {
+  border-top: none;
+}
+
+.portfolio-name,
+.portfolio-figures {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.portfolio-figures {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.portfolio-symbol {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.portfolio-currency {
+  margin-left: 6px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 400;
+  color: var(--ink-faint);
+  vertical-align: 2px;
+}
+
+.portfolio-description {
+  overflow: hidden;
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.portfolio-changes {
+  font-size: 0.74rem;
+}
+
+.portfolio-more {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.portfolio-more:hover {
+  color: var(--ink);
+}
+
+.portfolio-more:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+/* "As of …" – amber when the morning update did not come. */
+.portfolio-stamp {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+.portfolio-stamp.stale {
+  color: var(--amber);
+}

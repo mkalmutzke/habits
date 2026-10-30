@@ -1,0 +1,171 @@
+/* Shared text field with an amber focus ring. */
+
+.name-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid var(--ring);
+  border-radius: 14px;
+  background: var(--surface-2);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.name-field:focus-within {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--amber) 15%, transparent);
+}
+
+.name-field input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 4px;
+  border: none;
+  background: none;
+  font-size: 1.05rem;
+}
+
+.name-field input:focus {
+  outline: none;
+}
+
+.name-field input::placeholder {
+  color: var(--ink-faint);
+}
+
+/* Small mono label above a field. */
+.field-label {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+/* A short explanation under a field (v3.3: "Show in All"). */
+.field-hint {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.form-error {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--coral);
+}
+
+/* Plain inputs (date, time, select, notes) in the same look as .name-field. */
+.input {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--ring);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: max(16px, 1rem);
+  color-scheme: dark;
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--amber);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--amber) 15%, transparent);
+}
+
+textarea.input {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* On/off switch: a button with aria-pressed (mockup 5). */
+.switch {
+  position: relative;
+  flex: none;
+  width: 52px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--ring);
+  border-radius: 999px;
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+
+/* 44px tap area around the smaller switch */
+.switch::before {
+  content: '';
+  position: absolute;
+  inset: -6px -2px;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ink-soft);
+  transition: transform 180ms var(--ease-out), background-color 180ms ease;
+}
+
+.switch[aria-pressed='true'] {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 30%, var(--surface-2));
+}
+
+.switch[aria-pressed='true']::after {
+  transform: translateX(20px);
+  background: var(--ink);
+}
+
+.switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
+/* Chip buttons (list filter, reminder channels). */
+.chip {
+  flex: none;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.chip::before {
+  content: '';
+  position: absolute;
+  inset: -2px 0;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 16%, transparent);
+  color: var(--ink);
+}
+
+.chip.chip-teal[aria-pressed='true'] {
+  border-color: var(--teal);
+  background: color-mix(in srgb, var(--teal) 16%, transparent);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}

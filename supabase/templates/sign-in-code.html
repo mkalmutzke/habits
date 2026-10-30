@@ -1,0 +1,11 @@
+<!-- Habits v3.2 – Supabase Auth email template "Magic Link" (used for sign-in codes).
+     Subject: Your Habits sign-in code
+     Paste the same text into the dashboard of habits-test and production
+     (Authentication → Emails → Magic Link). {{ .Token }} is the 8-digit code. -->
+<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#13120f">
+  <p style="margin:0 0 4px;font-size:13px;color:#5a554d">Habits &middot; sign in</p>
+  <h1 style="margin:0 0 16px;font-size:22px">Your sign-in code</h1>
+  <p style="margin:0 0 16px;font-size:32px;letter-spacing:6px;font-family:&#39;Courier New&#39;,monospace;font-weight:bold">{{ .Token }}</p>
+  <p style="margin:0 0 8px">Enter this code in the app. It is valid for 10 minutes and works once.</p>
+  <p style="margin:0;font-size:12px;color:#5a554d">If you didn&#39;t try to sign in, ignore this email &ndash; nobody can sign in without the code.</p>
+</div>
