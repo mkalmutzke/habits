@@ -83,3 +83,22 @@ git push -u origin fix/e2e-test-match   # PR into main; CI runs the full end-to-
 **Result:** The owner finished the move (owner, 30 Oct): the app runs at https://habits.mkalmutzke.com from this repository, with Vercel, DNS (INWX `CNAME habits`), Resend and both Supabase projects switched over. With this fix the end-to-end tests run again in CI.
 **Issues & fixes:** The owner's browser first showed "This site can't be reached" although DNS (`nslookup … 8.8.8.8`) and Vercel ("Valid Configuration") were correct – the device still remembered the earlier "name doesn't exist" answer; it resolved by itself. Dependabot opened a PR in the new repository right away; its CI failed for the same reason and goes green once this fix is on `main`.
 **Commit:** `fix: e2e laptop tests match by file name, not by path`
+
+### Step 3 – Old repository deleted; session handoff
+**Date:** 2026-10-30 08:15
+**Request:** Owner: the old repository is deleted – finish up.
+**Why:** Close the move and leave the repository ready for the next session (`/handoff`).
+
+**Commands run:**
+```bash
+# the owner deleted mkalmutzke/habit-tracker on GitHub (Settings → Danger Zone) – Claude can't delete repositories
+git add -A && git commit && git push      # on fix/e2e-test-match, into PR #2
+```
+
+**Files changed:**
+- `docs/NEXT_SESSION.md` – modified: old repository deleted; the only open move item is the old address `todo.mkalmutzke.com`.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** The project lives only in `mkalmutzke/habits`; the app runs at https://habits.mkalmutzke.com. PR #2 (Steps 2–3) is merged once all checks are green.
+**Issues & fixes:** None.
+**Commit:** `docs: old repository deleted; session handoff (Step 3)`

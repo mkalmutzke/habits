@@ -1,10 +1,10 @@
 # Next session – handoff
 
-*Written 30 October 2026 after Step 2. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
+*Written 30 October 2026 after Step 3. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
 
 ## Where we stopped
 
-- **Fresh start (Step 1):** this repository (`mkalmutzke/habits`, public) starts from the code of v3.5.0 with one commit and no history. The old repository `habit-tracker` (history, PRs, tags, design documents) is kept by the owner outside this repository and deleted once the move works.
+- **Fresh start (Step 1):** this repository (`mkalmutzke/habits`, public) starts from the code of v3.5.0 with one commit and no history. The old repository `habit-tracker` was deleted by the owner on 30 Oct (Step 3); its design documents and old build log (Steps 1–153) are in the owner's download.
 - **Move done (Step 2):** the app runs at `https://habits.mkalmutzke.com` from this repository; emails come from `…@habits.mkalmutzke.com`. The end-to-end test pattern was fixed for the new folder name.
 - App: v3.5.0 – What's up? (IBKR card, Habits, ToDo's), Week (Garmin, Due & overdue, Shopping), Lists, Settings. Supabase projects `habits-test` and production, 16 migrations, Edge Functions `send-reminders`, `send-test-notification`, `ibkr-sync`, `garmin-sync`.
 - The IBKR token and the Garmin key expire around 28 Oct 2027 – renew them in **both** Supabase projects (owner's guide, outside the repository).
@@ -13,7 +13,7 @@
 
 | Item | Recommendation |
 |---|---|
-| Old address and old repository | Redirect `todo.mkalmutzke.com` (it points to `185.181.104.242`, not Vercel – check at INWX), then remove it; delete the old repository `habit-tracker` |
+| Old address `todo.mkalmutzke.com` | It points to `185.181.104.242`, not Vercel – check at INWX; redirect it to habits.mkalmutzke.com for a while, then remove it (also the old redirect URL in Supabase and the old domain in Resend) |
 | Branch protection for `main` (ruleset with required checks) | Set it up again in the new repository, as before |
 | Calendar reminder for the keys | about 21 Oct 2027 |
 
