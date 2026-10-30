@@ -25,7 +25,7 @@ export default defineConfig({
   projects: [
     // Android phone size (the owner's main device) and a laptop.
     { name: 'phone', use: { ...devices['Pixel 7'] } },
-    { name: 'laptop', use: { ...devices['Desktop Chrome'] }, testMatch: /habits|a11y|today|shell/ },
+    { name: 'laptop', use: { ...devices['Desktop Chrome'] }, testMatch: /[\\/](habits|a11y|today|shell)\.spec\.js$/ },
   ],
   webServer: {
     command: `npx vite build && npx vite preview --port ${PORT} --strictPort --host 127.0.0.1`,
