@@ -1,22 +1,16 @@
 # Next session – handoff
 
-*Written 1 November 2026 after Step 9. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
+*Written 1 November 2026 after Step 11. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
 
 ## Where we stopped
 
-- **v3.6.0 is built, not live yet** (Steps 4–9, integration branch `release/v3.6`, one PR per step):
-  - habit groups (Sport, Dog, default "Other") with an icon to show all habits, managed in Settings; Settings sections fold;
-  - Garmin as a window from the header (running figure) with Refresh, a steps chart and distances; no Garmin card on Week;
-  - three daily briefs – IBKR (newspaper on the IBKR card, Tue–Sat), Canada jobs (briefcase) and world news (globe) – each with an amber dot until opened today and an on/off switch in Settings.
-  - Briefs are written by Claude scheduled tasks on the owner's Claude plan and stored through the Edge Function `brief-ingest` (own password). How it works and the task instructions: [`docs/briefs/`](briefs/README.md).
-- **Waiting for the owner** (the release checklist is in Step 9 of the build log):
-  1. OK to go live → apply the 2 new migrations and deploy `garmin-sync` + `brief-ingest` (habits-test first, then production); merge `release/v3.6` into `main`; tag `v3.6.0`.
-  2. Set the brief password: `BRIEF_INGEST_TOKEN` in the Supabase dashboard; `HABITS_BRIEF_URL` and `HABITS_BRIEF_AUTH` in the Claude cloud environment, plus network access to the Supabase host.
-  3. Then Claude creates the three scheduled tasks (instructions in `docs/briefs/`) and fires one test run each.
+- **v3.6.0 is live** (Steps 4–11): habit groups (Sport, Dog, default "Other") with an icon to show all habits, managed in Settings; Settings sections fold; Garmin as a window from the header with Refresh, steps chart and distances; three daily briefs with an amber dot and on/off switches.
+- **Brief tasks** (owner's Claude account, Zurich time, fresh cloud session per run, instructions in [`docs/briefs/`](briefs/README.md)): "Habits – World news brief" daily 07:37, "Habits – Canada jobs brief" daily 07:41, "Habits – IBKR morning brief" Tue–Sat 07:45. Test runs on 1 Nov: world and jobs stored, IBKR correctly skipped (Sunday). Changing a task's text: edit the file in `docs/briefs/`, then update the scheduled task.
+- **Open, owner:** tag `v3.6.0` if not done yet; widen the Claude environment's network access (or allow the news sites) so the briefs can open articles and link each one – the test runs often had to share one overview link.
 
 - **Fresh start (Step 1):** this repository (`mkalmutzke/habits`, public) starts from the code of v3.5.0 with one commit and no history. The old repository `habit-tracker` was deleted by the owner on 30 Oct (Step 3); its design documents and old build log (Steps 1–153) are in the owner's download.
 - **Move done (Step 2):** the app runs at `https://habits.mkalmutzke.com` from this repository; emails come from `…@habits.mkalmutzke.com`. The end-to-end test pattern was fixed for the new folder name.
-- App live: v3.5.0. In `release/v3.6`: 18 migrations, Edge Functions `send-reminders`, `send-test-notification`, `ibkr-sync`, `garmin-sync`, `brief-ingest`.
+- App live: v3.6.0. 18 migrations, Edge Functions `send-reminders`, `send-test-notification`, `ibkr-sync`, `garmin-sync`, `brief-ingest`.
 - The IBKR token and the Garmin key expire around 28 Oct 2027 – renew them in **both** Supabase projects (owner's guide, outside the repository).
 
 ## Open, owner's choice
