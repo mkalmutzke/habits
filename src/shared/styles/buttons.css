@@ -231,3 +231,10 @@
   align-items: center;
   gap: 6px;
 }
+
+/* the dot on a card's icon (IBKR morning brief) sits on the card colour */
+.section-icon-button .tool-dot {
+  top: 10px;
+  right: 10px;
+  box-shadow: 0 0 0 2px var(--surface);
+}

@@ -235,3 +235,35 @@ npx vitest run && npm run lint
 **Result:** The server side is ready; nothing is visible in the app yet (step 4 adds the icons and windows).
 **Issues & fixes:** Locally the owner check found several accounts (left over from the end-to-end tests), so the manual test used a freshly reset local database with one test owner.
 **Commit:** see the PR into `release/v3.6`
+
+### Step 8 – Brief icons, windows, amber dot and switches (v3.6, PR 4)
+**Date:** 2026-11-01 16:45
+**Request:** Owner: a news icon on the IBKR card and two header icons (a job symbol for the Canada brief, a globe for world news), each opening its brief in a good-looking window with links to the sources; an amber dot until the brief is opened that day; Settings switches that hide an icon completely.
+**Why:**
+- **Icons:** the morning brief's newspaper sits before the eye on the IBKR card; the briefcase (Canada jobs) and globe (world news) sit in the header after the Garmin icon – on the three main pages only. A brief switched off in Settings has no icon at all.
+- **Amber dot:** shows when today's brief has arrived and wasn't opened today (`for_day = today` and `seen_on ≠ today`). Opening the window sets `seen_on` in the database, so the dot disappears on every device (owner). A brief from an earlier day (a failed run, or IBKR on Sunday/Monday) shows no dot and is marked "From yesterday" / "From Sat 31 Oct" in the window.
+- **Windows:** headings with link cards (IBKR, jobs – the jobs brief adds "Why it matters"), and for world news a short summary plus one simple numbered list (owner: keep it simple). Links open in a new tab (`noopener noreferrer`); the text is shown as plain text.
+- **Settings → Daily briefs:** one switch per brief; the hint says when it runs, or that it is off.
+
+**Commands run:**
+```bash
+npx vitest run && npm run lint
+npx playwright test
+```
+
+**Files changed:**
+- `src/features/briefs/briefs.js` (+ test) – created: names, icons, schedule, `isOn`, `isNew`, `briefDate`.
+- `src/features/briefs/useBriefs.js` – created: the latest brief per kind, `markSeen`.
+- `src/features/briefs/BriefWindow.jsx` (+ test), `briefs.css` – created: the brief window.
+- `src/features/briefs/BriefSettings.jsx` – created: Settings → Daily briefs.
+- `src/App.jsx` – modified: brief icons (header and IBKR card), dots, windows.
+- `src/features/whatsup/WhatsUpPage.jsx`, `src/features/portfolio/PortfolioSection.jsx` – modified: the newspaper icon on the IBKR card.
+- `src/features/settings/SettingsView.jsx` – modified: the Daily briefs section.
+- `src/shared/data/tables.js` – modified: loads `briefs`.
+- `src/shared/styles/buttons.css` – modified: the dot on a card icon.
+- `src/features/about/databaseTables.js` – modified: "How it's built" lists `briefs` and the switches.
+- `e2e/briefs.spec.js` – created: icons open their windows, a switch hides the icon, the app can't write a brief.
+
+**Result:** On What's up? the IBKR card has a newspaper icon; the header has a briefcase and a globe. Each opens its brief window ("No brief yet" until the scheduled tasks run). Settings → Daily briefs switches each one off.
+**Issues & fixes:** None.
+**Commit:** see the PR into `release/v3.6`

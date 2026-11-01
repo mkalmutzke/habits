@@ -11,7 +11,8 @@ import './portfolio.css'
 // portfolio's move of the newest trading day – never the value (owner D2).
 // Amounts are hidden at every app start on every device; the eye shows them
 // until the app is closed (owner D4). Percentages always show.
-function PortfolioSection({ portfolio, today }) {
+// v3.6: `briefButton` (the morning brief's newspaper icon) sits before the eye.
+function PortfolioSection({ portfolio, today, briefButton = null }) {
   const section = useSectionOpen('ibkr')
   const [showAmounts, setShowAmounts] = useSectionOpen('ibkr-amounts')
   const { current, loading } = portfolio
@@ -33,17 +34,20 @@ function PortfolioSection({ portfolio, today }) {
         )
       }
       actions={
-        snapshot && (
-          <button
-            type="button"
-            className="section-icon-button"
-            aria-label={showAmounts ? 'Hide amounts' : 'Show amounts'}
-            aria-pressed={showAmounts}
-            onClick={() => setShowAmounts(!showAmounts)}
-          >
-            <Icon name={showAmounts ? 'eye' : 'eyeOff'} />
-          </button>
-        )
+        <>
+          {briefButton}
+          {snapshot && (
+            <button
+              type="button"
+              className="section-icon-button"
+              aria-label={showAmounts ? 'Hide amounts' : 'Show amounts'}
+              aria-pressed={showAmounts}
+              onClick={() => setShowAmounts(!showAmounts)}
+            >
+              <Icon name={showAmounts ? 'eye' : 'eyeOff'} />
+            </button>
+          )}
+        </>
       }
     >
       {snapshot ? (

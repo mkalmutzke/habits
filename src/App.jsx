@@ -7,6 +7,9 @@ import { useShopping } from './features/shopping/useShopping.js'
 import NotificationSettings from './features/notifications/NotificationSettings.jsx'
 import ReminderRow from './features/notifications/ReminderRow.jsx'
 import { useInAppReminders, usePushOnThisDevice, useReminders } from './features/notifications/useReminders.js'
+import BriefWindow from './features/briefs/BriefWindow.jsx'
+import { BRIEFS, isNew, isOn } from './features/briefs/briefs.js'
+import { useBriefs } from './features/briefs/useBriefs.js'
 import GarminWindow from './features/garmin/GarminWindow.jsx'
 import { useGarmin } from './features/garmin/useGarmin.js'
 import { usePortfolio } from './features/portfolio/usePortfolio.js'
@@ -56,10 +59,11 @@ function SignedInApp({ user }) {
   const shopping = useShopping(user.id)
   const portfolio = usePortfolio()
   const garmin = useGarmin()
+  const briefs = useBriefs()
   const reminders = useReminders(user.id)
   const { settings, update: updateSettings } = useSettings(user.id)
   const pushOnThisDevice = usePushOnThisDevice(useTable('push_subscriptions').rows)
-  // v3.6: the window opened from a header icon ('garmin' …), or null
+  // v3.6: the window opened from an icon ('garmin', 'ibkr', 'jobs', 'world'), or null
   const [panel, setPanel] = useState(null)
   useTimeZoneSetting(user.id)
   useInAppReminders({
@@ -77,8 +81,20 @@ function SignedInApp({ user }) {
 
   const isTab = ['today', 'week', 'lists'].includes(route.view)
   const tabView = isTab ? route.view : 'today'
-  // v3.6: header icons before the gear, on the three main pages only (owner)
-  const tools = <ToolButton icon="run" label="Garmin" onClick={() => setPanel('garmin')} />
+  // v3.6: header icons before the gear, on the three main pages only (owner);
+  // a brief switched off in Settings has no icon. The amber dot: today's
+  // brief not opened yet today.
+  const briefButton = (kind, className) =>
+    isOn(settings, kind) && (
+      <ToolButton key={kind} icon={BRIEFS[kind].icon} label={BRIEFS[kind].title} dot={isNew(briefs.byKind[kind], today)} onClick={() => setPanel(kind)} className={className} />
+    )
+  const tools = (
+    <>
+      <ToolButton icon="run" label="Garmin" onClick={() => setPanel('garmin')} />
+      {briefButton('jobs')}
+      {briefButton('world')}
+    </>
+  )
 
   return (
     <main className="app">
@@ -101,6 +117,7 @@ function SignedInApp({ user }) {
             {tabView === 'today' && (
               <WhatsUpPage
                 portfolio={portfolio}
+                briefButton={briefButton('ibkr', 'section-icon-button')}
                 habits={habits}
                 todos={todos}
                 today={today}
@@ -115,6 +132,9 @@ function SignedInApp({ user }) {
             {tabView === 'lists' && <ListsView todos={todos} today={today} />}
           </div>
           {panel === 'garmin' && <GarminWindow garmin={garmin} today={today} onClose={() => setPanel(null)} />}
+          {panel in BRIEFS && (
+            <BriefWindow kind={panel} brief={briefs.byKind[panel]} today={today} onSeen={briefs.markSeen} onClose={() => setPanel(null)} />
+          )}
         </>
       ) : (
         <>
