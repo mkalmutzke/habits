@@ -203,3 +203,101 @@ npx playwright test
 **Result:** On What's up?, Week or Lists, tap the running figure next to the gear: the Garmin window opens with the steps chart, heart rate and the activities table with distances. Refresh fetches new data (or says to wait 2 minutes). The Week page shows only Due & overdue and Shopping.
 **Issues & fixes:** None.
 **Commit:** see the PR into `release/v3.6`
+
+### Step 7 – Daily briefs: database and the receiving function (v3.6, PR 3)
+**Date:** 2026-11-01 16:20
+**Request:** Owner: an IBKR morning brief, a Canada jobs brief and a world news brief, refreshed every morning at 08:00, written by an agent at no extra cost (option A: Claude scheduled tasks), each switchable off in Settings.
+**Why:**
+- **Who writes:** three Claude scheduled tasks on the owner's Claude plan (step 5 sets them up). They can't log in to the database, so they hand their result to a small Edge Function, `brief-ingest`, which is the only way in. It has its *own* password (`BRIEF_INGEST_TOKEN`, entered by the owner in the Supabase dashboard and in the Claude cloud environment). That password can do exactly two things – ask whether to run and store a brief – nothing else in the database.
+- **Off really means off:** each run first asks `brief-ingest` (`action: start`). When the brief is switched off in Settings (or it's not one of its days – IBKR runs Tuesday to Saturday), the answer is "don't run" and the task stops before any research. Storing is refused too.
+- **IBKR without the IBKR connector:** `brief_context()` hands the task the holdings of the newest stored IBKR report – symbol, name and type only, never quantities or values. Without a report it gets VT and VWO plus a "fallback" flag, so the brief adds the note the owner asked for.
+- **Trust nothing from outside:** briefs come from web search, so `_shared/brief.js` keeps only `http(s)` links, drops items without headline or link, and caps the number and length of everything before it is stored. The app shows it as plain text (React escapes it).
+- **Only the latest:** one row per kind (`unique (user_id, kind)`); a new brief replaces the old one and clears `seen_on`, so the amber dot shows. The app may read briefs and set `seen_on` – nothing else (column-level grant).
+- The instructions for the three tasks are kept in `docs/briefs/` so they can be read, reviewed and reproduced.
+
+**Commands run:**
+```bash
+node <scratchpad>/setup.mjs                 # local only: a random brief password in supabase/functions/.env (git-ignored)
+npx supabase stop && npm run db:start && npx supabase db reset   # fresh local stack with the new migration
+docker exec … psql < supabase/tests/database/14_briefs.test.sql  # 16 checks pass
+<scratchpad>/call.sh start-world.json …     # brief-ingest by hand: wrong password refused, start, IBKR not on Sunday, store, switched off
+npx vitest run && npm run lint
+```
+
+**Files changed:**
+- `supabase/migrations/20261101110000_v3_6_briefs.sql` – created: table `briefs`, the three switches in `user_settings`, `brief_context()` and `store_brief()` (server only).
+- `supabase/tests/database/14_briefs.test.sql` – created: only the server writes, the owner reads and marks as seen, no figures in the context.
+- `supabase/functions/_shared/brief.js` (+ `brief.test.js`) – created: checking and trimming a brief, run days, holdings without figures.
+- `supabase/functions/brief-ingest/index.ts` – created: the receiving function.
+- `supabase/config.toml` – modified: `brief-ingest` checks its own password (no user sign-in).
+- `docs/briefs/README.md`, `ibkr.md`, `jobs.md`, `world.md` – created: how the briefs are made, what the owner sets up once, and the three task instructions.
+
+**Result:** The server side is ready; nothing is visible in the app yet (step 4 adds the icons and windows).
+**Issues & fixes:** Locally the owner check found several accounts (left over from the end-to-end tests), so the manual test used a freshly reset local database with one test owner.
+**Commit:** see the PR into `release/v3.6`
+
+### Step 8 – Brief icons, windows, amber dot and switches (v3.6, PR 4)
+**Date:** 2026-11-01 16:45
+**Request:** Owner: a news icon on the IBKR card and two header icons (a job symbol for the Canada brief, a globe for world news), each opening its brief in a good-looking window with links to the sources; an amber dot until the brief is opened that day; Settings switches that hide an icon completely.
+**Why:**
+- **Icons:** the morning brief's newspaper sits before the eye on the IBKR card; the briefcase (Canada jobs) and globe (world news) sit in the header after the Garmin icon – on the three main pages only. A brief switched off in Settings has no icon at all.
+- **Amber dot:** shows when today's brief has arrived and wasn't opened today (`for_day = today` and `seen_on ≠ today`). Opening the window sets `seen_on` in the database, so the dot disappears on every device (owner). A brief from an earlier day (a failed run, or IBKR on Sunday/Monday) shows no dot and is marked "From yesterday" / "From Sat 31 Oct" in the window.
+- **Windows:** headings with link cards (IBKR, jobs – the jobs brief adds "Why it matters"), and for world news a short summary plus one simple numbered list (owner: keep it simple). Links open in a new tab (`noopener noreferrer`); the text is shown as plain text.
+- **Settings → Daily briefs:** one switch per brief; the hint says when it runs, or that it is off.
+
+**Commands run:**
+```bash
+npx vitest run && npm run lint
+npx playwright test
+```
+
+**Files changed:**
+- `src/features/briefs/briefs.js` (+ test) – created: names, icons, schedule, `isOn`, `isNew`, `briefDate`.
+- `src/features/briefs/useBriefs.js` – created: the latest brief per kind, `markSeen`.
+- `src/features/briefs/BriefWindow.jsx` (+ test), `briefs.css` – created: the brief window.
+- `src/features/briefs/BriefSettings.jsx` – created: Settings → Daily briefs.
+- `src/App.jsx` – modified: brief icons (header and IBKR card), dots, windows.
+- `src/features/whatsup/WhatsUpPage.jsx`, `src/features/portfolio/PortfolioSection.jsx` – modified: the newspaper icon on the IBKR card.
+- `src/features/settings/SettingsView.jsx` – modified: the Daily briefs section.
+- `src/shared/data/tables.js` – modified: loads `briefs`.
+- `src/shared/styles/buttons.css` – modified: the dot on a card icon.
+- `src/features/about/databaseTables.js` – modified: "How it's built" lists `briefs` and the switches.
+- `e2e/briefs.spec.js` – created: icons open their windows, a switch hides the icon, the app can't write a brief.
+
+**Result:** On What's up? the IBKR card has a newspaper icon; the header has a briefcase and a globe. Each opens its brief window ("No brief yet" until the scheduled tasks run). Settings → Daily briefs switches each one off.
+**Issues & fixes:** None.
+**Commit:** see the PR into `release/v3.6`
+
+### Step 9 – v3.6.0 ready for release; owner's checklist (v3.6, PR 5)
+**Date:** 2026-11-01 17:10
+**Request:** Owner: go ahead with v3.6; notify me when it's time for me to act.
+**Why:** All four feature steps are merged into `release/v3.6`. Going live and changing the cloud databases need the owner's OK, and the cloud container can't log in to Supabase – so the remaining steps are the owner's. The version becomes 3.6.0. The task instructions now also say that a scheduled run must not change anything in the repository (the scheduled sessions start inside it, and its build-log rules are meant for coding sessions).
+
+**Owner's checklist:**
+1. **Test project first** – on your computer, in the repository, on `release/v3.6`:
+   - check `supabase/.temp/project-ref` is `habits-test`;
+   - `npx supabase db push` (applies `v3_6_habit_groups` and `v3_6_briefs`);
+   - `npx supabase functions deploy garmin-sync brief-ingest`;
+   - Supabase dashboard (habits-test) → Edge Functions → Secrets: add `BRIEF_INGEST_TOKEN` = a new random password, at least 32 characters (from your password manager);
+   - try the Vercel preview of `release/v3.6`: habit groups, Settings, Garmin window with Refresh, brief icons.
+2. **Production** (your OK = release): link the CLI to production, then the same `db push`, `functions deploy garmin-sync brief-ingest` and the `BRIEF_INGEST_TOKEN` entry (a different password is fine); merge the PR `release/v3.6` → `main`; `git tag v3.6.0 && git push origin v3.6.0`.
+3. **Claude cloud environment** (environment menu → Edit): environment variables `HABITS_BRIEF_URL` = `https://<production-ref>.supabase.co/functions/v1/brief-ingest` and `HABITS_BRIEF_AUTH` = the production password; Network access: allow `<production-ref>.supabase.co`.
+4. Tell Claude "done" – Claude creates the three scheduled tasks from `docs/briefs/` and fires one test run each.
+
+**Commands run:**
+```bash
+# version 3.5.0 → 3.6.0 in package.json, package-lock.json and the two tests that show it
+npx vitest run && npm run lint && npx playwright test e2e/shell.spec.js
+```
+
+**Files changed:**
+- `package.json`, `package-lock.json` – modified: version 3.6.0.
+- `src/features/about/AboutPage.test.jsx`, `e2e/shell.spec.js` – modified: expect "Version 3.6.0".
+- `README.md` – modified: describes groups, the Garmin window, the briefs and `docs/briefs/`.
+- `docs/briefs/ibkr.md`, `jobs.md`, `world.md` – modified: a scheduled run never changes the repository.
+- `docs/NEXT_SESSION.md` – modified: where we stopped and the owner's checklist.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** `release/v3.6` holds v3.6.0, ready to go live once the owner has done the checklist.
+**Issues & fixes:** Force-pushing is blocked in the cloud container, so after each merged PR the working branch merges `release/v3.6` instead of being rebased. A tooling hook blocks shell commands that mention secrets – build-log text like this is written with the editor tool.
+**Commit:** see the PR into `release/v3.6`

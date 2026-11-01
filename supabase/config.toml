@@ -439,3 +439,9 @@ verify_jwt = false
 # v3.5: called by the scheduler every 30 minutes (same token check inside).
 [functions.garmin-sync]
 verify_jwt = false
+
+# v3.6: garmin-sync also takes the app's Refresh button (a user sign-in, checked
+# inside next to the scheduler token). brief-ingest is called by the owner's
+# Claude scheduled tasks with its own password (checked inside).
+[functions.brief-ingest]
+verify_jwt = false

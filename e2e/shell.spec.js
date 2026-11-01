@@ -22,7 +22,7 @@ test('TS-W1/W2/W3 start page is “What’s up?” with a gear and no message of
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
   // the architecture overview now lives in Settings, as a page (TS-S6, S7)
   await openSettingsSection(page, 'About')
-  await expect(page.getByText('Version 3.5.0')).toBeVisible()
+  await expect(page.getByText('Version 3.6.0')).toBeVisible()
   await page.getByRole('link', { name: /How it’s built/ }).click()
   await expect(page).toHaveURL(/#\/settings\/about$/)
   await expect(page.getByRole('heading', { level: 1, name: 'How it’s built' })).toBeVisible()

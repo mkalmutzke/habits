@@ -1,0 +1,159 @@
+/* The daily briefs (v3.6): IBKR morning brief, Canada jobs brief, world news. */
+
+.brief-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.brief-old,
+.brief-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+  color: var(--amber-hover);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.brief-tickers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.brief-ticker {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--amber) 14%, var(--surface));
+  color: var(--amber-hover);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.brief-tickers-label {
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+}
+
+.brief-summary,
+.brief-intro {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.brief-summary {
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.brief-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.brief-heading {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.brief-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brief-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 150ms ease;
+}
+
+.brief-card:hover {
+  border-color: var(--line);
+}
+
+.brief-card:focus-visible,
+.brief-numbered a:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.brief-headline {
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.brief-why {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--amber-hover);
+}
+
+.brief-source {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--teal);
+}
+
+/* World news: a plain numbered list */
+.brief-numbered {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brief-numbered li {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.brief-numbered a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 11px 2px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brief-numbered .brief-headline {
+  flex: 1 1 200px;
+}
+
+.brief-number {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--amber);
+}
+
+.brief-footer {
+  margin: 16px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--ink-faint);
+}
