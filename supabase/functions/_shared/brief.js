@@ -78,7 +78,7 @@ export function normalizeBrief(kind, input) {
   if (summary) brief.summary = summary
   if (quiet) brief.quiet = true
   if (Array.isArray(input.tickers)) {
-    const tickers = input.tickers.map((ticker) => cleanText(ticker, LIMITS.ticker).toUpperCase()).filter((ticker) => /^[A-Z0-9.\-]+$/.test(ticker))
+    const tickers = input.tickers.map((ticker) => cleanText(ticker, LIMITS.ticker).toUpperCase()).filter((ticker) => /^[A-Z0-9.-]+$/.test(ticker))
     if (tickers.length) brief.tickers = [...new Set(tickers)].slice(0, LIMITS.tickers)
   }
   return { brief }
