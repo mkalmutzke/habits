@@ -2,8 +2,8 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { createUser, openSignedIn, restAs } from './helpers.js'
 
-// Test plan v3 TS-K: the Week page – the shopping list; v3.5 TS-G: the Garmin
-// card in place of the habit grid (habits stay on What's up?).
+// Test plan v3 TS-K: the Week page – the shopping list; TS-G: Garmin (v3.5 a
+// card on Week, v3.6 a window opened from the header).
 
 const shot = (page, name) =>
   page.screenshot({ path: `test-results/screens/${test.info().project.name}-${name}.png`, fullPage: true })
@@ -20,23 +20,37 @@ async function addItems(page, ...titles) {
   }
 }
 
-test('TS-G1 v3.5: the Week page has the Garmin card instead of Habits – folded, not set up yet, readable', async ({ page }) => {
+test('TS-G1 v3.6: Garmin opens from the header on every main page – no card on Week; refresh; readable', async ({ page }) => {
   const user = await createUser('week')
   await openSignedIn(page, user)
   await page.getByRole('tab', { name: 'Week' }).click()
   await expect(page.getByText(/^Last 7 days · /)).toBeVisible()
-  // Habits stay on What's up? only (owner, v3.5)
+  // neither Habits (v3.5) nor Garmin (v3.6) are cards on Week any more
   await expect(page.getByRole('button', { name: /^Habits/ })).toHaveCount(0)
-  // folded at every app start (G2); a new account has no Garmin data – the card's
-  // figures are covered by the component tests (GarminSection.test.jsx)
-  const garmin = page.getByRole('button', { name: /^Garmin/ })
-  await expect(garmin).toHaveAttribute('aria-expanded', 'false')
-  await expect(garmin).toContainText('not set up yet')
-  await garmin.click()
-  await expect(page.getByText(/No data from Garmin yet/)).toBeVisible()
+  await expect(page.locator('.card-section', { hasText: 'Garmin' })).toHaveCount(0)
+
+  // the running-figure icon in the header opens the window; a new account has
+  // no Garmin data – the figures are covered by GarminWindow.test.jsx
+  await page.getByRole('button', { name: 'Garmin' }).click()
+  const window = page.getByRole('dialog', { name: 'Garmin' })
+  await expect(window.getByText(/No data from Garmin yet/)).toBeVisible()
+  // the local stack has no Garmin key: Refresh says so
+  await window.getByRole('button', { name: 'Refresh' }).click()
+  await expect(page.getByText('Garmin isn’t set up yet.')).toBeVisible()
   await shot(page, 'week-garmin')
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
   expect(axe.violations).toEqual([])
+  await window.getByRole('button', { name: 'Close' }).click()
+  await expect(window).toHaveCount(0)
+
+  // the same icon on the other main pages, but not on inner pages (owner)
+  for (const tab of ['What’s up?', 'Lists']) {
+    await page.getByRole('tab', { name: tab }).click()
+    await expect(page.getByRole('button', { name: 'Garmin' })).toBeVisible()
+  }
+  await page.goto('/#/settings')
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Garmin' })).toHaveCount(0)
 })
 
 test('TS-K2/K3/K4 shopping: add several, tick moves to the bottom, clear ticked with undo', async ({ page }) => {
@@ -108,7 +122,7 @@ test('TS-K7 an item added on one device appears on the other', async ({ browser 
 // A date key `offset` days from today, in the tests' time zone.
 const dayKey = (offset) => new Date(Date.now() + offset * 86_400_000).toLocaleDateString('en-CA', { timeZone: 'Europe/Zurich' })
 
-test('TS-D5/D7/D8/F11/A10 v3.3/v3.5: Garmin, Due & overdue and Shopping; due tasks of every list', async ({ page }) => {
+test('TS-D5/D7/D8/F11/A10 v3.3/v3.6: Due & overdue and Shopping; due tasks of every list', async ({ page }) => {
   const user = await createUser('due')
   const [work] = (await restAs(user, 'todo_lists', { method: 'POST', body: JSON.stringify({ name: 'Work', color: 'blue', show_in_all: false }) })).body
   const task = (title, due_date, list_id = null) => restAs(user, 'todo_tasks', { method: 'POST', body: JSON.stringify({ title, due_date, list_id }) })
@@ -117,8 +131,9 @@ test('TS-D5/D7/D8/F11/A10 v3.3/v3.5: Garmin, Due & overdue and Shopping; due tas
   await task('Far away', dayKey(10))
 
   await openSignedIn(page, user, '/#/week')
-  await expect(page.locator('.card-section-title')).toHaveText(['Garmin', 'Due & overdue', 'Shopping'])
-  // start states (owner Q5, v3.5 G2): Garmin and Due & overdue folded, Shopping open
+  // v3.6: Garmin is a window from the header, no longer a card here
+  await expect(page.locator('.card-section-title')).toHaveText(['Due & overdue', 'Shopping'])
+  // start states (owner Q5): Due & overdue folded, Shopping open
   const due = page.getByRole('button', { name: /^Due & overdue/ })
   await expect(due).toHaveAttribute('aria-expanded', 'false')
   await expect(page.getByRole('button', { name: /^Shopping/ })).toHaveAttribute('aria-expanded', 'true')

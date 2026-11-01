@@ -14,8 +14,8 @@ const ITEMS = [
   { node: { icon: '🔔', title: 'Push and email', detail: 'Web Push to your devices · emails via Resend', zone: 'data' } },
   { link: { label: 'Tue–Sat mornings: scheduler → Edge Function ibkr-sync (read-only token)', direction: 'both' } },
   { node: { icon: '📈', title: 'IBKR Flex reports', detail: 'Last trading day + year to date · stored as one snapshot for the IBKR card', zone: 'data' } },
-  { link: { label: 'Every 30 minutes: scheduler → Edge Function garmin-sync (personal key)', direction: 'both' } },
-  { node: { icon: '⌚', title: 'Garmin Connect', detail: 'Personal API · daily steps, resting heart rate and activities for the Garmin card', zone: 'data' } },
+  { link: { label: 'Every 30 minutes (and on Refresh, v3.6): Edge Function garmin-sync (personal key)', direction: 'both' } },
+  { node: { icon: '⌚', title: 'Garmin Connect', detail: 'Personal API · daily steps, resting heart rate and activities for the Garmin window', zone: 'data' } },
 ]
 
 // Where everything runs and how the parts talk to each other.

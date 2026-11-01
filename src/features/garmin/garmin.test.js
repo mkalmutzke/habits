@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   activityGroup,
   average,
+  barHeights,
   fetchedLabel,
   formatCount,
+  formatDistance,
   formatDuration,
   formatThousands,
   headerSummary,
@@ -22,9 +24,9 @@ const DAYS = [
   { day: '2026-10-28', steps: 4180, resting_hr: null, fetched_at: '2026-10-28T07:42:00Z' },
 ]
 const ACTIVITIES = [
-  { day: '2026-10-22', activity_type: 'running', moving_s: 2700, duration_s: 2900 },
-  { day: '2026-10-23', activity_type: 'trail_running', moving_s: 3000, duration_s: 3300 },
-  { day: '2026-10-24', activity_type: 'gravel_cycling', moving_s: 5460, duration_s: 6000 },
+  { day: '2026-10-22', activity_type: 'running', moving_s: 2700, duration_s: 2900, distance_m: 8200 },
+  { day: '2026-10-23', activity_type: 'trail_running', moving_s: 3000, duration_s: 3300, distance_m: 9050 },
+  { day: '2026-10-24', activity_type: 'gravel_cycling', moving_s: 5460, duration_s: 6000, distance_m: 41000 },
   { day: '2026-10-25', activity_type: 'strength_training', moving_s: null, duration_s: 1800 },
   { day: '2026-10-01', activity_type: 'walking', moving_s: 3600 },
 ]
@@ -61,7 +63,21 @@ describe('summarize', () => {
       { label: 'Cycling', count: 1, seconds: 5460 },
       { label: 'Strength', count: 1, seconds: 1800 },
     ])
-    expect(week.total).toEqual({ count: 4, seconds: 12960 })
+    expect(week.total).toMatchObject({ count: 4, seconds: 12960 })
+  })
+
+  it('v3.6: adds up the distance per type and in total (strength has none)', () => {
+    expect(week.activities.map(({ label, meters }) => [label, meters])).toEqual([
+      ['Running', 17250],
+      ['Cycling', 41000],
+      ['Strength', 0],
+    ])
+    expect(week.total.meters).toBe(58250)
+  })
+
+  it('v3.6: bar heights relative to the highest day; missing days are 0', () => {
+    expect(barHeights(week.perDay).map((value) => Math.round(value * 100))).toEqual([80, 100, 0, 0, 0, 0, 35])
+    expect(barHeights([{ steps: null }])).toEqual([0])
   })
 
   it('counts the month’s activities in the month view', () => {
@@ -70,6 +86,11 @@ describe('summarize', () => {
 })
 
 describe('helpers', () => {
+  it('v3.6: formats a distance in km, or a dash without one', () => {
+    expect(formatDistance(24630)).toBe('24.6 km')
+    expect(formatDistance(0)).toBe('–')
+  })
+
   it('folds Garmin type keys into groups', () => {
     expect(activityGroup('virtual_ride').label).toBe('Cycling')
     expect(activityGroup('indoor_cycling').label).toBe('Cycling')

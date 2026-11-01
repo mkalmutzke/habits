@@ -42,6 +42,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
+}
+
+/* v3.6: title with an optional small line below it */
+.modal-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-subtitle {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
 }
 
 .modal-header h2 {
