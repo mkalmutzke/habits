@@ -267,3 +267,37 @@ npx playwright test
 **Result:** On What's up? the IBKR card has a newspaper icon; the header has a briefcase and a globe. Each opens its brief window ("No brief yet" until the scheduled tasks run). Settings → Daily briefs switches each one off.
 **Issues & fixes:** None.
 **Commit:** see the PR into `release/v3.6`
+
+### Step 9 – v3.6.0 ready for release; owner's checklist (v3.6, PR 5)
+**Date:** 2026-11-01 17:10
+**Request:** Owner: go ahead with v3.6; notify me when it's time for me to act.
+**Why:** All four feature steps are merged into `release/v3.6`. Going live and changing the cloud databases need the owner's OK, and the cloud container can't log in to Supabase – so the remaining steps are the owner's. The version becomes 3.6.0. The task instructions now also say that a scheduled run must not change anything in the repository (the scheduled sessions start inside it, and its build-log rules are meant for coding sessions).
+
+**Owner's checklist:**
+1. **Test project first** – on your computer, in the repository, on `release/v3.6`:
+   - check `supabase/.temp/project-ref` is `habits-test`;
+   - `npx supabase db push` (applies `v3_6_habit_groups` and `v3_6_briefs`);
+   - `npx supabase functions deploy garmin-sync brief-ingest`;
+   - Supabase dashboard (habits-test) → Edge Functions → Secrets: add `BRIEF_INGEST_TOKEN` = a new random password, at least 32 characters (from your password manager);
+   - try the Vercel preview of `release/v3.6`: habit groups, Settings, Garmin window with Refresh, brief icons.
+2. **Production** (your OK = release): link the CLI to production, then the same `db push`, `functions deploy garmin-sync brief-ingest` and the `BRIEF_INGEST_TOKEN` entry (a different password is fine); merge the PR `release/v3.6` → `main`; `git tag v3.6.0 && git push origin v3.6.0`.
+3. **Claude cloud environment** (environment menu → Edit): environment variables `HABITS_BRIEF_URL` = `https://<production-ref>.supabase.co/functions/v1/brief-ingest` and `HABITS_BRIEF_AUTH` = the production password; Network access: allow `<production-ref>.supabase.co`.
+4. Tell Claude "done" – Claude creates the three scheduled tasks from `docs/briefs/` and fires one test run each.
+
+**Commands run:**
+```bash
+# version 3.5.0 → 3.6.0 in package.json, package-lock.json and the two tests that show it
+npx vitest run && npm run lint && npx playwright test e2e/shell.spec.js
+```
+
+**Files changed:**
+- `package.json`, `package-lock.json` – modified: version 3.6.0.
+- `src/features/about/AboutPage.test.jsx`, `e2e/shell.spec.js` – modified: expect "Version 3.6.0".
+- `README.md` – modified: describes groups, the Garmin window, the briefs and `docs/briefs/`.
+- `docs/briefs/ibkr.md`, `jobs.md`, `world.md` – modified: a scheduled run never changes the repository.
+- `docs/NEXT_SESSION.md` – modified: where we stopped and the owner's checklist.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** `release/v3.6` holds v3.6.0, ready to go live once the owner has done the checklist.
+**Issues & fixes:** Force-pushing is blocked in the cloud container, so after each merged PR the working branch merges `release/v3.6` instead of being rebased. A tooling hook blocks shell commands that mention secrets – build-log text like this is written with the editor tool.
+**Commit:** see the PR into `release/v3.6`

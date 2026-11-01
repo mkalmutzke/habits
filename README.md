@@ -2,9 +2,10 @@
 
 A personal app for **habits, to-dos and a shopping list**, mobile-first and installable on
 Android. The start page "What's up?" shows a folded IBKR portfolio card (the day's move; holdings and
-performance when opened), the habits (tap a day to tick it) and every open to-do; the Week page has a Garmin card (steps,
-resting heart rate and activities for 7 days or the month), the tasks due soon and the shopping list. Data lives in the cloud and updates live on all your devices; reminders arrive by
-push, email or in the app.
+performance when opened; a daily morning news brief), the habits in groups (tap a day to tick it) and every open to-do; the Week page has
+the tasks due soon and the shopping list. Icons in the header open Garmin (steps, resting heart rate and activities for 7 days or the month)
+and two daily briefs (Canada jobs, world news), written each morning by Claude scheduled tasks. Data lives in the cloud and updates live on
+all your devices; reminders arrive by push, email or in the app.
 
 **Live app:** https://habits.mkalmutzke.com/ – sign in with your email, then "Install app" /
 "Add to Home Screen".
@@ -49,10 +50,11 @@ src/
   features/
     whatsup/               What's up?: IBKR card, habit section + ToDo's
     portfolio/             IBKR card: newest snapshot, holdings, day move, TWR (read-only)
-    habits/                week grid, habit dialog (icons, daily reminder), streaks
+    habits/                week grid, habit groups, habit dialog (icons, group, daily reminder), streaks
     todos/                 sources, lists, groups, task details, deleted tasks
     week/, shopping/       Week page, shopping list
-    garmin/                Garmin card on Week: 7 days or month, steps, resting heart rate, activities
+    garmin/                Garmin window from the header: 7 days or month, steps chart, resting heart rate, activities, Refresh
+    briefs/                daily briefs (IBKR, Canada jobs, world news): windows, amber dot, Settings switches
     notifications/         reminders, push on this device, in-app pop-ups
     settings/, about/      Settings, "How it's built"
     account/               sign-in with an 8-digit code by email, change email
@@ -60,10 +62,11 @@ src/
   storage/                 small per-device preferences (localStorage)
 supabase/
   migrations/              tables, row level security, functions, scheduler
-  functions/               Edge Functions: send-reminders, send-test-notification, ibkr-sync, garmin-sync
+  functions/               Edge Functions: send-reminders, send-test-notification, ibkr-sync, garmin-sync, brief-ingest
   tests/database/          pgTAP tests
 e2e/                       Playwright tests
 docs/NEXT_SESSION.md      where the last session stopped (shown at every session start)
+docs/briefs/               how the daily briefs are made, and the scheduled tasks' instructions
 ```
 
 ## Environments and deployment

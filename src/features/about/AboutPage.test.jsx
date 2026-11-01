@@ -23,7 +23,7 @@ describe('How it’s built (v3 TS-S6)', () => {
     expect(screen.getByText('habit_reminders')).toBeInTheDocument()
 
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Topic' }), 'stack')
-    expect(screen.getByText(/Version 3.5.0/)).toBeInTheDocument()
+    expect(screen.getByText(/Version 3.6.0/)).toBeInTheDocument()
   })
 
   it('offers all seven topics', () => {
