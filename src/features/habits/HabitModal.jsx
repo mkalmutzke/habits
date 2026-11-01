@@ -15,7 +15,9 @@ import { useReminderDraft } from './useReminderDraft.js'
 // only if the habit isn't done yet that day. `onAdd(name, emoji, reminder)`
 // gets { remind_time, channels } or null.
 // v3.1: an optional subtitle (second line in the grid); `onAdd` gets
-// ({ name, subtitle, emoji }, reminder).
+// ({ name, subtitle, emoji, groupId }, reminder).
+// v3.6: the habit's group – `groups` are the user's groups, `defaultGroupName`
+// names the default group (groupId null). Without groups the field is hidden.
 function HabitModal({
   open,
   onClose,
@@ -26,6 +28,9 @@ function HabitModal({
   initialEmoji = HABIT_ICONS[0].emoji,
   initialSubtitle = '',
   initialReminder = null,
+  initialGroupId = null,
+  groups = [],
+  defaultGroupName = 'Other',
   defaultTime = '09:00',
   defaultChannels = ['inapp'],
   pushOnThisDevice = false,
@@ -34,6 +39,8 @@ function HabitModal({
   const [name, setName] = useState(initialName)
   const [subtitle, setSubtitle] = useState(initialSubtitle ?? '')
   const [emoji, setEmoji] = useState(initialEmoji)
+  // a group that was deleted meanwhile counts as the default group
+  const [groupId, setGroupId] = useState(groups.some((group) => group.id === initialGroupId) ? initialGroupId : null)
   const [choices] = useState(() => iconChoices(initialEmoji))
   const reminder = useReminderDraft(initialReminder, defaultTime, defaultChannels)
 
@@ -47,7 +54,7 @@ function HabitModal({
     event.preventDefault()
     const trimmed = name.trim()
     if (!trimmed) return
-    onAdd({ name: trimmed, subtitle: cleanText(subtitle, 60), emoji }, reminder.value())
+    onAdd({ name: trimmed, subtitle: cleanText(subtitle, 60), emoji, groupId }, reminder.value())
     handleClose()
   }
 
@@ -106,6 +113,20 @@ function HabitModal({
         aria-label="Subtitle (optional)"
         maxLength={60}
       />
+
+      {groups.length > 0 && (
+        <label className="group-field">
+          <span className="group-field-label">Group</span>
+          <select className="input" value={groupId ?? ''} onChange={(event) => setGroupId(event.target.value || null)}>
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+            <option value="">{defaultGroupName}</option>
+          </select>
+        </label>
+      )}
 
       <HabitReminderFields reminder={reminder} pushOnThisDevice={pushOnThisDevice} />
 

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { authEmail, createUser, hasEmail, latestCode, openSignedIn } from './helpers.js'
+import { authEmail, createUser, hasEmail, latestCode, openSettingsSection, openSignedIn } from './helpers.js'
 
 // Test plan TS-A (sign-in, staying signed in) and v3.2 (owner only: sign-in
 // by code, no new accounts, change email with two codes).
@@ -46,6 +46,7 @@ test('TS-A2 stays signed in after closing and reopening the app', async ({ page 
 test('TS-A3 sign out removes the session and the device copy', async ({ page }) => {
   const user = await createUser('out')
   await openSignedIn(page, user, '/#/settings')
+  await openSettingsSection(page, 'Account and data')
   await expect(page.getByText(`Signed in as ${user.email}`)).toBeVisible()
   await page.getByRole('button', { name: 'Sign out' }).click()
   await expect(page.getByRole('button', { name: 'Send code' })).toBeVisible()
@@ -62,6 +63,7 @@ test('v3.2 change email: code to the current address, then to the new one', asyn
   const user = await createUser('move')
   const newEmail = `moved-${Date.now()}@e2e.test`
   await openSignedIn(page, user, '/#/settings')
+  await openSettingsSection(page, 'Account and data')
   await page.getByRole('button', { name: 'Change email' }).click()
   await page.getByLabel('New email address').fill(newEmail)
 

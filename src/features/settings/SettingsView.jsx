@@ -10,12 +10,16 @@ import { signOut } from '../account/useSession.js'
 import { version } from '../../../package.json'
 import '../about/about.css'
 import { disablePush } from '../notifications/pushDevice.js'
+import BriefSettings from '../briefs/BriefSettings.jsx'
+import HabitGroupSettings from './HabitGroupSettings.jsx'
+import SettingsSection from './SettingsSection.jsx'
 import SwitchRow from './SwitchRow.jsx'
 import './settings.css'
 
 // Settings (mockup 6): reminders (passed in as children), to-dos, about, and
-// account and data.
-function SettingsView({ user, settings, update, children }) {
+// account and data. v3.6: every section is a foldable card, folded at app
+// start, and habit groups are managed here.
+function SettingsView({ user, settings, update, habits, children }) {
   const queryClient = useQueryClient()
   const online = useOnline()
   const [busy, setBusy] = useState(null)
@@ -54,10 +58,9 @@ function SettingsView({ user, settings, update, children }) {
 
       {children}
 
-      <section className="settings-section" aria-labelledby="todos-heading">
-        <h2 id="todos-heading" className="section-label">
-          To-dos
-        </h2>
+      {habits && <HabitGroupSettings habits={habits} settings={settings} update={update} />}
+      <BriefSettings settings={settings} update={update} />
+      <SettingsSection id="todos" title="To-dos">
         <div className="settings-card">
           <SwitchRow
             label="Show deleted tasks"
@@ -67,12 +70,9 @@ function SettingsView({ user, settings, update, children }) {
             disabled={!online}
           />
         </div>
-      </section>
+      </SettingsSection>
 
-      <section className="settings-section" aria-labelledby="about-heading">
-        <h2 id="about-heading" className="section-label">
-          About
-        </h2>
+      <SettingsSection id="about" title="About" summary={`v${version}`}>
         <a className="settings-link" href="#/settings/about">
           <span className="settings-link-text">
             <span>How it’s built</span>
@@ -81,12 +81,9 @@ function SettingsView({ user, settings, update, children }) {
           <Icon name="chevronRight" size={16} outline />
         </a>
         <p className="settings-hint">Version {version}</p>
-      </section>
+      </SettingsSection>
 
-      <section className="settings-section" aria-labelledby="account-heading">
-        <h2 id="account-heading" className="section-label">
-          Account and data
-        </h2>
+      <SettingsSection id="account" title="Account and data">
         <div className="settings-card padded">
           <p className="signed-in">
             <span className="status-dot" aria-hidden="true" />
@@ -129,7 +126,7 @@ function SettingsView({ user, settings, update, children }) {
             </p>
           )}
         </div>
-      </section>
+      </SettingsSection>
     </div>
   )
 }

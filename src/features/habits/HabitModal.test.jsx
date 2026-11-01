@@ -36,7 +36,7 @@ describe('HabitModal – daily reminder (v3 TS-R1)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Email' }))
     expect(time).toHaveValue('16:02')
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
-    expect(onAdd).toHaveBeenCalledWith({ name: 'Test', subtitle: '', emoji: '🐕' }, { remind_time: '16:02:00', channels: ['inapp', 'email'] })
+    expect(onAdd).toHaveBeenCalledWith({ name: 'Test', subtitle: '', emoji: '🐕', groupId: null }, { remind_time: '16:02:00', channels: ['inapp', 'email'] })
   })
 
   it('shows the time that will be saved', () => {
@@ -51,13 +51,13 @@ describe('HabitModal – daily reminder (v3 TS-R1)', () => {
     const onAdd = renderModal({ initialName: 'Walk', initialReminder: { remind_time: '07:15:00', channels: ['push'], active: true } })
     expect(screen.getByLabelText('Time')).toHaveValue('07:15')
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
-    expect(onAdd).toHaveBeenCalledWith({ name: 'Walk', subtitle: '', emoji: '🐕' }, { remind_time: '07:15:00', channels: ['push'] })
+    expect(onAdd).toHaveBeenCalledWith({ name: 'Walk', subtitle: '', emoji: '🐕', groupId: null }, { remind_time: '07:15:00', channels: ['push'] })
   })
 
   it('switched off: no reminder', async () => {
     const onAdd = renderModal({ initialName: 'Walk' })
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
-    expect(onAdd).toHaveBeenCalledWith({ name: 'Walk', subtitle: '', emoji: '🐕' }, null)
+    expect(onAdd).toHaveBeenCalledWith({ name: 'Walk', subtitle: '', emoji: '🐕', groupId: null }, null)
   })
 
   it('saves an optional subtitle, trimmed (v3.1)', async () => {
@@ -66,6 +66,37 @@ describe('HabitModal – daily reminder (v3 TS-R1)', () => {
     await userEvent.clear(screen.getByLabelText('Subtitle (optional)'))
     await userEvent.type(screen.getByLabelText('Subtitle (optional)'), '  2 × 20 minutes ')
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
-    expect(onAdd).toHaveBeenCalledWith({ name: 'Gym', subtitle: '2 × 20 minutes', emoji: '🐕' }, null)
+    expect(onAdd).toHaveBeenCalledWith({ name: 'Gym', subtitle: '2 × 20 minutes', emoji: '🐕', groupId: null }, null)
+  })
+
+  describe('group (v3.6)', () => {
+    const groups = [
+      { id: 'sport', name: 'Sport' },
+      { id: 'dog', name: 'Dog' },
+    ]
+
+    it('no field without groups', () => {
+      renderModal()
+      expect(screen.queryByLabelText('Group')).not.toBeInTheDocument()
+    })
+
+    it('starts in the default group and saves the chosen group', async () => {
+      const onAdd = renderModal({ initialName: 'Run', groups, defaultGroupName: 'Other' })
+      const field = screen.getByLabelText('Group')
+      expect(field).toHaveDisplayValue('Other')
+      await userEvent.selectOptions(field, 'Sport')
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+      expect(onAdd).toHaveBeenCalledWith({ name: 'Run', subtitle: '', emoji: '🐕', groupId: 'sport' }, null)
+    })
+
+    it('editing keeps the habit’s group; a deleted group counts as the default', () => {
+      renderModal({ initialName: 'Walk', groups, initialGroupId: 'dog' })
+      expect(screen.getByLabelText('Group')).toHaveDisplayValue('Dog')
+    })
+
+    it('a group that no longer exists shows the default group', () => {
+      renderModal({ initialName: 'Walk', groups, initialGroupId: 'gone', defaultGroupName: 'Misc' })
+      expect(screen.getByLabelText('Group')).toHaveDisplayValue('Misc')
+    })
   })
 })

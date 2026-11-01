@@ -198,3 +198,43 @@
 [aria-expanded='true'] > .section-chevron {
   transform: rotate(180deg);
 }
+
+/* v3.6: icon buttons in the header and on cards (ToolButton) */
+.tool-button {
+  position: relative;
+}
+
+.tool-button svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* "new today": a small amber dot at the top right */
+.tool-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 0 2px var(--surface-2);
+}
+
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* the dot on a card's icon (IBKR morning brief) sits on the card colour */
+.section-icon-button .tool-dot {
+  top: 10px;
+  right: 10px;
+  box-shadow: 0 0 0 2px var(--surface);
+}

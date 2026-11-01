@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createUser, openSignedIn, restAs } from './helpers.js'
+import { createUser, openSettingsSection, openSignedIn, restAs } from './helpers.js'
 
 // Test plan v3 TS-S1, S2, S5: deleted tasks are kept 10 days, can be restored
 // or deleted for good, and the Settings switch shows or hides them.
@@ -50,6 +50,7 @@ test('TS-S2 the Settings switch hides deleted tasks everywhere (default on)', as
   await expect(page.getByRole('button', { name: 'Deleted · 1' })).toBeVisible()
 
   await page.getByRole('link', { name: 'Settings' }).click()
+  await openSettingsSection(page, 'To-dos')
   const toggle = page.getByRole('button', { name: 'Show deleted tasks' })
   await expect(toggle).toHaveAttribute('aria-pressed', 'true')
   await toggle.click()

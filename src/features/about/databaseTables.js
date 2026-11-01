@@ -2,7 +2,8 @@
 // place so it's easy to keep current; a test checks that every table the app
 // loads (src/shared/data/tables.js) is described here.
 export const DATABASE_TABLES = [
-  { group: 'Habits', name: 'habits', what: 'Your habits', columns: 'name · subtitle (v3.1) · emoji · position (v3.3: drag to reorder)', since: 'v2' },
+  { group: 'Habits', name: 'habits', what: 'Your habits', columns: 'name · subtitle (v3.1) · emoji · position (v3.3: drag to reorder) · group_id (v3.6)', since: 'v2' },
+  { group: 'Habits', name: 'habit_groups', what: 'Groups of habits (Sport, Dog, …); habits without a group are in the default group', columns: 'name · position', since: 'v3.6' },
   { group: 'Habits', name: 'habit_completions', what: 'One row per habit and ticked day', columns: 'habit_id · day', since: 'v2' },
   { group: 'Habits', name: 'habit_reminders', what: 'Daily reminder of a habit – only if not done that day', columns: 'habit_id · remind_time · channels · starts_on · last_sent_on', since: 'v3' },
   { group: 'To-dos', name: 'todo_groups', what: 'Groups (folders) of lists', columns: 'name · collapsed · position', since: 'v2' },
@@ -15,16 +16,18 @@ export const DATABASE_TABLES = [
   { group: 'IBKR', name: 'portfolio_positions', what: 'The holdings of a snapshot (kept 7 days), in CHF', columns: 'symbol · quantity · value_base · prev_close_price · cost_basis_base', since: 'v3.4' },
   { group: 'Garmin', name: 'garmin_days', what: 'One Garmin daily summary per day (kept 365 days), written by the server', columns: 'day · steps · step_goal · resting_hr', since: 'v3.5' },
   { group: 'Garmin', name: 'garmin_activities', what: 'Your Garmin activities (kept 365 days), written by the server', columns: 'day · activity_type · moving_s · duration_s · distance_m', since: 'v3.5' },
-  { group: 'You', name: 'user_settings', what: 'Time zone, reminder channels, quiet hours, show deleted tasks', columns: 'time_zone · inapp_on · email_on · quiet_start/end · show_deleted_tasks', since: 'v2' },
+  { group: 'Briefs', name: 'briefs', what: 'The latest daily brief of each kind (IBKR, Canada jobs, world news), written by the server', columns: 'kind · for_day · content · seen_on', since: 'v3.6' },
+  { group: 'You', name: 'user_settings', what: 'Time zone, reminder channels, quiet hours, show deleted tasks, name of the default habit group, daily briefs on/off', columns: 'time_zone · inapp_on · email_on · quiet_start/end · show_deleted_tasks · default_habit_group · brief_*_on (v3.6)', since: 'v2' },
   { group: 'You', name: 'push_subscriptions', what: 'Devices with push switched on', columns: 'endpoint · device_label · last_used_at', since: 'v2' },
   { group: 'You', name: 'notification_log', what: 'What the server sent (kept 30 days)', columns: 'channel · result · task_id / habit_id', since: 'v2' },
 ]
 
 // How the tables hang together (shown under the list).
 export const RELATIONS = [
-  'habits → habit_completions, habit_reminders',
+  'habit_groups → habits → habit_completions, habit_reminders',
   'todo_groups → todo_lists → todo_tasks → todo_steps, todo_reminders',
   'portfolio_snapshots → portfolio_positions',
   'garmin_days, garmin_activities (one row per day / per activity)',
+  'briefs (one row per kind – only the latest)',
   'every table → your account (user_id), deleted with it',
 ]

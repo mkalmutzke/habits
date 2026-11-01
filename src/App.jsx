@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import AppHeader from './AppHeader.jsx'
 import SignInScreen from './features/account/SignInScreen.jsx'
 import { useSession } from './features/account/useSession.js'
@@ -7,6 +7,10 @@ import { useShopping } from './features/shopping/useShopping.js'
 import NotificationSettings from './features/notifications/NotificationSettings.jsx'
 import ReminderRow from './features/notifications/ReminderRow.jsx'
 import { useInAppReminders, usePushOnThisDevice, useReminders } from './features/notifications/useReminders.js'
+import BriefWindow from './features/briefs/BriefWindow.jsx'
+import { BRIEFS, isNew, isOn } from './features/briefs/briefs.js'
+import { useBriefs } from './features/briefs/useBriefs.js'
+import GarminWindow from './features/garmin/GarminWindow.jsx'
 import { useGarmin } from './features/garmin/useGarmin.js'
 import { usePortfolio } from './features/portfolio/usePortfolio.js'
 import SettingsView from './features/settings/SettingsView.jsx'
@@ -24,6 +28,7 @@ import { useOnline, useTable } from './shared/data/hooks.js'
 import { isConfigured } from './shared/data/supabaseClient.js'
 import { useRoute } from './shared/hooks/useRoute.js'
 import { useToday } from './shared/hooks/useToday.js'
+import ToolButton from './shared/ui/ToolButton.jsx'
 import './app.css'
 
 // "How it's built" is only downloaded when it's opened (design v3 §2.6).
@@ -54,9 +59,12 @@ function SignedInApp({ user }) {
   const shopping = useShopping(user.id)
   const portfolio = usePortfolio()
   const garmin = useGarmin()
+  const briefs = useBriefs()
   const reminders = useReminders(user.id)
   const { settings, update: updateSettings } = useSettings(user.id)
   const pushOnThisDevice = usePushOnThisDevice(useTable('push_subscriptions').rows)
+  // v3.6: the window opened from an icon ('garmin', 'ibkr', 'jobs', 'world'), or null
+  const [panel, setPanel] = useState(null)
   useTimeZoneSetting(user.id)
   useInAppReminders({
     reminders: reminders.reminders,
@@ -73,6 +81,20 @@ function SignedInApp({ user }) {
 
   const isTab = ['today', 'week', 'lists'].includes(route.view)
   const tabView = isTab ? route.view : 'today'
+  // v3.6: header icons before the gear, on the three main pages only (owner);
+  // a brief switched off in Settings has no icon. The amber dot: today's
+  // brief not opened yet today.
+  const briefButton = (kind, className) =>
+    isOn(settings, kind) && (
+      <ToolButton key={kind} icon={BRIEFS[kind].icon} label={BRIEFS[kind].title} dot={isNew(briefs.byKind[kind], today)} onClick={() => setPanel(kind)} className={className} />
+    )
+  const tools = (
+    <>
+      <ToolButton icon="run" label="Garmin" onClick={() => setPanel('garmin')} />
+      {briefButton('jobs')}
+      {briefButton('world')}
+    </>
+  )
 
   return (
     <main className="app">
@@ -88,12 +110,14 @@ function SignedInApp({ user }) {
             today={today}
             view={tabView}
             openTasks={todos.tasks.filter(isOpen).length}
+            tools={tools}
           />
           {/* key: a new page fades in (it never moves – design v3 §2.1) */}
           <div key={tabView} id="view-panel" role="tabpanel" aria-labelledby={`tab-${tabView}`} className="view-panel">
             {tabView === 'today' && (
               <WhatsUpPage
                 portfolio={portfolio}
+                briefButton={briefButton('ibkr', 'section-icon-button')}
                 habits={habits}
                 todos={todos}
                 today={today}
@@ -103,10 +127,14 @@ function SignedInApp({ user }) {
               />
             )}
             {tabView === 'week' && (
-              <WeekView garmin={garmin} todos={todos} shopping={shopping} today={today} reminderText={reminders.reminderText} />
+              <WeekView todos={todos} shopping={shopping} today={today} reminderText={reminders.reminderText} />
             )}
             {tabView === 'lists' && <ListsView todos={todos} today={today} />}
           </div>
+          {panel === 'garmin' && <GarminWindow garmin={garmin} today={today} onClose={() => setPanel(null)} />}
+          {panel in BRIEFS && (
+            <BriefWindow kind={panel} brief={briefs.byKind[panel]} today={today} onSeen={briefs.markSeen} onClose={() => setPanel(null)} />
+          )}
         </>
       ) : (
         <>
@@ -137,7 +165,7 @@ function SignedInApp({ user }) {
             </Suspense>
           )}
           {route.view === 'settings' && route.id !== 'about' && (
-            <SettingsView user={user} settings={settings} update={updateSettings}>
+            <SettingsView user={user} settings={settings} update={updateSettings} habits={habits}>
               <NotificationSettings user={user} settings={settings} update={updateSettings} pushOnThisDevice={pushOnThisDevice} />
             </SettingsView>
           )}

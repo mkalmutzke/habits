@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createECDH, randomBytes } from 'node:crypto'
-import { createUser, openSignedIn, restAs } from './helpers.js'
+import { createUser, openSettingsSection, openSignedIn, restAs } from './helpers.js'
 
 // Test plan TS-N (reminders, notification settings) and TS-O3 (offline start).
 // The scheduler in the local stack calls send-reminders every minute.
@@ -28,6 +28,7 @@ test('TS-N1 notification settings are saved and apply everywhere', async ({ page
   const user = await createUser('settings')
   await openSignedIn(page, user, '/#/settings')
   await expect(page.getByRole('heading', { name: 'Reminders' })).toBeVisible()
+  await openSettingsSection(page, 'Reminders')
 
   await page.getByRole('button', { name: 'In-app pop-ups' }).click()
   await page.getByRole('button', { name: 'Email', exact: true }).click()
@@ -126,6 +127,7 @@ test('TS-N4 the server sends due reminders: done, retried, postponed for quiet h
 test('TS-N5 test button: no device yet, and only one test per minute', async ({ page }) => {
   const user = await createUser('testbtn')
   await openSignedIn(page, user, '/#/settings')
+  await openSettingsSection(page, 'Reminders')
   await page.getByRole('button', { name: 'Send a test notification' }).click()
   await expect(page.getByText('Test: no device with push switched on.')).toBeVisible()
   await page.getByRole('button', { name: 'Send a test notification' }).click()
@@ -137,6 +139,7 @@ test('TS-N6 push can’t be switched on without a push service: clear message, s
   await context.grantPermissions(['notifications'])
   const user = await createUser('nopush')
   await openSignedIn(page, user, '/#/settings')
+  await openSettingsSection(page, 'Reminders')
   await page.evaluate(() => navigator.serviceWorker.ready)
   const toggle = page.getByRole('button', { name: 'Push on this device' })
   await toggle.click()

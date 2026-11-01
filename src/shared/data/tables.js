@@ -6,6 +6,8 @@ export const TABLES = {
   habits: { key: ['id'], order: ['position', 'created_at'] },
   habit_completions: { key: ['habit_id', 'day'], order: ['day'] },
   habit_reminders: { key: ['id'], order: ['created_at'] },
+  // v3.6: groups of habits (Sport, Dog, …)
+  habit_groups: { key: ['id'], order: ['position', 'created_at'] },
   user_settings: { key: ['user_id'], order: ['user_id'] },
   todo_groups: { key: ['id'], order: ['position', 'created_at'] },
   todo_lists: { key: ['id'], order: ['position', 'created_at'] },
@@ -20,6 +22,8 @@ export const TABLES = {
   // v3.5: written by the server only (garmin-sync); the app reads them
   garmin_days: { key: ['id'], order: ['day'] },
   garmin_activities: { key: ['id'], order: ['day'] },
+  // v3.6: written by the server only (brief-ingest); the app reads them and sets seen_on
+  briefs: { key: ['id'], order: ['kind'] },
 }
 
 // The Data API returns at most 1000 rows per request, so bigger tables

@@ -92,3 +92,10 @@ export async function authEmail(user) {
   })
   return (await response.json()).email
 }
+
+// v3.6: Settings sections start folded – open one by its title.
+export async function openSettingsSection(page, title) {
+  const toggle = page.locator('.settings-fold .card-section-toggle', { hasText: title })
+  await toggle.click()
+  await page.locator('.settings-fold .card-section-toggle[aria-expanded="true"]', { hasText: title }).waitFor()
+}

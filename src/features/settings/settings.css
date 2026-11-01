@@ -124,3 +124,97 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* v3.6: every section is a foldable card (SettingsSection) */
+.settings-fold-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 6px 6px;
+}
+
+.settings-fold .settings-card {
+  background: var(--surface-2);
+}
+
+/* v3.6: Settings → Habit groups */
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding-left: 4px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-2);
+  transition: transform 150ms var(--ease-out);
+}
+
+.group-grip-space {
+  flex: none;
+  width: 28px;
+}
+
+.group-name {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: max(16px, 1rem);
+}
+
+.group-name:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: -2px;
+}
+
+.group-count {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+.group-row.is-default .group-count {
+  padding-right: 14px;
+}
+
+.group-delete {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  color: var(--coral);
+  cursor: pointer;
+}
+
+.group-delete:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.group-add {
+  display: flex;
+  gap: 8px;
+}
+
+.group-add .input {
+  flex: 1;
+  min-width: 0;
+}

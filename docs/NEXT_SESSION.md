@@ -1,12 +1,22 @@
 # Next session – handoff
 
-*Written 30 October 2026 after Step 3. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
+*Written 1 November 2026 after Step 9. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
 
 ## Where we stopped
 
+- **v3.6.0 is built, not live yet** (Steps 4–9, integration branch `release/v3.6`, one PR per step):
+  - habit groups (Sport, Dog, default "Other") with an icon to show all habits, managed in Settings; Settings sections fold;
+  - Garmin as a window from the header (running figure) with Refresh, a steps chart and distances; no Garmin card on Week;
+  - three daily briefs – IBKR (newspaper on the IBKR card, Tue–Sat), Canada jobs (briefcase) and world news (globe) – each with an amber dot until opened today and an on/off switch in Settings.
+  - Briefs are written by Claude scheduled tasks on the owner's Claude plan and stored through the Edge Function `brief-ingest` (own password). How it works and the task instructions: [`docs/briefs/`](briefs/README.md).
+- **Waiting for the owner** (the release checklist is in Step 9 of the build log):
+  1. OK to go live → apply the 2 new migrations and deploy `garmin-sync` + `brief-ingest` (habits-test first, then production); merge `release/v3.6` into `main`; tag `v3.6.0`.
+  2. Set the brief password: `BRIEF_INGEST_TOKEN` in the Supabase dashboard; `HABITS_BRIEF_URL` and `HABITS_BRIEF_AUTH` in the Claude cloud environment, plus network access to the Supabase host.
+  3. Then Claude creates the three scheduled tasks (instructions in `docs/briefs/`) and fires one test run each.
+
 - **Fresh start (Step 1):** this repository (`mkalmutzke/habits`, public) starts from the code of v3.5.0 with one commit and no history. The old repository `habit-tracker` was deleted by the owner on 30 Oct (Step 3); its design documents and old build log (Steps 1–153) are in the owner's download.
 - **Move done (Step 2):** the app runs at `https://habits.mkalmutzke.com` from this repository; emails come from `…@habits.mkalmutzke.com`. The end-to-end test pattern was fixed for the new folder name.
-- App: v3.5.0 – What's up? (IBKR card, Habits, ToDo's), Week (Garmin, Due & overdue, Shopping), Lists, Settings. Supabase projects `habits-test` and production, 16 migrations, Edge Functions `send-reminders`, `send-test-notification`, `ibkr-sync`, `garmin-sync`.
+- App live: v3.5.0. In `release/v3.6`: 18 migrations, Edge Functions `send-reminders`, `send-test-notification`, `ibkr-sync`, `garmin-sync`, `brief-ingest`.
 - The IBKR token and the Garmin key expire around 28 Oct 2027 – renew them in **both** Supabase projects (owner's guide, outside the repository).
 
 ## Open, owner's choice
@@ -28,6 +38,8 @@
 
 - A plugin hook blocks shell commands whose text contains words like "secret", ".env", "key" or "credential" → write such text with the editor tool or into a script file.
 - Run the **whole** end-to-end suite locally before pushing (`npx playwright test`, local stack via `npm run db:start`).
+- Cloud container: Docker may not be running → start it with `dockerd &`; the `pg_prove` image may not download → run the pgTAP files with `psql` inside the database container; Playwright may expect a newer headless browser than the installed one → link the installed one under `/opt/pw-browsers` (local only).
+- Force-pushing is blocked in the cloud container → after a PR is merged, merge `release/v3.6` into the working branch instead of rebasing.
 - Database tests run as the owner and see all rows → tests count only their own rows.
 - CI sometimes fails to start Docker (port) – rerun the failed job.
 - With `--linked`, the Supabase CLI seemed to ignore `--project-ref` – for production, check in the dashboard.
