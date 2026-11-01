@@ -203,3 +203,35 @@ npx playwright test
 **Result:** On What's up?, Week or Lists, tap the running figure next to the gear: the Garmin window opens with the steps chart, heart rate and the activities table with distances. Refresh fetches new data (or says to wait 2 minutes). The Week page shows only Due & overdue and Shopping.
 **Issues & fixes:** None.
 **Commit:** see the PR into `release/v3.6`
+
+### Step 7 – Daily briefs: database and the receiving function (v3.6, PR 3)
+**Date:** 2026-11-01 16:20
+**Request:** Owner: an IBKR morning brief, a Canada jobs brief and a world news brief, refreshed every morning at 08:00, written by an agent at no extra cost (option A: Claude scheduled tasks), each switchable off in Settings.
+**Why:**
+- **Who writes:** three Claude scheduled tasks on the owner's Claude plan (step 5 sets them up). They can't log in to the database, so they hand their result to a small Edge Function, `brief-ingest`, which is the only way in. It has its *own* password (`BRIEF_INGEST_TOKEN`, entered by the owner in the Supabase dashboard and in the Claude cloud environment). That password can do exactly two things – ask whether to run and store a brief – nothing else in the database.
+- **Off really means off:** each run first asks `brief-ingest` (`action: start`). When the brief is switched off in Settings (or it's not one of its days – IBKR runs Tuesday to Saturday), the answer is "don't run" and the task stops before any research. Storing is refused too.
+- **IBKR without the IBKR connector:** `brief_context()` hands the task the holdings of the newest stored IBKR report – symbol, name and type only, never quantities or values. Without a report it gets VT and VWO plus a "fallback" flag, so the brief adds the note the owner asked for.
+- **Trust nothing from outside:** briefs come from web search, so `_shared/brief.js` keeps only `http(s)` links, drops items without headline or link, and caps the number and length of everything before it is stored. The app shows it as plain text (React escapes it).
+- **Only the latest:** one row per kind (`unique (user_id, kind)`); a new brief replaces the old one and clears `seen_on`, so the amber dot shows. The app may read briefs and set `seen_on` – nothing else (column-level grant).
+- The instructions for the three tasks are kept in `docs/briefs/` so they can be read, reviewed and reproduced.
+
+**Commands run:**
+```bash
+node <scratchpad>/setup.mjs                 # local only: a random brief password in supabase/functions/.env (git-ignored)
+npx supabase stop && npm run db:start && npx supabase db reset   # fresh local stack with the new migration
+docker exec … psql < supabase/tests/database/14_briefs.test.sql  # 16 checks pass
+<scratchpad>/call.sh start-world.json …     # brief-ingest by hand: wrong password refused, start, IBKR not on Sunday, store, switched off
+npx vitest run && npm run lint
+```
+
+**Files changed:**
+- `supabase/migrations/20261101110000_v3_6_briefs.sql` – created: table `briefs`, the three switches in `user_settings`, `brief_context()` and `store_brief()` (server only).
+- `supabase/tests/database/14_briefs.test.sql` – created: only the server writes, the owner reads and marks as seen, no figures in the context.
+- `supabase/functions/_shared/brief.js` (+ `brief.test.js`) – created: checking and trimming a brief, run days, holdings without figures.
+- `supabase/functions/brief-ingest/index.ts` – created: the receiving function.
+- `supabase/config.toml` – modified: `brief-ingest` checks its own password (no user sign-in).
+- `docs/briefs/README.md`, `ibkr.md`, `jobs.md`, `world.md` – created: how the briefs are made, what the owner sets up once, and the three task instructions.
+
+**Result:** The server side is ready; nothing is visible in the app yet (step 4 adds the icons and windows).
+**Issues & fixes:** Locally the owner check found several accounts (left over from the end-to-end tests), so the manual test used a freshly reset local database with one test owner.
+**Commit:** see the PR into `release/v3.6`
