@@ -7,6 +7,7 @@ import SwitchRow from '../settings/SwitchRow.jsx'
 import { disablePush, enablePush, pushPermission, pushSupported } from './pushDevice.js'
 import { describeReminder } from './reminderTime.js'
 import './notifications.css'
+import SettingsSection from '../settings/SettingsSection.jsx'
 
 // "Reminders" in Settings (mockup 5): in-app, push on this device, email,
 // default time, quiet hours, a test button and the latest deliveries.
@@ -60,10 +61,7 @@ function NotificationSettings({ user, settings, update, pushOnThisDevice }) {
       : 'Notifications on this phone or computer, also when the app is closed.'
 
   return (
-    <section className="settings-section" aria-labelledby="reminders-heading">
-      <h2 id="reminders-heading" className="section-label">
-        Reminders
-      </h2>
+    <SettingsSection id="reminders" title="Reminders">
       <div className="settings-card">
         <SwitchRow
           label="In-app pop-ups"
@@ -126,7 +124,7 @@ function NotificationSettings({ user, settings, update, pushOnThisDevice }) {
         </button>
       </div>
       <RecentDeliveries />
-    </section>
+    </SettingsSection>
   )
 }
 

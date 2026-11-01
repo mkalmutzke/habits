@@ -137,7 +137,7 @@ function SignedInApp({ user }) {
             </Suspense>
           )}
           {route.view === 'settings' && route.id !== 'about' && (
-            <SettingsView user={user} settings={settings} update={updateSettings}>
+            <SettingsView user={user} settings={settings} update={updateSettings} habits={habits}>
               <NotificationSettings user={user} settings={settings} update={updateSettings} pushOnThisDevice={pushOnThisDevice} />
             </SettingsView>
           )}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { firstReminderDay, reminderChanges, shapeHabits } from './habitData.js'
+import { firstReminderDay, groupHabits, reminderChanges, shapeHabits } from './habitData.js'
 
 const habit = (id, position, created_at = '2026-10-01T10:00:00Z') => ({ id, name: id, emoji: '📚', position, created_at })
 
@@ -21,6 +21,34 @@ describe('shapeHabits', () => {
 
   it('a missing subtitle becomes an empty text; no check-offs an empty list', () => {
     expect(shapeHabits([habit('a', 1)], [])[0]).toMatchObject({ subtitle: '', completions: [], createdAt: '2026-10-01T10:00:00Z' })
+  })
+})
+
+describe('groupHabits (v3.6)', () => {
+  const today = '2026-11-01'
+  const shaped = (id, groupId, done = false) => ({ id, groupId, completions: done ? [today] : [] })
+  const groupRows = [
+    { id: 'dog', name: 'Dog', position: 2, created_at: '2026-11-01T10:00:00Z' },
+    { id: 'sport', name: 'Sport', position: 1, created_at: '2026-11-01T10:00:00Z' },
+    { id: 'empty', name: 'Empty', position: 3, created_at: '2026-11-01T10:00:00Z' },
+  ]
+
+  it('orders the groups by position, puts the default group last and counts today', () => {
+    const habits = [shaped('walk', 'dog', true), shaped('run', 'sport', true), shaped('bike', 'sport'), shaped('read', null)]
+    expect(groupHabits(habits, groupRows, 'Other', today).map(({ id, name, habits: items, done }) => [id, name, items.map((h) => h.id), done])).toEqual([
+      ['sport', 'Sport', ['run', 'bike'], 1],
+      ['dog', 'Dog', ['walk'], 1],
+      [null, 'Other', ['read'], 0],
+    ])
+  })
+
+  it('leaves out empty groups; a habit of a deleted group is in the default group', () => {
+    const groups = groupHabits([shaped('run', 'gone')], groupRows, 'Misc', today)
+    expect(groups.map((group) => [group.name, group.habits.length])).toEqual([['Misc', 1]])
+  })
+
+  it('shapeHabits keeps the group (empty = default)', () => {
+    expect(shapeHabits([{ ...habit('a', 1), group_id: 'sport' }, habit('b', 2)], []).map((item) => item.groupId)).toEqual(['sport', null])
   })
 })
 

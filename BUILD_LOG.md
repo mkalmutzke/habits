@@ -102,3 +102,66 @@ git add -A && git commit && git push      # on fix/e2e-test-match, into PR #2
 **Result:** The project lives only in `mkalmutzke/habits`; the app runs at https://habits.mkalmutzke.com. PR #2 (Steps 2–3) is merged once all checks are green.
 **Issues & fixes:** None.
 **Commit:** `docs: old repository deleted; session handoff (Step 3)`
+
+### Step 4 – v3.6 requirements and mockups
+**Date:** 2026-11-01 14:30
+**Request:** Owner: plan v3.6 – habit groups, an IBKR news brief, Garmin as a popup, a Canada jobs brief and a world news brief; requirements, open questions and mockups first, no changes yet.
+**Why:** The owner wants to see and approve each change before any code is touched. Decisions made in three rounds of questions and comments on the mockups:
+- **Habit groups:** Sport, Dog, Other to start with; managed in Settings (rename, reorder, add, delete; the default group "Other" can be renamed but not deleted). Every group is folded at app start, empty groups are hidden, and an icon next to ＋ (like the IBKR eye) switches between groups and one list of all habits – every app start begins with groups.
+- **Garmin:** removed from the Week page; a running-figure icon in the header (the three main tabs only) opens it as a window with a Refresh button (at most once per 2 minutes), steps as a bar chart, and a distance column in the activities table.
+- **Briefs (IBKR, Canada jobs, world news):** ready at 08:00 in the app's time zone (IBKR Tuesday–Saturday, the others every day); only the latest brief is kept (shown "from yesterday" if a run fails); an amber dot until it is opened that day, "seen" saved in the database for all devices; each brief has an on/off switch in Settings that hides its icon and stops its morning run.
+- **Who writes the briefs:** Claude scheduled tasks on the owner's existing Claude plan (option A) – no extra cost. Alternatives looked at: the Claude API (costs per use – rejected), a self-hosted agent with a free AI model (free tiers change, may train on the data, more upkeep – rejected). The IBKR brief reads the holdings from the stored IBKR report (read-only by design), not from the live IBKR connector, which can also place orders.
+- **Settings:** all sections become foldable cards, folded at app start.
+
+**Commands run:**
+```bash
+# none in the repository – mockups were made on a private Claude design canvas
+```
+
+**Files changed:**
+- None (the mockups live outside the repository: a private design canvas on claude.ai).
+
+**Result:** Requirements and mockups approved by the owner ("Mockups looking good. Go ahead.").
+**Issues & fixes:** None.
+**Commit:** –
+
+### Step 5 – Habit groups and foldable Settings sections (v3.6, PR 1)
+**Date:** 2026-11-01 15:00
+**Request:** Owner: cluster the habits in groups (Sport, Dog, Other), choose the group in the habit dialog, manage the groups in Settings; organize Settings in sections that start folded.
+**Why:** Many habits in one long list are hard to scan. Design decisions:
+- **Data model:** a new table `habit_groups` (name, position) and a column `habits.group_id`. A habit *without* a group belongs to the default group, whose name is a setting (`user_settings.default_habit_group`, "Other"). So the default group always exists without having to create a row for every account, can be renamed but never deleted, and deleting a group simply moves its habits there (`on delete set null` – the database does it). The composite foreign key `(group_id, user_id)` stops a habit from pointing to someone else's group.
+- **Seeding:** the migration creates "Sport" and "Dog" for the accounts that exist (the owner). New accounts (e.g. in tests) have no groups and see the plain list as before – the group icon only appears once there are groups.
+- **Screen:** `HabitGroups.jsx` shows one foldable bar per group ("x of y" today), each folded at app start and remembered for the visit (the same `useSectionOpen` as the cards). Dragging reorders inside a group. The icon next to ＋ (only while the card is open) switches to one list of all habits; every app start begins with groups (like the IBKR eye).
+- **Settings:** `SettingsSection.jsx` wraps every section in the existing foldable card (`CollapsibleSection`), folded at app start. `HabitGroupSettings.jsx` renames in place (saved when the field is left), reorders with the same drag grip as the habits, adds and deletes groups.
+
+**Commands run:**
+```bash
+npm ci                                   # project packages for the tests (nothing new installed)
+git push origin origin/main:refs/heads/release/v3.6   # integration branch for v3.6
+dockerd &                                # the cloud container's Docker was not running
+npm run dev:push-keys && npm run db:start   # local Supabase stack with the new migration
+# the pg_prove image could not be downloaded here, so the same pgTAP files ran through psql in the database container:
+for f in supabase/tests/database/*.sql; do docker exec -i supabase_db_habit-tracker psql -U postgres -q -t < $f; done
+npx vitest run && npm run lint
+npx playwright test                      # whole end-to-end suite
+```
+
+**Files changed:**
+- `supabase/migrations/20261101100000_v3_6_habit_groups.sql` – created: table `habit_groups`, `habits.group_id`, `user_settings.default_habit_group`, owner's first groups.
+- `supabase/tests/database/13_habit_groups.test.sql` – created: row level security, limits, deleting a group keeps its habits.
+- `src/shared/data/tables.js` – modified: loads `habit_groups`.
+- `src/features/habits/habitData.js` (+ test) – modified: `groupId` on each habit; `groupHabits()` orders the groups, hides empty ones, counts today.
+- `src/features/habits/useHabits.js` – modified: groups, add/rename/delete/move group, habit saves its group, move inside a group.
+- `src/features/habits/HabitGroups.jsx` – created: the foldable group bars.
+- `src/features/habits/HabitSection.jsx` – modified: grouped view and the groups/list icon.
+- `src/features/habits/HabitModal.jsx` (+ test) – modified: Group dropdown (hidden without groups).
+- `src/features/habits/habits.css` – modified: styles for the Group field and the group bars.
+- `src/features/settings/SettingsSection.jsx`, `HabitGroupSettings.jsx` – created; `SettingsView.jsx`, `settings.css`, `src/features/notifications/NotificationSettings.jsx` – modified: foldable sections and group management.
+- `src/App.jsx` – modified: hands the habits to Settings.
+- `src/shared/ui/Icon.jsx` – modified: new icons (groups, list, and the run/newspaper/briefcase/globe/refresh icons for the next steps).
+- `src/features/about/databaseTables.js` – modified: "How it's built" lists the new table and columns.
+- `e2e/habit-groups.spec.js` – created; `e2e/helpers.js`, `reminders.spec.js`, `auth.spec.js`, `shell.spec.js` – modified: open the folded Settings section first.
+
+**Result:** On What's up?, open Habits: the habits appear under "Sport", "Dog" and "Other" (each folded); the small icon next to ＋ shows them all in one list. Settings → Habit groups manages the groups. Every Settings section starts folded.
+**Issues & fixes:** Docker was not running in the cloud container – started it with `dockerd`. The `pg_prove` test image could not be downloaded (blocked), so the pgTAP files ran through `psql` inside the database container instead (all 13 files pass; CI runs them the usual way). Playwright here expected a newer browser build than the installed one – linked the installed headless browser locally (outside the repository).
+**Commit:** see the PR into `release/v3.6`

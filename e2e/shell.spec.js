@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
-import { createUser, openSignedIn } from './helpers.js'
+import { createUser, openSettingsSection, openSignedIn } from './helpers.js'
 
 // Test plan v3 TS-W: the shell – "What's up?", the gear, and a header that
 // never moves when switching tabs (design v3 §2.1).
@@ -21,6 +21,7 @@ test('TS-W1/W2/W3 start page is “What’s up?” with a gear and no message of
   await page.getByRole('link', { name: 'Settings' }).click()
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
   // the architecture overview now lives in Settings, as a page (TS-S6, S7)
+  await openSettingsSection(page, 'About')
   await expect(page.getByText('Version 3.5.0')).toBeVisible()
   await page.getByRole('link', { name: /How it’s built/ }).click()
   await expect(page).toHaveURL(/#\/settings\/about$/)

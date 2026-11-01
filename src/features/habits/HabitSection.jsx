@@ -6,6 +6,8 @@ import Confetti from '../../shared/ui/Confetti.jsx'
 import Icon from '../../shared/ui/Icon.jsx'
 import { hapticCelebrate, hapticLight, hapticSuccess } from '../../shared/utils/haptics.js'
 import EmptyState from './EmptyState.jsx'
+import { groupHabits } from './habitData.js'
+import HabitGroups from './HabitGroups.jsx'
 import HabitModal from './HabitModal.jsx'
 import HabitWeekGrid from './HabitWeekGrid.jsx'
 import { MILESTONES, getStreak } from './streak.js'
@@ -18,9 +20,12 @@ const CONFETTI_MS = 1600
 // "x of y today" and a small ＋; unfolded it shows the habit grid. Folded at
 // every app start (owner, v3.1); open or folded is remembered per page for
 // the visit. Without any habits it shows the welcome card instead.
+// v3.6 (owner): with habit groups, the habits are shown in groups; an icon
+// next to ＋ (only while the card is open) switches to one list of all
+// habits. Every app start begins with the groups, like the IBKR eye.
 function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }) {
   const online = useOnline()
-  const { habits, remindersByHabit, addHabit, editHabit, deleteHabit, moveHabit, toggleToday, loading } = model
+  const { habits, groups = [], remindersByHabit, addHabit, editHabit, deleteHabit, moveHabit, toggleToday, loading } = model
   // a new reminder starts at the default time with the channels that are on
   const reminderDefaults = {
     defaultTime: settings?.default_remind_time ?? '09:00',
@@ -28,7 +33,11 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
     pushOnThisDevice,
   }
   const section = useSectionOpen(`habits-${page}`)
-  const setOpen = section[1]
+  const [open, setOpen] = section
+  const [showGroups, setShowGroups] = useSectionOpen('habits-in-groups', true)
+  const defaultGroupName = settings?.default_habit_group ?? 'Other'
+  const hasGroups = groups.length > 0
+  const groupProps = { groups, defaultGroupName }
   // what the add dialog starts with, plus a counter that gives it a fresh `key` per opening
   const [adding, setAdding] = useState(null)
   const [editing, setEditing] = useState(null)
@@ -76,9 +85,22 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
         summary={habits.length === 0 ? 'none yet' : `${doneToday} of ${habits.length} today`}
         alwaysOpen={habits.length === 0}
         actions={
-          <button type="button" className="section-icon-button add" aria-label="Add a habit" onClick={() => openAdd()} disabled={!online}>
-            <Icon name="plus" />
-          </button>
+          <>
+            {open && hasGroups && habits.length > 0 && (
+              <button
+                type="button"
+                className="section-icon-button"
+                aria-label="Show in groups"
+                aria-pressed={showGroups}
+                onClick={() => setShowGroups(!showGroups)}
+              >
+                <Icon name={showGroups ? 'groups' : 'list'} />
+              </button>
+            )}
+            <button type="button" className="section-icon-button add" aria-label="Add a habit" onClick={() => openAdd()} disabled={!online}>
+              <Icon name="plus" />
+            </button>
+          </>
         }
       >
         {loading && habits.length === 0 ? (
@@ -87,6 +109,15 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
           </p>
         ) : habits.length === 0 ? (
           <EmptyState onAdd={openAdd} />
+        ) : hasGroups && showGroups ? (
+          <HabitGroups
+            groups={groupHabits(habits, groups, defaultGroupName, today)}
+            today={today}
+            onToggle={handleToggle}
+            onEdit={setEditing}
+            onMove={moveHabit}
+            disabled={!online}
+          />
         ) : (
           <HabitWeekGrid habits={habits} today={today} onToggle={handleToggle} onEdit={setEditing} onMove={moveHabit} disabled={!online} />
         )}
@@ -107,6 +138,7 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
           }}
           initialName={adding.name}
           initialEmoji={adding.emoji}
+          {...groupProps}
           {...reminderDefaults}
         />
       )}
@@ -120,6 +152,8 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
           initialEmoji={editing.emoji}
           initialSubtitle={editing.subtitle}
           initialReminder={remindersByHabit.get(editing.id) ?? null}
+          initialGroupId={editing.groupId}
+          {...groupProps}
           {...reminderDefaults}
           onClose={() => setEditing(null)}
           onAdd={(values, reminder) => editHabit(editing.id, values, reminder)}

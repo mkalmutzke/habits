@@ -19,8 +19,26 @@ export function shapeHabits(habitRows, completionRows) {
     emoji: row.emoji,
     position: row.position,
     createdAt: row.created_at,
+    // v3.6: empty = the default group
+    groupId: row.group_id ?? null,
     completions: byHabit.get(row.id) ?? [],
   }))
+}
+
+// v3.6: the groups to show on What's up?, in order – the user's groups by
+// position, then the default group (habits without a group, or whose group no
+// longer exists). Empty groups are left out (owner). Each group:
+// { id (null = default), name, habits, done } – done = ticked today.
+export function groupHabits(habits, groupRows, defaultName, today) {
+  const ordered = [...groupRows].sort(byPosition)
+  const known = new Set(ordered.map((group) => group.id))
+  const groups = [
+    ...ordered.map((group) => ({ id: group.id, name: group.name, habits: habits.filter((habit) => habit.groupId === group.id) })),
+    { id: null, name: defaultName, habits: habits.filter((habit) => !known.has(habit.groupId)) },
+  ]
+  return groups
+    .filter((group) => group.habits.length > 0)
+    .map((group) => ({ ...group, done: group.habits.filter((habit) => habit.completions.includes(today)).length }))
 }
 
 // First day of a reminder set at `now`: today if its time is still to come,
