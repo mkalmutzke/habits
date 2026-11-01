@@ -469,3 +469,94 @@ span.wg-habit {
 .habit-section:has(.wg-row.is-lifted) {
   overflow: visible;
 }
+
+/* v3.6: the habit's group in the habit dialog */
+.group-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.group-field-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* v3.6: habits in groups – one foldable bar per group inside the Habits card */
+.habit-groups {
+  display: flex;
+  flex-direction: column;
+  margin: 0 -10px -10px;
+}
+
+.habit-group {
+  border-top: 1px solid var(--line-soft);
+}
+
+.habit-group-heading {
+  margin: 0;
+  font: inherit;
+}
+
+.habit-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border: none;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.habit-group:last-child:not(.open) .habit-group-toggle {
+  border-radius: 0 0 20px 20px;
+}
+
+.habit-group-toggle:hover {
+  background: color-mix(in srgb, var(--ink) 4%, var(--surface-2));
+}
+
+.habit-group-toggle:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: -2px;
+}
+
+.habit-group-title {
+  flex: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.habit-group-summary {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.habit-group-toggle .section-chevron {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 2;
+  transition: transform 200ms var(--ease-out);
+}
+
+.habit-group.open .section-chevron {
+  transform: rotate(180deg);
+}
+
+.habit-group-body {
+  padding: 4px 10px 10px;
+  animation: section-open 260ms var(--ease-out);
+}

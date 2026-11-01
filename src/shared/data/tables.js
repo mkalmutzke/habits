@@ -6,6 +6,8 @@ export const TABLES = {
   habits: { key: ['id'], order: ['position', 'created_at'] },
   habit_completions: { key: ['habit_id', 'day'], order: ['day'] },
   habit_reminders: { key: ['id'], order: ['created_at'] },
+  // v3.6: groups of habits (Sport, Dog, …)
+  habit_groups: { key: ['id'], order: ['position', 'created_at'] },
   user_settings: { key: ['user_id'], order: ['user_id'] },
   todo_groups: { key: ['id'], order: ['position', 'created_at'] },
   todo_lists: { key: ['id'], order: ['position', 'created_at'] },
