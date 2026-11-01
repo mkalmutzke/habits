@@ -40,7 +40,8 @@ export function average(values) {
 const activitySeconds = (row) => Number(row.moving_s ?? row.duration_s ?? 0)
 
 // Everything one view shows: a row per day, the two averages, and the
-// activities per group (count and time, owner G5) with their total.
+// activities per group (count and time, owner G5; v3.6: and distance) with
+// their total.
 export function summarize(dayRows, activityRows, days) {
   const byDay = new Map(dayRows.map((row) => [row.day, row]))
   const perDay = days.map((day) => ({ day, steps: byDay.get(day)?.steps ?? null, restingHr: byDay.get(day)?.resting_hr ?? null }))
@@ -48,9 +49,10 @@ export function summarize(dayRows, activityRows, days) {
   const groups = new Map()
   for (const row of inView) {
     const group = activityGroup(row.activity_type)
-    const entry = groups.get(group.label) ?? { ...group, match: undefined, count: 0, seconds: 0 }
+    const entry = groups.get(group.label) ?? { ...group, match: undefined, count: 0, seconds: 0, meters: 0 }
     entry.count += 1
     entry.seconds += activitySeconds(row)
+    entry.meters += Number(row.distance_m ?? 0)
     groups.set(group.label, entry)
   }
   const activities = [...groups.values()].sort((a, b) => b.seconds - a.seconds)
@@ -59,7 +61,11 @@ export function summarize(dayRows, activityRows, days) {
     stepsAverage: average(perDay.map((row) => row.steps)),
     restingHrAverage: average(perDay.map((row) => row.restingHr)),
     activities,
-    total: { count: inView.length, seconds: activities.reduce((sum, group) => sum + group.seconds, 0) },
+    total: {
+      count: inView.length,
+      seconds: activities.reduce((sum, group) => sum + group.seconds, 0),
+      meters: activities.reduce((sum, group) => sum + group.meters, 0),
+    },
   }
 }
 
@@ -74,6 +80,15 @@ export const formatCount = (value) => (value === null || value === undefined ? '
 
 // Steps in thousands for the month's small cells: 9412 → "9.4".
 export const formatThousands = (value) => (value === null || value === undefined ? '–' : (value / 1000).toFixed(1))
+
+// v3.6: 24 630 metres → "24.6 km"; no distance (e.g. strength) → "–".
+export const formatDistance = (meters) => (meters > 0 ? `${(meters / 1000).toFixed(1)} km` : '–')
+
+// v3.6: the height of each day's bar in the steps chart, 0–1 of the highest day.
+export function barHeights(perDay) {
+  const highest = Math.max(0, ...perDay.map((row) => row.steps ?? 0))
+  return perDay.map((row) => (highest > 0 && row.steps ? row.steps / highest : 0))
+}
 
 // 7680 seconds → "2:08 h".
 export function formatDuration(seconds) {

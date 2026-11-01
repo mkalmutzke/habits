@@ -1,9 +1,109 @@
-/* Garmin card on the Week page (v3.5). */
+/* Garmin (v3.5; v3.6: a window opened from the header). */
 
-.garmin-section .card-section-body {
+.garmin-body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* v3.6: Refresh next to ✕ */
+.garmin-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.garmin-refresh svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.garmin-refresh:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.garmin-refresh:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.garmin-refresh .spinning {
+  animation: garmin-spin 900ms linear infinite;
+}
+
+@keyframes garmin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* v3.6: the 7 days' steps as bars; the dashed line marks the average. */
+.garmin-bars {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+  height: 128px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+
+.garmin-bars li {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 3px;
+  min-width: 0;
+}
+
+.garmin-bar-value {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.garmin-bar {
+  display: block;
+  height: max(3px, calc(var(--height, 0) * 80px));
+  border-radius: 6px 6px 2px 2px;
+  background: var(--teal);
+}
+
+.garmin-bars li.today .garmin-bar {
+  background: var(--amber);
+}
+
+.garmin-bars li.today .garmin-bar-value,
+.garmin-bars li.today .garmin-day {
+  color: var(--amber);
+}
+
+.garmin-bars .garmin-average {
+  position: absolute;
+  right: 0;
+  left: 0;
+  /* the bars start above the day names (about 18px) */
+  bottom: calc(18px + var(--average) * 80px);
+  border-top: 1px dashed var(--ring);
+  pointer-events: none;
 }
 
 /* Month label on the left, the 7 days | Month toggle on the right. */
@@ -180,6 +280,21 @@
 .garmin-activities tr:first-child th,
 .garmin-activities tr:first-child td {
   border-top: none;
+}
+
+/* v3.6: column titles (Type · Count · Distance · Moving) */
+.garmin-activities thead th {
+  padding-top: 0;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.garmin-activities thead th:not(:first-child) {
+  text-align: right;
 }
 
 .garmin-activities th {

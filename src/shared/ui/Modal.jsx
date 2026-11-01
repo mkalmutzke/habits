@@ -5,7 +5,9 @@ import './Modal.css'
 // keyboard focus inside and closes on Esc without extra code (no UI libraries).
 // Clicking the dimmed area outside the box also closes it.
 // Pass `onSubmit` to make the body a <form> (Enter submits), `wide` for more room.
-function Modal({ open, onClose, title, initialFocusRef, onSubmit, wide = false, children }) {
+// v3.6: `headerActions` sit next to ✕ (e.g. Refresh in the Garmin window),
+// `subtitle` is a small line under the title.
+function Modal({ open, onClose, title, subtitle, headerActions, initialFocusRef, onSubmit, wide = false, className = '', children }) {
   const dialogRef = useRef(null)
   const titleId = useId()
   const Body = onSubmit ? 'form' : 'div'
@@ -27,14 +29,18 @@ function Modal({ open, onClose, title, initialFocusRef, onSubmit, wide = false, 
   return (
     <dialog
       ref={dialogRef}
-      className={wide ? 'modal modal-wide' : 'modal'}
+      className={`${wide ? 'modal modal-wide' : 'modal'} ${className}`.trim()}
       aria-labelledby={titleId}
       onClose={onClose}
       onClick={handleDialogClick}
     >
       <Body className="modal-body" onSubmit={onSubmit}>
         <header className="modal-header">
-          <h2 id={titleId}>{title}</h2>
+          <div className="modal-title">
+            <h2 id={titleId}>{title}</h2>
+            {subtitle && <p className="modal-subtitle">{subtitle}</p>}
+          </div>
+          {headerActions}
           <button type="button" className="icon-button" aria-label="Close" onClick={onClose}>
             ✕
           </button>

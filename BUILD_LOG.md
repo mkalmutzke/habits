@@ -165,3 +165,41 @@ npx playwright test                      # whole end-to-end suite
 **Result:** On What's up?, open Habits: the habits appear under "Sport", "Dog" and "Other" (each folded); the small icon next to ＋ shows them all in one list. Settings → Habit groups manages the groups. Every Settings section starts folded.
 **Issues & fixes:** Docker was not running in the cloud container – started it with `dockerd`. The `pg_prove` test image could not be downloaded (blocked), so the pgTAP files ran through `psql` inside the database container instead (all 13 files pass; CI runs them the usual way). Playwright here expected a newer browser build than the installed one – linked the installed headless browser locally (outside the repository).
 **Commit:** see the PR into `release/v3.6`
+
+### Step 6 – Garmin as a window from the header, with Refresh (v3.6, PR 2)
+**Date:** 2026-11-01 15:40
+**Request:** Owner: remove the Garmin card from the Week page and open Garmin as a window from a sport icon next to the settings icon; add a Refresh button; show steps as a chart and add the distance to the activities table.
+**Why:**
+- **Where:** a running-figure icon before the gear, only on the three main pages (owner: not on inner pages). The window reuses the existing Garmin content; the 7-day averages that the old card header showed now sit in a small line under the window title.
+- **Refresh:** the button calls the existing Edge Function `garmin-sync`. It now accepts two callers – the scheduler (its own token, as before) or the signed-in app (a normal sign-in, checked inside the function). App calls are refused for 2 minutes after the last stored data, whoever fetched it, to stay well inside Garmin's limits; only the scheduler may ask for a whole year. The automatic fetch every 30 minutes is unchanged.
+- **Chart:** the 7 days' steps as bars (value in thousands on top, today amber, a dashed line at the average), drawn with plain HTML and CSS – no chart library needed for seven bars. Screen readers get the same as a list.
+- **Distance:** `garmin_activities.distance_m` was already stored, so the table only adds a column (Type · Count · Distance · Moving); activities without a distance show "–".
+- The shared `Modal` got two small options (`headerActions` next to ✕, and a `subtitle`), and a `ToolButton` component for the round header icons (with the amber dot used in the next steps).
+
+**Commands run:**
+```bash
+git mv src/features/garmin/GarminSection.jsx src/features/garmin/GarminWindow.jsx
+git mv src/features/garmin/GarminSection.test.jsx src/features/garmin/GarminWindow.test.jsx
+npx vitest run && npm run lint
+npx playwright test
+```
+
+**Files changed:**
+- `src/features/garmin/GarminWindow.jsx` (renamed from `GarminSection.jsx`) – the Garmin content in a window, with Refresh.
+- `src/features/garmin/GarminWindow.test.jsx` (renamed) – window, chart, distance, Refresh.
+- `src/features/garmin/GarminDays.jsx` – modified: `StepsChart`.
+- `src/features/garmin/garmin.js` (+ test) – modified: distance per type and in total, `formatDistance`, `barHeights`.
+- `src/features/garmin/useGarmin.js` – modified: `refresh()` calls `garmin-sync` and reloads the tables.
+- `src/features/garmin/garmin.css` – modified: window, Refresh button, chart, table headers.
+- `supabase/functions/garmin-sync/index.ts` – modified: also takes the signed-in app, 2-minute pause.
+- `src/shared/ui/Modal.jsx`, `Modal.css` – modified: `headerActions`, `subtitle`, `className`.
+- `src/shared/ui/ToolButton.jsx` – created; `src/shared/styles/buttons.css` – modified: header icons and the amber dot.
+- `src/AppHeader.jsx` – modified: a slot for header icons before the gear.
+- `src/App.jsx` – modified: the Garmin icon and window.
+- `src/features/week/WeekView.jsx` – modified: no Garmin card.
+- `src/features/about/BlocksDiagram.jsx`, `DeployDiagram.jsx` – modified: describe the window.
+- `e2e/week.spec.js` – modified: Garmin opens from the header on the main pages, not on inner pages; Refresh answers.
+
+**Result:** On What's up?, Week or Lists, tap the running figure next to the gear: the Garmin window opens with the steps chart, heart rate and the activities table with distances. Refresh fetches new data (or says to wait 2 minutes). The Week page shows only Due & overdue and Shopping.
+**Issues & fixes:** None.
+**Commit:** see the PR into `release/v3.6`

@@ -1,5 +1,5 @@
 import { formatShortDate } from '../../shared/utils/date.js'
-import { dayName, formatCount, formatThousands, leadingBlanks } from './garmin.js'
+import { barHeights, dayName, formatCount, formatThousands, leadingBlanks } from './garmin.js'
 
 // The Garmin card's day displays (v3.5): seven numbers for the week view, and
 // the month's steps as calendar cells.
@@ -19,6 +19,32 @@ export function DayRow({ perDay, value, today }) {
         </li>
       ))}
     </ol>
+  )
+}
+
+// v3.6 (owner): the 7 days' steps as a bar chart – value (in thousands) on
+// top, day below, today in amber, a dashed line at the average. Screen
+// readers get the same as a list: day and steps.
+export function StepsChart({ perDay, average, today }) {
+  const heights = barHeights(perDay)
+  const highest = Math.max(0, ...perDay.map((row) => row.steps ?? 0))
+  const averageAt = highest > 0 && average ? average / highest : null
+  return (
+    <div className="garmin-chart">
+      <ol className="garmin-bars" aria-label="Steps per day, last 7 days" style={{ '--average': averageAt ?? 0 }}>
+        {averageAt !== null && <li className="garmin-average" aria-hidden="true" />}
+        {perDay.map((row, index) => (
+          <li key={row.day} className={row.day === today ? 'today' : undefined}>
+            <span className="garmin-bar-value" aria-hidden="true">
+              {formatThousands(row.steps)}
+            </span>
+            <span className="garmin-bar" style={{ '--height': heights[index] }} aria-hidden="true" />
+            <span className="garmin-day">{dayName(row.day, today)}</span>
+            <span className="visually-hidden">: {formatCount(row.steps)} steps</span>
+          </li>
+        ))}
+      </ol>
+    </div>
   )
 }
 
