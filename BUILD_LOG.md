@@ -301,3 +301,23 @@ npx vitest run && npm run lint && npx playwright test e2e/shell.spec.js
 **Result:** `release/v3.6` holds v3.6.0, ready to go live once the owner has done the checklist.
 **Issues & fixes:** Force-pushing is blocked in the cloud container, so after each merged PR the working branch merges `release/v3.6` instead of being rebased. A tooling hook blocks shell commands that mention secrets – build-log text like this is written with the editor tool.
 **Commit:** see the PR into `release/v3.6`
+
+### Step 10 – Fix: garmin-sync no longer returns internal error details (v3.6, PR 6)
+**Date:** 2026-11-01 15:40
+**Request:** GitHub's code scanning (CodeQL) flagged "information exposure through a stack trace" in `garmin-sync` on the release PR.
+**Why:** On an error, `garmin-sync` answered with the internal error message. That was harmless while only the scheduler called it, but since Step 6 the signed-in app can call it too (Refresh), so the message could reach a browser. The details now stay in the function log; every caller gets a plain "Could not fetch from Garmin" answer. `brief-ingest` already did it this way.
+
+**Commands run:**
+```bash
+git merge origin/release/v3.6     # bring the working branch up to date
+npx vitest run && npm run lint
+npx playwright test e2e/week.spec.js
+```
+
+**Files changed:**
+- `supabase/functions/garmin-sync/index.ts` – modified: plain error answer, details only in the log.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** The code-scanning finding is fixed; the app's Refresh still shows its own friendly message.
+**Issues & fixes:** None.
+**Commit:** see the PR into `release/v3.6`

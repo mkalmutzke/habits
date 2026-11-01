@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     console.error(`garmin-sync: ${message}`)
-    return json({ error: message }, 500)
+    // the details stay in the function log; callers (v3.6: also the app) get a plain answer
+    return json({ error: 'Could not fetch from Garmin – see the function log.' }, 500)
   }
 })
