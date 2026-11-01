@@ -321,3 +321,29 @@ npx playwright test e2e/week.spec.js
 **Result:** The code-scanning finding is fixed; the app's Refresh still shows its own friendly message.
 **Issues & fixes:** None.
 **Commit:** see the PR into `release/v3.6`
+
+### Step 11 – v3.6.0 live; the three brief tasks set up and tested
+**Date:** 2026-11-01 16:30
+**Request:** Owner: "merge #6", then "deployment is done" and the brief password set up.
+**Why:** Going live was the owner's call. After that, the briefs need their scheduled tasks; each was started once by hand to prove the whole chain (Claude cloud session → `brief-ingest` → database → app).
+- **Release:** PR #6 (`release/v3.6` → `main`) merged by Claude on the owner's explicit "merge #6"; Vercel deployed v3.6.0. The owner applied the two migrations and deployed `garmin-sync` and `brief-ingest` to production.
+- **Scheduled tasks** (owner's Claude account, fresh cloud session per run, Zurich time, instructions = `docs/briefs/*.md`):
+  - "Habits – World news brief", every day 07:37
+  - "Habits – Canada jobs brief", every day 07:41
+  - "Habits – IBKR morning brief", Tuesday–Saturday 07:45
+  - They carry no connectors (not available for this account – and not wanted: the IBKR brief must not reach the account).
+- **Checks before the test runs:** `brief-ingest` first answered 404 (not yet deployed on the production project), then "not set up" (password missing), then "Unauthorized" (the password in the Claude environment was only 20 characters, the function needs at least 32 – the owner fixed both).
+
+**Commands run:**
+```bash
+curl … brief-ingest  {"action":"start","kind":…}   # only "start" (changes nothing); the password never printed
+# scheduled tasks created with create_trigger and started once each with fire_trigger
+```
+
+**Files changed:**
+- `docs/NEXT_SESSION.md` – modified: v3.6.0 is live, the tasks, open points.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** v3.6.0 runs at https://habits.mkalmutzke.com. Test runs: world news – 8 headlines stored; Canada jobs – 7 items stored (a quiet Sunday); IBKR – stopped at once, "not one of this brief's days" (Sunday), as designed. The globe and briefcase show their briefs with the amber dot.
+**Issues & fixes:** The test runs could not open several news sites (euronews.com, Reuters, AP, BBC) because of the environment's limited network access, so some headlines share one overview link instead of each article's own link. Fix (owner): a broader network access level for the Claude environment, or the news sites added as allowed domains. Each manual test run worked twice because the "this is a test run" note arrived as a second message; the normal morning runs have no such note.
+**Commit:** `docs: v3.6.0 live, brief tasks set up (Step 11)`
