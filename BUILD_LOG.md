@@ -347,3 +347,26 @@ curl … brief-ingest  {"action":"start","kind":…}   # only "start" (changes n
 **Result:** v3.6.0 runs at https://habits.mkalmutzke.com. Test runs: world news – 8 headlines stored; Canada jobs – 7 items stored (a quiet Sunday); IBKR – stopped at once, "not one of this brief's days" (Sunday), as designed. The globe and briefcase show their briefs with the amber dot.
 **Issues & fixes:** The test runs could not open several news sites (euronews.com, Reuters, AP, BBC) because of the environment's limited network access, so some headlines share one overview link instead of each article's own link. Fix (owner): a broader network access level for the Claude environment, or the news sites added as allowed domains. Each manual test run worked twice because the "this is a test run" note arrived as a second message; the normal morning runs have no such note.
 **Commit:** `docs: v3.6.0 live, brief tasks set up (Step 11)`
+
+### Step 12 – Concept: moving Habits to the private VPS (Docker)
+**Date:** 2026-11-02 10:25
+**Request:** Owner: prepare the whole concept for running Habits in Docker on the private VPS, replacing parts with free components where needed, with a picture of the move that includes Trilium, www_cv and www_nika.
+**Why:** The owner wants the app off Vercel and Supabase Cloud and on their own server. Decisions (details and diagrams in the concept page, kept outside the repository like the other design documents):
+- **Self-host Supabase** (Postgres, Auth, REST, Realtime, Edge Functions, Kong – all open source) instead of rewriting to another backend: migrations, functions, row level security and supabase-js keep working. Alternative rejected: PocketBase or a custom API – touches almost every file.
+- **Caddy replaces Vercel** (static `dist/` plus the same security headers); **GitHub Actions + GitHub's image registry** replace Vercel's builds.
+- **Resend stays** (free tier) – mail sent straight from a VPS address usually lands in spam.
+- **Backups become the owner's job:** nightly `pg_dump` + restic off-site, monthly restore test.
+- **Only the shared reverse proxy is public**; the database and backend containers sit on a private Docker network.
+- Deploying and live database changes keep needing the owner's OK. Planned as v4.0 in phases 0–4 with a way back via DNS until the cloud is retired.
+
+**Commands run:**
+```bash
+ls / cat / grep over package.json, vercel.json, supabase/config.toml, supabase/migrations, supabase/functions   # inventory of what runs today
+```
+
+**Files changed:**
+- `BUILD_LOG.md` – modified: this entry. The concept itself is a private page for the owner: https://claude.ai/artifact/QtRXV8ATuJMmZZPbgQXuTn
+
+**Result:** A concept with two diagrams (what moves where; the VPS after the move), a component table, container sizing, security, deploy and backup flow, phase plan, trade-offs and open questions. Nothing on the server, Vercel or Supabase was changed.
+**Issues & fixes:** None. Open questions for the owner (which reverse proxy runs today, VPS size, backup target, IBKR IP restriction) are listed in the concept.
+**Commit:** `docs: VPS move concept (Step 12)`
