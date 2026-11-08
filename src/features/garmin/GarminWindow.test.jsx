@@ -31,12 +31,20 @@ const days = [
   day('2026-10-27', 7365, 54),
   day('2026-10-28', 4180, 51),
 ]
-const activity = (id, key, type, moving_s, duration_s = moving_s, distance_m = null) => ({ id, day: key, activity_type: type, moving_s, duration_s, distance_m })
+const activity = (id, key, type, moving_s, duration_s = moving_s, distance_m = null, elevation_gain_m = null) => ({
+  id,
+  day: key,
+  activity_type: type,
+  moving_s,
+  duration_s,
+  distance_m,
+  elevation_gain_m,
+})
 const activities = [
-  activity('a', '2026-10-22', 'running', 2700, 2700, 8000),
-  activity('b', '2026-10-24', 'trail_running', 3000, 3000, 9500),
+  activity('a', '2026-10-22', 'running', 2700, 2700, 8000, 120),
+  activity('b', '2026-10-24', 'trail_running', 3000, 3000, 9500, 640.4),
   activity('c', '2026-10-25', 'strength_training', null, 1800),
-  activity('d', '2026-10-02', 'road_biking', 7200, 7200, 50000),
+  activity('d', '2026-10-02', 'road_biking', 7200, 7200, 50000, 1150),
 ]
 const garmin = (values = {}) => ({ days, activities, loading: false, refresh: vi.fn(), refreshing: false, ...values })
 
@@ -69,6 +77,13 @@ describe('GarminWindow (v3.5 §2, v3.6 window)', () => {
     expect(rows[1]).toHaveTextContent('52Thu51Fri53Sat50Sun52Mon54Tue51today')
   })
 
+  it('v3.7: elevation climbed in the 7 days, in total and per day', () => {
+    renderWindow()
+    expect(screen.getByText('760')).toBeInTheDocument()
+    const rows = screen.getAllByRole('list')
+    expect(rows[2]).toHaveTextContent('120Thu–Fri640Sat0Sun–Mon–Tue–today')
+  })
+
   it('Refresh asks garmin-sync and shows the answer (v3.6)', async () => {
     const model = garmin({ refresh: vi.fn().mockResolvedValue({ ok: true, message: 'Garmin data updated.' }) })
     const toast = renderWindow(model)
@@ -82,12 +97,13 @@ describe('GarminWindow (v3.5 §2, v3.6 window)', () => {
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled()
   })
 
-  it('activities by type with count, distance (v3.6) and moving time, plus a total (G4, G5)', () => {
+  it('activities by type with count, distance (v3.6), moving time and elevation (v3.7), plus a total (G4, G5)', () => {
     renderWindow()
     const table = screen.getByRole('table')
-    expect(within(table).getByRole('row', { name: /Running/ })).toHaveTextContent('Running2×17.5 km1:35 h')
-    expect(within(table).getByRole('row', { name: /Strength/ })).toHaveTextContent('Strength1×–0:30 h')
-    expect(within(table).getByRole('row', { name: /Total/ })).toHaveTextContent('Total3×17.5 km2:05 h')
+    expect(within(table).getByRole('columnheader', { name: 'Elevation' })).toBeInTheDocument()
+    expect(within(table).getByRole('row', { name: /Running/ })).toHaveTextContent('Running2×17.5 km1:35 h760 m')
+    expect(within(table).getByRole('row', { name: /Strength/ })).toHaveTextContent('Strength1×–0:30 h–')
+    expect(within(table).getByRole('row', { name: /Total/ })).toHaveTextContent('Total3×17.5 km2:05 h760 m')
   })
 
   it('the toggle shows the calendar month with steps per day and only the average heart rate (G10, G11)', async () => {
@@ -99,9 +115,15 @@ describe('GarminWindow (v3.5 §2, v3.6 window)', () => {
     expect(cells).toHaveLength(28)
     expect(cells[1]).toHaveTextContent('20.0')
     expect(screen.getByText('2 Oct: 20’000 steps')).toBeInTheDocument()
+    // v3.7: the month's elevation per day, in the same calendar cells
+    const climbs = within(screen.getByRole('list', { name: 'Elevation per day this month' })).getAllByRole('listitem')
+    expect(climbs).toHaveLength(28)
+    expect(screen.getByText('2 Oct: 1’150 m climbed')).toBeInTheDocument()
+    expect(screen.getByText('1 Oct: no activity')).toBeInTheDocument()
+    expect(screen.getByText('1’910')).toBeInTheDocument()
     // the month's heart rate: only the average, no row of days
-    expect(screen.getAllByRole('list')).toHaveLength(1)
-    expect(within(screen.getByRole('table')).getByRole('row', { name: /Total/ })).toHaveTextContent('Total4×67.5 km4:05 h')
+    expect(screen.getAllByRole('list')).toHaveLength(2)
+    expect(within(screen.getByRole('table')).getByRole('row', { name: /Total/ })).toHaveTextContent('Total4×67.5 km4:05 h1’910 m')
     // the line under the title keeps the 7-day averages
     expect(screen.getByText('7 days: Ø 8’866 steps · Ø 52 bpm')).toBeInTheDocument()
   })

@@ -63,7 +63,9 @@ const typeKey = (row) => {
   return key ? String(key).toLowerCase() : 'other'
 }
 
-// One row per activity: { garmin_id, day, started_at, activity_type, name, distance_m, duration_s, moving_s }.
+// One row per activity: { garmin_id, day, started_at, activity_type, name, distance_m, duration_s, moving_s, elevation_gain_m }.
+// v3.7: elevation gain in metres – Garmin Connect calls it elevationGain, the
+// Health API totalElevationGainInMeters; fieldNames() shows which one arrives.
 export function parseActivities(answer) {
   return listOf(answer)
     .map((row) => ({
@@ -75,6 +77,7 @@ export function parseActivities(answer) {
       distance_m: decimal(pick(row, ['distance', 'distanceInMeters'])),
       duration_s: decimal(pick(row, ['duration', 'durationInSeconds', 'elapsedDuration'])),
       moving_s: decimal(pick(row, ['movingDuration', 'movingDurationInSeconds'])),
+      elevation_gain_m: decimal(pick(row, ['elevationGain', 'totalElevationGainInMeters', 'totalElevationGain', 'elevationGainInMeters'])),
     }))
     .filter((row) => row.garmin_id !== null && row.day)
 }

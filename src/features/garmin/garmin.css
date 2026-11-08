@@ -255,6 +255,11 @@
   text-align: center;
 }
 
+/* v3.7: the elevation grid in teal, so it doesn't read as steps */
+.garmin-month.elevation .garmin-cell:not(.blank) {
+  background: color-mix(in srgb, var(--teal) calc(10% + var(--shade, 0) * 50%), transparent);
+}
+
 .garmin-cell.blank {
   background: none;
 }
@@ -282,7 +287,7 @@
   border-top: none;
 }
 
-/* v3.6: column titles (Type · Count · Distance · Moving) */
+/* v3.6: column titles (Type · Count · Distance · Moving; v3.7: · Elevation) */
 .garmin-activities thead th {
   padding-top: 0;
   font-family: var(--font-mono);
@@ -294,7 +299,17 @@
 }
 
 .garmin-activities thead th:not(:first-child) {
+  padding-left: 10px;
   text-align: right;
+}
+
+.garmin-activities abbr {
+  text-decoration: none;
+}
+
+/* v3.7: the type name stays on one line beside its icon */
+.garmin-activities tbody th {
+  white-space: nowrap;
 }
 
 .garmin-activities th {
@@ -308,6 +323,22 @@
   text-align: right;
   white-space: nowrap;
   color: var(--ink-soft);
+}
+
+/* v3.7: five columns – a little smaller on narrow phones so a row stays on one line */
+@media (max-width: 400px) {
+  .garmin-activities {
+    font-size: 0.74rem;
+  }
+
+  .garmin-activities td,
+  .garmin-activities thead th:not(:first-child) {
+    padding-left: 6px;
+  }
+
+  .garmin-activities .garmin-icon {
+    margin-right: 5px;
+  }
 }
 
 .garmin-total th,

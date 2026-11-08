@@ -20,6 +20,7 @@ const ACTIVITIES = [
     distance: 8123.4,
     duration: 2950.2,
     movingDuration: 2801,
+    elevationGain: 412.8,
   },
   { activityId: 9002, activityType: { typeKey: 'STRENGTH_TRAINING' }, startTimeLocal: '2026-10-27 18:00:00', duration: 2400 },
   { activityName: 'no id' },
@@ -61,6 +62,7 @@ describe('parseActivities', () => {
         distance_m: 8123.4,
         duration_s: 2950.2,
         moving_s: 2801,
+        elevation_gain_m: 412.8,
       },
       {
         garmin_id: 9002,
@@ -71,8 +73,14 @@ describe('parseActivities', () => {
         distance_m: null,
         duration_s: 2400,
         moving_s: null,
+        elevation_gain_m: null,
       },
     ])
+  })
+
+  it('v3.7: also understands the Health API name for the elevation gain', () => {
+    const [row] = parseActivities([{ activityId: 1, startTimeLocal: '2026-10-26 07:00:00', totalElevationGainInMeters: 95 }])
+    expect(row.elevation_gain_m).toBe(95)
   })
 })
 

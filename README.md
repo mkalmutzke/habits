@@ -3,7 +3,7 @@
 A personal app for **habits, to-dos and a shopping list**, mobile-first and installable on
 Android. The start page "What's up?" shows a folded IBKR portfolio card (the day's move; holdings and
 performance when opened; a daily morning news brief), the habits in groups (tap a day to tick it) and every open to-do; the Week page has
-the tasks due soon and the shopping list. Icons in the header open Garmin (steps, resting heart rate and activities for 7 days or the month)
+the tasks due soon and the shopping list. Icons in the header open Garmin (steps, resting heart rate, elevation and activities for 7 days or the month)
 and two daily briefs (Canada jobs, world news), written each morning by Claude scheduled tasks. Data lives in the cloud and updates live on
 all your devices; reminders arrive by push, email or in the app.
 
@@ -53,7 +53,7 @@ src/
     habits/                week grid, habit groups, habit dialog (icons, group, daily reminder), streaks
     todos/                 sources, lists, groups, task details, deleted tasks
     week/, shopping/       Week page, shopping list
-    garmin/                Garmin window from the header: 7 days or month, steps chart, resting heart rate, activities, Refresh
+    garmin/                Garmin window from the header: 7 days or month, steps chart, resting heart rate, elevation, activities, Refresh
     briefs/                daily briefs (IBKR, Canada jobs, world news): windows, amber dot, Settings switches
     notifications/         reminders, push on this device, in-app pop-ups
     settings/, about/      Settings, "How it's built"
