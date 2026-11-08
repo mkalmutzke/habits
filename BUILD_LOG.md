@@ -389,3 +389,30 @@ npx playwright test --trace off          # 68 passed, 3 failed – see Issues
 **Issues & fixes:** Three end-to-end tests failed (habit reminders, reminders, drag a habit to the top on the phone). They fail the same way without this change (checked with `git stash`), so they are an existing problem in the cloud container, not caused by this step. Playwright expected browser build 1248, the container has 1243 → linked locally (not committed). A Prettier run with default settings reformatted files; undone, since the project has no Prettier setup.
 **Still to do (owner, at release):** `npx supabase db push` (new migration) and `npx supabase functions deploy garmin-sync` – on `habits-test` first, then production.
 **Commit:** `feat: Garmin elevation per activity type and per day (Step 12)`
+
+### Step 13 – v3.7.0: version bump and release (v3.7, PR 2)
+**Date:** 2026-11-08 15:10
+**Request:** Owner: "list all steps to update the production version", then "merge v3.7".
+**Why:** "merge v3.7" is the owner's explicit OK to go live. The release preparation (version number, integration branch, PRs) had not been done yet, so it is done now, then merged. The app reads its tables with `select('*')`, so the new app also runs safely if the production database does not have the new column yet – elevation just shows "–" until the owner has run `db push` and deployed `garmin-sync`.
+- Integration branch `release/v3.7` created from `main`; PR working branch → `release/v3.7`, then PR `release/v3.7` → `main`, each merged only with all checks green.
+
+**Commands run:**
+```bash
+npm version 3.7.0 --no-git-tag-version   # package.json and package-lock.json
+npx vitest run                           # 269 tests passed
+npm run lint                             # no warnings
+npx supabase stop --no-backup && npm run db:start   # the local database had stopped while the session paused
+npx playwright test --trace off e2e/shell.spec.js    # 6 passed ("Version 3.7.0")
+git push origin origin/main:refs/heads/release/v3.7
+```
+
+**Files changed:**
+- `package.json`, `package-lock.json` – modified: version 3.7.0.
+- `src/features/about/AboutPage.test.jsx`, `e2e/shell.spec.js` – modified: expect "Version 3.7.0".
+- `README.md` – modified: the Garmin window also shows elevation.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** v3.7.0 merged into `main`; Vercel deploys it to https://habits.mkalmutzke.com.
+**Still to do (owner):** `npx supabase db push` and `npx supabase functions deploy garmin-sync` on production (check the linked project first), then `git tag v3.7.0 && git push origin v3.7.0` on `main`, and link the CLI back to `habits-test`.
+**Issues & fixes:** None so far.
+**Commit:** `chore: release v3.7.0 (Step 13)`
