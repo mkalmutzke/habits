@@ -40,19 +40,29 @@ export function average(values) {
 const activitySeconds = (row) => Number(row.moving_s ?? row.duration_s ?? 0)
 
 // Everything one view shows: a row per day, the two averages, and the
-// activities per group (count and time, owner G5; v3.6: and distance) with
-// their total.
+// activities per group (count and time, owner G5; v3.6: and distance; v3.7:
+// and elevation gain) with their total.
+// v3.7 (owner): each day's elevation is the sum of that day's activities;
+// a day without an activity is null ("–").
 export function summarize(dayRows, activityRows, days) {
   const byDay = new Map(dayRows.map((row) => [row.day, row]))
-  const perDay = days.map((day) => ({ day, steps: byDay.get(day)?.steps ?? null, restingHr: byDay.get(day)?.resting_hr ?? null }))
   const inView = activityRows.filter((row) => row.day >= days[0] && row.day <= days.at(-1))
+  const climbedByDay = new Map()
+  for (const row of inView) climbedByDay.set(row.day, (climbedByDay.get(row.day) ?? 0) + Number(row.elevation_gain_m ?? 0))
+  const perDay = days.map((day) => ({
+    day,
+    steps: byDay.get(day)?.steps ?? null,
+    restingHr: byDay.get(day)?.resting_hr ?? null,
+    elevation: climbedByDay.get(day) ?? null,
+  }))
   const groups = new Map()
   for (const row of inView) {
     const group = activityGroup(row.activity_type)
-    const entry = groups.get(group.label) ?? { ...group, match: undefined, count: 0, seconds: 0, meters: 0 }
+    const entry = groups.get(group.label) ?? { ...group, match: undefined, count: 0, seconds: 0, meters: 0, elevation: 0 }
     entry.count += 1
     entry.seconds += activitySeconds(row)
     entry.meters += Number(row.distance_m ?? 0)
+    entry.elevation += Number(row.elevation_gain_m ?? 0)
     groups.set(group.label, entry)
   }
   const activities = [...groups.values()].sort((a, b) => b.seconds - a.seconds)
@@ -65,6 +75,7 @@ export function summarize(dayRows, activityRows, days) {
       count: inView.length,
       seconds: activities.reduce((sum, group) => sum + group.seconds, 0),
       meters: activities.reduce((sum, group) => sum + group.meters, 0),
+      elevation: activities.reduce((sum, group) => sum + group.elevation, 0),
     },
   }
 }
@@ -83,6 +94,12 @@ export const formatThousands = (value) => (value === null || value === undefined
 
 // v3.6: 24 630 metres → "24.6 km"; no distance (e.g. strength) → "–".
 export const formatDistance = (meters) => (meters > 0 ? `${(meters / 1000).toFixed(1)} km` : '–')
+
+// v3.7: 1240.6 metres climbed → "1’241 m"; none (e.g. strength) → "–".
+export const formatElevation = (meters) => (meters > 0 ? `${formatCount(meters)} m` : '–')
+
+// v3.7: a day's elevation in the small day cells, without the unit: 412.8 → "413".
+export const formatClimb = (meters) => (meters === null || meters === undefined ? '–' : formatCount(meters))
 
 // v3.6: the height of each day's bar in the steps chart, 0–1 of the highest day.
 export function barHeights(perDay) {

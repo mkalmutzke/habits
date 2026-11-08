@@ -15,7 +15,7 @@ export const DATABASE_TABLES = [
   { group: 'IBKR', name: 'portfolio_snapshots', what: 'One snapshot of your IBKR portfolio per trading day (kept 400 days), written by the server', columns: 'as_of · nav · cash · day_change · day_twr · twr (YTD)', since: 'v3.4' },
   { group: 'IBKR', name: 'portfolio_positions', what: 'The holdings of a snapshot (kept 7 days), in CHF', columns: 'symbol · quantity · value_base · prev_close_price · cost_basis_base', since: 'v3.4' },
   { group: 'Garmin', name: 'garmin_days', what: 'One Garmin daily summary per day (kept 365 days), written by the server', columns: 'day · steps · step_goal · resting_hr', since: 'v3.5' },
-  { group: 'Garmin', name: 'garmin_activities', what: 'Your Garmin activities (kept 365 days), written by the server', columns: 'day · activity_type · moving_s · duration_s · distance_m', since: 'v3.5' },
+  { group: 'Garmin', name: 'garmin_activities', what: 'Your Garmin activities (kept 365 days), written by the server', columns: 'day · activity_type · moving_s · duration_s · distance_m · elevation_gain_m (v3.7)', since: 'v3.5' },
   { group: 'Briefs', name: 'briefs', what: 'The latest daily brief of each kind (IBKR, Canada jobs, world news), written by the server', columns: 'kind · for_day · content · seen_on', since: 'v3.6' },
   { group: 'You', name: 'user_settings', what: 'Time zone, reminder channels, quiet hours, show deleted tasks, name of the default habit group, daily briefs on/off', columns: 'time_zone · inapp_on · email_on · quiet_start/end · show_deleted_tasks · default_habit_group · brief_*_on (v3.6)', since: 'v2' },
   { group: 'You', name: 'push_subscriptions', what: 'Devices with push switched on', columns: 'endpoint · device_label · last_used_at', since: 'v2' },

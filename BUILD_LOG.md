@@ -347,3 +347,45 @@ curl … brief-ingest  {"action":"start","kind":…}   # only "start" (changes n
 **Result:** v3.6.0 runs at https://habits.mkalmutzke.com. Test runs: world news – 8 headlines stored; Canada jobs – 7 items stored (a quiet Sunday); IBKR – stopped at once, "not one of this brief's days" (Sunday), as designed. The globe and briefcase show their briefs with the amber dot.
 **Issues & fixes:** The test runs could not open several news sites (euronews.com, Reuters, AP, BBC) because of the environment's limited network access, so some headlines share one overview link instead of each article's own link. Fix (owner): a broader network access level for the Claude environment, or the news sites added as allowed domains. Each manual test run worked twice because the "this is a test run" note arrived as a second message; the normal morning runs have no such note.
 **Commit:** `docs: v3.6.0 live, brief tasks set up (Step 11)`
+
+### Step 12 – Garmin window: elevation per activity type and per day (v3.7, PR 1)
+**Date:** 2026-11-08 13:57
+**Request:** Owner: show the elevation in the Garmin window's activity table (total per activity type for the period) and a daily elevation in the month view, laid out like the steps per day.
+**Why:** Garmin's elevation gain was not stored yet, so this needs a small database change as well as the display.
+- **Decision (owner, asked first):** a day's elevation is the **sum of that day's activities** (not Garmin's all-day "floors climbed"). It matches the table exactly, and the activity field name (`elevationGain`) is well known; Garmin's Personal API name for the all-day value is unconfirmed. Consequence: a day without an activity shows "–", a strength day "0".
+- **Decision (owner):** the 7-day view also gets a row of 7 daily values (like the resting heart rate), not only the month view.
+- **Database:** one new column `garmin_activities.elevation_gain_m` (metres, may be empty) and `store_garmin_data` now stores it. Additive only: the live v3.6 app keeps working before the new app is deployed, and the old input (without elevation) is still accepted.
+- **No full re-fetch needed:** each sync replaces the current month and the last 7 days, so these get their elevation by themselves within 30 minutes of deploying `garmin-sync`. Older months stay without elevation until a full run (`{ "full": true }` with the scheduler token) – the window never shows them, so that is optional.
+- **Window:** a new "Elevation" block (total for the period, then 7 numbers or the month as calendar cells in teal, so they don't read as steps); the activity table gets a fifth column "Elev." (full word as tooltip and for screen readers). The table moved into its own component `ActivityTable.jsx` so `GarminWindow.jsx` stays under ~150 lines. On phones up to 400px wide the table text is a little smaller so every row stays on one line (checked with a screenshot at 360px).
+
+**Commands run:**
+```bash
+npm ci                                   # the fresh container had no node_modules; installs the locked versions, nothing new
+npx vitest run                           # 38 files, 269 tests passed
+npm run lint                             # oxlint: no warnings
+npm run build                            # ok
+dockerd &                                # Docker was not running in the cloud container
+npm run db:start                         # all 19 migrations applied, incl. the new one
+docker exec -i <db container> psql … < supabase/tests/database/*.sql   # all 14 files pass (Garmin: 19/19)
+npx playwright test --trace off          # 68 passed, 3 failed – see Issues
+```
+
+**Files changed:**
+- `supabase/migrations/20261108100000_v3_7_garmin_elevation.sql` – created: the new column and the updated store function.
+- `supabase/tests/database/12_garmin.test.sql` – modified: checks that the elevation is stored.
+- `supabase/functions/_shared/garmin.js` – modified: reads the elevation gain from Garmin's activity list (`elevationGain`, or the Health API's `totalElevationGainInMeters`).
+- `supabase/functions/_shared/garmin.test.js` – modified: tests for both names.
+- `src/features/garmin/garmin.js` – modified: elevation per day, per type and in total; `formatElevation` ("1’241 m") and `formatClimb` ("413").
+- `src/features/garmin/garmin.test.js` – modified: tests for the sums and the formats.
+- `src/features/garmin/GarminWindow.jsx` – modified: the Elevation block; uses the new table component.
+- `src/features/garmin/ActivityTable.jsx` – created: the activity table (moved out of the window) with the Elevation column.
+- `src/features/garmin/GarminDays.jsx` – modified: the month grid shows steps or elevation (`kind="elevation"`).
+- `src/features/garmin/garmin.css` – modified: teal elevation cells, header spacing, smaller table on narrow phones.
+- `src/features/garmin/GarminWindow.test.jsx` – modified: tests for the column, the 7-day row and the month grid.
+- `src/features/about/databaseTables.js` – modified: the About page lists the new column.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** In the Garmin window (running figure in the header): an "Elevation" block under the resting heart rate, and an "Elev." column with a total row in the activity table – for 7 days and for the month. Visible locally with `npm run dev`; live after the owner's release steps below.
+**Issues & fixes:** Three end-to-end tests failed (habit reminders, reminders, drag a habit to the top on the phone). They fail the same way without this change (checked with `git stash`), so they are an existing problem in the cloud container, not caused by this step. Playwright expected browser build 1248, the container has 1243 → linked locally (not committed). A Prettier run with default settings reformatted files; undone, since the project has no Prettier setup.
+**Still to do (owner, at release):** `npx supabase db push` (new migration) and `npx supabase functions deploy garmin-sync` – on `habits-test` first, then production.
+**Commit:** `feat: Garmin elevation per activity type and per day (Step 12)`

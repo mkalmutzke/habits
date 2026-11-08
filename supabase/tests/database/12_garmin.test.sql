@@ -4,7 +4,7 @@ begin;
 set local role postgres;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(18);
+select plan(19);
 
 insert into private.allowed_emails (email) values ('owner@test.local');
 insert into auth.users (id, email, aud, role)
@@ -25,7 +25,7 @@ select is(
   public.store_garmin_data(
     '{"from": "2026-10-26", "to": "2026-10-27"}',
     '[{"day": "2026-10-26", "steps": 8120, "step_goal": 8000, "resting_hr": 52}, {"day": "2026-10-27", "steps": 4100, "resting_hr": null}]',
-    '[{"garmin_id": 101, "day": "2026-10-26", "activity_type": "running", "moving_s": 1800, "duration_s": 1900},
+    '[{"garmin_id": 101, "day": "2026-10-26", "activity_type": "running", "moving_s": 1800, "duration_s": 1900, "elevation_gain_m": 212.5},
       {"garmin_id": 102, "day": "2026-10-27", "activity_type": "strength_training", "duration_s": 2400}]'
   ),
   2,
@@ -33,6 +33,7 @@ select is(
 );
 select is((select user_id from public.garmin_days where day = '2026-10-26'), '11111111-1111-1111-1111-111111111111'::uuid, 'they belong to the allowlisted owner');
 select is((select count(*) from public.garmin_activities), 2::bigint, 'and two activities');
+select is((select elevation_gain_m from public.garmin_activities where garmin_id = 101), 212.5::numeric, 'v3.7: with their elevation gain');
 
 -- the same day again: the newer figures win, one row per day
 select lives_ok(
