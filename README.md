@@ -11,6 +11,7 @@ all your devices; reminders arrive by push, email or in the app.
 "Add to Home Screen".
 
 - How it's built: in the app, Settings → How it's built
+- Workflow diagram of every flow (n8n style): [`docs/workflow/habits-workflow.html`](docs/workflow/habits-workflow.html)
 - Step-by-step history: [`BUILD_LOG.md`](BUILD_LOG.md) · handoff for the next session: [`docs/NEXT_SESSION.md`](docs/NEXT_SESSION.md)
 
 ## Run it locally

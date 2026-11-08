@@ -416,3 +416,25 @@ git push origin origin/main:refs/heads/release/v3.7
 **Still to do (owner):** `npx supabase db push` and `npx supabase functions deploy garmin-sync` on production (check the linked project first), then `git tag v3.7.0 && git push origin v3.7.0` on `main`, and link the CLI back to `habits-test`.
 **Issues & fixes:** None so far.
 **Commit:** `chore: release v3.7.0 (Step 13)`
+
+### Step 14 – Workflow diagram of the whole app (n8n style)
+**Date:** 2026-11-08 15:34
+**Request:** Owner: "Can you create a n8n kind of workflow of the habits app as a reference."
+**Why:** The app now has many moving parts (sign-in, live sync, reminders, IBKR, Garmin, three daily briefs, nightly clean-up, the release path). One picture in the style of n8n, a tool that shows automations as boxes ("nodes") joined by lines, makes it easy to see what starts each flow and where the data goes. The diagram was drawn from the code (migrations, Edge Functions, `src/features/`, `docs/briefs/`, CI file), not from memory. It is a reference drawing only, not a file you can import into n8n, and it changes no app code.
+- 8 lanes (one per flow) and 50 nodes. Colors: trigger, app, server function, table, outside service, decision (IF). Clicking a node shows what it does, the file it lives in, and what it connects to.
+- It uses the app's own colors and fonts, and works in dark and light mode and on a phone (zoom buttons, scrolling canvas).
+
+**Commands run:**
+```bash
+grep -n "cron.schedule\|create table" supabase/migrations/*.sql   # find every scheduler job and table
+node scratchpad/shot.js                                           # one screenshot with Playwright to check the drawing
+```
+
+**Files changed:**
+- `docs/workflow/habits-workflow.html` – created: the diagram (one self-contained page, no packages).
+- `README.md` – modified: link to the diagram.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Open `docs/workflow/habits-workflow.html` in a browser, or the published page https://claude.ai/artifact/Wu2zkmZyvUM8gxZTtVhk5i (private to the owner).
+**Issues & fixes:** The first draft said six nightly clean-up jobs; the migrations have five (the email-change clean-up runs inside a function, not on a schedule) – corrected before committing. One-line lanes were too short for two-line labels – made taller.
+**Commit:** `docs: add n8n-style workflow diagram of the app (Step 14)`

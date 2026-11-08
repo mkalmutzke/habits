@@ -1,0 +1,364 @@
+<title>Habits Workflow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: an n8n-style node canvas (lanes = flows, left to right = order) with a details panel beside it.
+   Colors and fonts come from the app itself (src/shared/styles/base.css), dark first. */
+:root {
+  --bg: #13120f; --canvas: #181713; --dot: #2c2a25; --surface: #1c1a17; --surface-2: #24221e;
+  --ink: #f1ede6; --ink-soft: #a39d93; --ink-faint: #8a857d; --line: #2f2c27; --edge: #6e6a64;
+  --c-trigger: #c68a3d; --c-app: #4fa6c4; --c-fn: #ff7a59; --c-db: #5fbf86; --c-ext: #a497e0; --c-logic: #f2c14e;
+  --lane: rgb(241 237 230 / 0.025); --lane-line: rgb(241 237 230 / 0.07);
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Archivo', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #f4f4f2; --canvas: #fbfbfa; --dot: #d9d7d1; --surface: #ffffff; --surface-2: #f0efec;
+  --ink: #1d1b17; --ink-soft: #57524a; --ink-faint: #6b665e; --line: #dedad2; --edge: #9a958c;
+  --c-trigger: #a8691f; --c-app: #2a7f9e; --c-fn: #c9532f; --c-db: #2f8f5a; --c-ext: #6a5bb5; --c-logic: #9a720c;
+  --lane: rgb(29 27 23 / 0.025); --lane-line: rgb(29 27 23 / 0.08); color-scheme: light } }
+:root[data-theme="light"] {
+  --bg: #f4f4f2; --canvas: #fbfbfa; --dot: #d9d7d1; --surface: #ffffff; --surface-2: #f0efec;
+  --ink: #1d1b17; --ink-soft: #57524a; --ink-faint: #6b665e; --line: #dedad2; --edge: #9a958c;
+  --c-trigger: #a8691f; --c-app: #2a7f9e; --c-fn: #c9532f; --c-db: #2f8f5a; --c-ext: #6a5bb5; --c-logic: #9a720c;
+  --lane: rgb(29 27 23 / 0.025); --lane-line: rgb(29 27 23 / 0.08); color-scheme: light }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.5 }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 28px; display: grid; gap: 14px }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 1.6rem; margin: 0; letter-spacing: -0.01em }
+.lead { margin: 2px 0 0; color: var(--ink-soft); max-width: 68ch }
+.tag { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint) }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-soft) }
+.legend span { display: inline-flex; align-items: center; gap: 6px }
+.legend i { width: 10px; height: 10px; border-radius: 3px; background: var(--c) }
+.legend .dash { width: 18px; height: 0; border-top: 2px dashed var(--edge); border-radius: 0; background: none }
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start }
+@media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr) } }
+
+.stage { position: relative; border: 1px solid var(--line); border-radius: 12px; background: var(--canvas); overflow: hidden; min-width: 0 }
+.tools { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 3px }
+.tools button { font: 500 13px var(--font-mono); color: var(--ink); background: none; border: 0; border-radius: 5px; min-width: 30px; height: 28px; cursor: pointer }
+.tools button:hover { background: var(--surface-2) }
+.scroller { overflow: auto; height: min(78vh, 900px); min-height: 420px;
+  background-image: radial-gradient(var(--dot) 1px, transparent 1.2px); background-size: 20px 20px }
+.sizer { position: relative }
+.world { position: absolute; top: 0; left: 0; transform-origin: 0 0 }
+svg.edges { position: absolute; inset: 0; overflow: visible; pointer-events: none }
+.edge { fill: none; stroke: var(--edge); stroke-width: 1.6 }
+.edge.dash { stroke-dasharray: 5 5 }
+.edge.hot { stroke: var(--ink); stroke-width: 2.2 }
+.elabel { font: 500 11px var(--font-mono); fill: var(--ink-soft) }
+.lane-bg { fill: var(--lane); stroke: var(--lane-line) }
+
+.note { position: absolute; max-width: 560px; pointer-events: none }
+.note b { font-family: var(--font-display); font-weight: 600; font-size: 15px; display: block }
+.note span { color: var(--ink-faint); font-size: 12.5px }
+
+.node { position: absolute; width: 132px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: none; border: 0; padding: 0; color: var(--ink); font: inherit; cursor: pointer; text-align: center }
+.box { position: relative; width: 84px; height: 84px; border-radius: 12px; background: var(--surface);
+  border: 1.5px solid color-mix(in srgb, var(--c) 55%, var(--line)); display: grid; place-items: center;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.15); transition: transform .15s, border-color .15s }
+.box svg { width: 34px; height: 34px; stroke: var(--c); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round }
+.trigger .box { border-radius: 42px 12px 12px 42px }
+.trigger .box::before { content: ""; position: absolute; left: -15px; top: 50%; translate: 0 -50%; width: 10px; height: 10px;
+  background: var(--c); clip-path: polygon(55% 0, 0 58%, 45% 58%, 35% 100%, 100% 40%, 55% 40%) }
+.h { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--edge); top: 50%; translate: 0 -50% }
+.h.in { left: -6px } .h.out { right: -6px }
+.h.t { top: 30% } .h.f { top: 70% }
+.trigger .h.in { display: none }
+.lbl { font-weight: 500; font-size: 13px; line-height: 1.25; text-wrap: balance }
+.sub { font: 400 11px/1.3 var(--font-mono); color: var(--ink-faint); margin-top: -3px }
+.node:hover .box { transform: translateY(-2px) }
+.node:focus-visible { outline: none }
+.node:focus-visible .box, .node.sel .box { border-color: var(--c); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 25%, transparent) }
+.node.dim { opacity: .35 }
+.c-trigger { --c: var(--c-trigger) } .c-app { --c: var(--c-app) } .c-fn { --c: var(--c-fn) }
+.c-db { --c: var(--c-db) } .c-ext { --c: var(--c-ext) } .c-logic { --c: var(--c-logic) }
+
+aside { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 18px; display: grid; gap: 12px; min-width: 0; position: sticky; top: 12px }
+aside h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; margin: 0; text-wrap: balance }
+.kind { display: inline-flex; align-items: center; gap: 6px; font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--c) }
+.kind i { width: 8px; height: 8px; border-radius: 2px; background: var(--c) }
+aside p { margin: 0; color: var(--ink-soft) }
+.k { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); margin-bottom: 4px }
+code, .code { font-family: var(--font-mono); font-size: 12px; word-break: break-word }
+.code { display: block; background: var(--surface-2); border-radius: 6px; padding: 6px 8px; color: var(--ink) }
+ul.links { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px }
+ul.links button { all: unset; cursor: pointer; color: var(--ink); border-bottom: 1px dotted var(--ink-faint); font-size: 13px }
+ul.links button:focus-visible { outline: 2px solid var(--c-app); outline-offset: 2px }
+ul.links small { color: var(--ink-faint); font-family: var(--font-mono); font-size: 11px }
+.foot { color: var(--ink-faint); font-size: 12px }
+@media (prefers-reduced-motion: reduce) { .box { transition: none } .node:hover .box { transform: none } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Habits Workflow</h1>
+      <p class="lead">Every moving part of the Habits app drawn as an n8n-style workflow. Each lane is one flow, read left to right. Click a node to see what it does and where it lives in the code.</p>
+    </div>
+    <span class="tag">v3.7.0 · 8 Nov 2026 · times in UTC unless noted</span>
+  </header>
+  <div class="legend" aria-label="Legend">
+    <span class="c-trigger"><i></i>Trigger</span>
+    <span class="c-app"><i></i>App (browser / phone)</span>
+    <span class="c-fn"><i></i>Edge Function or database function</span>
+    <span class="c-db"><i></i>Database table</span>
+    <span class="c-ext"><i></i>Outside service</span>
+    <span class="c-logic"><i></i>IF / decision</span>
+    <span><i class="dash"></i>reads data from another flow</span>
+  </div>
+  <div class="main">
+    <div class="stage">
+      <div class="tools" role="toolbar" aria-label="Zoom">
+        <button id="zout" type="button" aria-label="Zoom out">−</button>
+        <button id="zfit" type="button" aria-label="Fit to width">fit</button>
+        <button id="zin" type="button" aria-label="Zoom in">+</button>
+      </div>
+      <div class="scroller" id="scroller">
+        <div class="sizer" id="sizer"><div class="world" id="world"><svg class="edges" id="edges" aria-hidden="true"></svg></div></div>
+      </div>
+    </div>
+    <aside id="panel" aria-live="polite"></aside>
+  </div>
+  <p class="foot">Source of truth: <code>supabase/migrations/</code> (tables, scheduler), <code>supabase/functions/</code> (Edge Functions), <code>src/features/</code> (app), <code>docs/briefs/</code> (brief tasks), <code>.github/workflows/ci.yml</code> (checks). This page is a reference drawing, not a runnable n8n file.</p>
+</div>
+
+<script>
+const ICON = {
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  phone: '<rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+  pointer: '<path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  db: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
+  code: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+  cloud: '<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>',
+  branch: '<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+  inbox: '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  radio: '<circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>',
+  monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+  x: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+  check: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  deploy: '<polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  trend: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  terminal: '<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>',
+  merge: '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+  git: '<circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/>'
+}
+const KIND = { trigger: 'Trigger', app: 'App', fn: 'Function', db: 'Database', ext: 'Outside service', logic: 'Decision' }
+
+// Lanes: title, one-line explanation, number of node rows.
+const LANES = [
+  { id: 'auth', title: 'Sign in', text: 'Only the owner\'s email address may create an account.', rows: 2 },
+  { id: 'use', title: 'Daily use, live on every device', text: 'Every change is saved once and pushed to the other devices.', rows: 1 },
+  { id: 'rem', title: 'Reminders', text: 'To-do reminders and daily habit reminders by push, email or in the app.', rows: 3 },
+  { id: 'ibkr', title: 'IBKR portfolio', text: 'Read-only snapshot of the brokerage account for the What\'s up? card.', rows: 1 },
+  { id: 'garmin', title: 'Garmin', text: 'Steps, resting heart rate, elevation and activities.', rows: 2 },
+  { id: 'brief', title: 'Daily briefs', text: 'Three Claude scheduled tasks write the IBKR, Canada jobs and world news briefs.', rows: 2 },
+  { id: 'clean', title: 'Nightly clean-up', text: 'Scheduler jobs that delete old rows so the database stays small.', rows: 1 },
+  { id: 'ship', title: 'Build and ship', text: 'How a change gets from a branch to habits.mkalmutzke.com.', rows: 2 }
+]
+
+// Nodes: id, lane, col, row (within lane), kind, icon, label, sub, does, code.
+const N = [
+  // Sign in
+  ['a1','auth',0,0,'trigger','phone','Owner opens the app','PWA, Android','The app always starts at the sign-in screen until there is a valid session on this device.','src/App.jsx'],
+  ['a2','auth',1,0,'app','mail','Email + 8-digit code','account/','The owner types their email address and gets an 8-digit code by email. No passwords.','src/features/account/'],
+  ['a3','auth',2,0,'ext','lock','Supabase Auth','sign-in service','Supabase checks the code and sends sign-in emails. Locally they land in Mailpit (http://127.0.0.1:54324).','supabase/config.toml, supabase/templates/'],
+  ['a4','auth',3,0,'logic','branch','Is the address allowed?','auth hook','Database hook "before user created": refuses every address that is not in private.allowed_emails, even through the admin API.','supabase/migrations/20261011210000_v3_2_owner_only.sql'],
+  ['a5','auth',4,0,'app','check','Signed in','session token','The session token is kept on the device. Every database request carries it, so row level security knows who is asking.','src/shared/data/supabaseClient.js'],
+  ['a6','auth',5,0,'app','monitor','Load data, cached on device','TanStack Query','Tables are loaded through TanStack Query and kept in localStorage, so the app opens instantly and works for a while offline.','src/shared/data/DataProvider.jsx'],
+  ['a7','auth',4,1,'app','x','Refused','no account','Any other address gets no account and cannot sign in.','supabase/migrations/20261011210000_v3_2_owner_only.sql'],
+  // Daily use
+  ['b1','use',0,0,'trigger','pointer','Tick a habit, edit a to-do','or a shopping item','Any change in the app: tick a day in the habit grid, add or complete a task, add a shopping item, change Settings.','src/features/habits/, todos/, shopping/'],
+  ['b2','use',1,0,'app','code','Save with supabase-js','optimistic update','The screen updates at once; the change is written through supabase-js in the background.','src/shared/data/'],
+  ['b3','use',2,0,'db','db','Postgres tables','row level security','habits, habit_completions, habit_groups, todo_*, shopping_items, user_settings … Row level security lets each user see only their own rows.','supabase/migrations/'],
+  ['b4','use',3,0,'fn','code','broadcast_change()','table trigger','A trigger on every table sends each insert, update or delete to the private Realtime topic of that user.','supabase/migrations/20261010134214_v2_foundation_and_habits.sql'],
+  ['b5','use',4,0,'ext','radio','Realtime','topic user:<id>','Supabase Realtime delivers the message. Only the owner may listen on their topic (row level security on realtime.messages).','src/shared/data/realtime.js'],
+  ['b6','use',5,0,'app','phone','Other devices reload','that table only','Each open device gets the message and reloads just the affected table when it is idle.','src/shared/data/realtime.js, refresh.js'],
+  // Reminders
+  ['c1','rem',0,0,'trigger','clock','Every minute','pg_cron * * * * *','The database scheduler calls send-reminders with pg_net every minute.','supabase/migrations/20261010164525_v2_reminders.sql'],
+  ['c2','rem',1,0,'fn','code','send-reminders','Edge Function','Claims the due to-do reminders and daily habit reminders, so two runs never send the same one twice.','supabase/functions/send-reminders/index.ts'],
+  ['c3','rem',2,0,'logic','branch','Due and not quiet hours?','quiet_start / end','Inside the owner\'s quiet hours a reminder waits until they end. Otherwise it is sent on every channel that is switched on.','supabase/functions/_shared/schedule.js'],
+  ['c4','rem',3,0,'ext','bell','Web Push','VAPID','One push message to each registered device (push_subscriptions).','supabase/functions/_shared/push.ts, webpush.js'],
+  ['c6','rem',4,0,'app','bell','Notification on the phone','service worker','The service worker receives the push and shows the notification, even when the app is closed.','src/sw.js'],
+  ['c1b','rem',0,1,'trigger','pointer','"Send a test notification"','Settings button','Button in Settings → Notifications. At most one test per minute.','src/features/notifications/NotificationSettings.jsx'],
+  ['c2b','rem',1,1,'fn','code','send-test-notification','Edge Function','Checks who is signed in and sends one push to each of their devices, plus an email if email is switched on.','supabase/functions/send-test-notification/index.ts'],
+  ['c5','rem',3,1,'ext','mail','Resend','email API','Reminder email from …@habits.mkalmutzke.com, with a daily limit.','supabase/functions/_shared/email.ts, emailTemplate.js'],
+  ['c8','rem',4,1,'ext','inbox','Owner\'s inbox','','The email arrives in the owner\'s mailbox.',''],
+  ['c7','rem',3,2,'db','db','notification_log','+ reminder status','Every delivery is logged. Each reminder is marked sent, to be retried, or failed. The in-app pop-up reads the same reminders.','supabase/migrations/20261010164525_v2_reminders.sql'],
+  // IBKR
+  ['d1','ibkr',0,0,'trigger','clock','Tue–Sat 05:30','retry 07:30','Two scheduler jobs, ibkr-sync and ibkr-sync-retry, on the mornings after each business day.','supabase/migrations/20261028100000_v3_4_portfolio.sql'],
+  ['d2','ibkr',1,0,'fn','code','ibkr-sync','Edge Function','Fetches two IBKR Flex reports: the last business day and the year to date. Logs only dates, counts and errors, never figures.','supabase/functions/ibkr-sync/index.ts'],
+  ['d3','ibkr',2,0,'ext','trend','IBKR Flex Web Service','read-only token','Interactive Brokers returns the reports. The token expires around 28 Oct 2027.','supabase/functions/_shared/flexClient.ts, flex.js'],
+  ['d4','ibkr',3,0,'fn','code','store_portfolio_snapshot()','database function','Stores both reports as one snapshot.','supabase/migrations/20261028100000_v3_4_portfolio.sql'],
+  ['d5','ibkr',4,0,'db','db','portfolio_snapshots','+ portfolio_positions','Newest snapshot plus holdings. Snapshots older than 400 days are deleted at night.','supabase/migrations/20261028100000_v3_4_portfolio.sql'],
+  ['d6','ibkr',5,0,'app','trend','IBKR card','What\'s up?','Folded card with the day\'s move. Open it for holdings and time-weighted return.','src/features/portfolio/'],
+  // Garmin
+  ['e1','garmin',0,0,'trigger','clock','Every 30 minutes',':07 and :37','Scheduler job garmin-sync.','supabase/migrations/20261028120000_v3_5_garmin.sql'],
+  ['e1b','garmin',0,1,'trigger','pointer','Refresh button','Garmin window','The signed-in owner can refresh by hand, at most once every 2 minutes, to stay inside Garmin\'s limits.','src/features/garmin/useGarmin.js'],
+  ['e2','garmin',1,0.5,'fn','code','garmin-sync','Edge Function','Reads daily summaries and activities for this month and the last 7 days. The whole last year on the first run.','supabase/functions/garmin-sync/index.ts'],
+  ['e3','garmin',2,0.5,'ext','activity','Garmin Connect API','personal API key','Garmin returns the daily summaries and activities. The key expires around 28 Oct 2027.','supabase/functions/_shared/garminClient.ts, garmin.js'],
+  ['e4','garmin',3,0.5,'fn','code','store_garmin_data()','database function','Stores days and activities, replacing earlier values for the same day.','supabase/migrations/20261028120000_v3_5_garmin.sql'],
+  ['e5','garmin',4,0.5,'db','db','garmin_days','+ garmin_activities','Steps, resting heart rate, elevation (v3.7) and activities. Kept for 365 days.','supabase/migrations/20261108100000_v3_7_garmin_elevation.sql'],
+  ['e6','garmin',5,0.5,'app','activity','Garmin window','header icon','7 days or the month: steps chart, resting heart rate, elevation, distances, activities.','src/features/garmin/'],
+  // Briefs
+  ['f1','brief',0,0,'trigger','clock','Claude scheduled task','07:37 / 07:41 / 07:45 Zurich','World news daily 07:37, Canada jobs daily 07:41, IBKR Tue–Sat 07:45. Each run starts a fresh Claude cloud session.','docs/briefs/README.md'],
+  ['f2','brief',1,0,'fn','code','brief-ingest','action: start','Asks whether to run. The IBKR brief also gets the holdings of the newest IBKR report (symbol and name only), or VT and VWO as a fallback.','supabase/functions/brief-ingest/index.ts'],
+  ['f3','brief',2,0,'logic','branch','run: true?','switch on + right day','False when the brief is switched off in Settings or today is not one of its days.','supabase/functions/brief-ingest/index.ts'],
+  ['f4','brief',3,0,'ext','search','Web search','research','Claude researches the news and builds the brief as JSON: sections of headlines, each with a link and a source.','docs/briefs/world.md, jobs.md, ibkr.md'],
+  ['f5','brief',4,0,'fn','code','brief-ingest','action: store','Checks and trims the brief (only http(s) links, texts capped) and stores it as today\'s brief, replacing the previous one.','supabase/functions/_shared/brief.js'],
+  ['f6','brief',5,0,'db','db','briefs','one per kind per day','Today\'s brief for each kind. Only brief-ingest can write here, never the app.','supabase/migrations/20261101110000_v3_6_briefs.sql'],
+  ['f7','brief',6,0,'app','file','Amber dot → brief window','header / IBKR card','An amber dot shows until the brief has been opened that day.','src/features/briefs/'],
+  ['f8','brief',3,1,'app','x','Stop','almost no usage','The task ends at once, with no research.',''],
+  // Clean-up
+  ['g1','clean',0,0,'trigger','clock','Every night','03:17 – 03:33','Five pg_cron jobs, a few minutes apart (03:17, 03:23, 03:27, 03:29, 03:33).','supabase/migrations/'],
+  ['g2','clean',1,0,'db','trash','Delete old rows','5 jobs','notification_log after 30 days · deleted tasks after 10 days · completed tasks after 360 days · portfolio snapshots after 400 days · Garmin days after 365 days.','supabase/migrations/*.sql (cron.schedule)'],
+  // Ship
+  ['h1','ship',0,0,'trigger','git','Push a branch / open a PR','one PR per step','Work happens on a branch. Each step gets a pull request into the release branch (e.g. release/v3.7).','CLAUDE.md'],
+  ['h2','ship',1,0,'fn','check','GitHub Actions CI','5 jobs','Lint, unit tests, build, npm audit · gitleaks · Semgrep · pgTAP database tests · Playwright end-to-end tests on a local stack.','.github/workflows/ci.yml'],
+  ['h3','ship',2,0,'logic','branch','All checks green?','','Only a green pull request may be merged.','.github/workflows/ci.yml'],
+  ['h4','ship',3,0,'app','merge','Merge','step → release → main','The step PR goes into the release branch; the release PR goes into main once the owner gives the OK to go live.','BUILD_LOG.md'],
+  ['h5','ship',4,0,'ext','deploy','Vercel','build + deploy','Vercel builds every push. main goes live; other branches get a preview.','vercel.json'],
+  ['h6','ship',5,0,'app','globe','habits.mkalmutzke.com','live app','The new version is live. Installed apps update through the service worker.','README.md'],
+  ['h7','ship',4,1,'ext','terminal','Owner runs Supabase CLI','db push · functions deploy','Database migrations and Edge Functions go to production by hand from the owner\'s computer. Check the linked project first.','supabase/.temp/project-ref'],
+  ['h8','ship',3,1,'app','x','Fix and push again','','A red check means fixing the cause, never skipping the test.','']
+].map(([id, lane, col, row, kind, icon, label, sub, does, code]) => ({ id, lane, col, row, kind, icon, label, sub, does, code }))
+
+// Edges: from, to, label, port ('t' true / 'f' false on IF nodes), dash.
+const E = [
+  ['a1','a2'],['a2','a3'],['a3','a4'],['a4','a5','yes','t'],['a4','a7','no','f'],['a5','a6'],
+  ['b1','b2'],['b2','b3'],['b3','b4'],['b4','b5'],['b5','b6'],
+  ['c1','c2'],['c2','c3'],['c3','c4','send','t'],['c3','c5','send','t'],['c3','c7','log','f'],['c4','c6'],['c5','c8'],
+  ['c1b','c2b'],['c2b','c4'],['c2b','c5'],
+  ['d1','d2'],['d2','d3'],['d3','d4'],['d4','d5'],['d5','d6'],
+  ['e1','e2'],['e1b','e2'],['e2','e3'],['e3','e4'],['e4','e5'],['e5','e6'],
+  ['f1','f2'],['f2','f3'],['f3','f4','true','t'],['f3','f8','false','f'],['f4','f5'],['f5','f6'],['f6','f7'],
+  ['d5','f2','holdings',null,true],
+  ['g1','g2'],
+  ['h1','h2'],['h2','h3'],['h3','h4','true','t'],['h3','h8','false','f'],['h4','h5'],['h4','h7'],['h5','h6']
+].map(([from, to, label, port, dash]) => ({ from, to, label, port, dash }))
+
+// Geometry
+const X0 = 70, COL = 200, BOX = 84, NODE_W = 132, ROW = 150, HEAD = 64, PAD = 28, GAP = 18
+let y = 20
+const laneY = {}
+for (const l of LANES) { l.y = y; l.h = HEAD + l.rows * ROW; laneY[l.id] = l; y += l.h + GAP }
+const W = X0 + 7 * COL + 40, H = y
+const byId = Object.fromEntries(N.map(n => [n.id, n]))
+for (const n of N) {
+  const l = laneY[n.lane]
+  n.x = X0 + n.col * COL                      // left edge of the 132px node
+  n.bx = n.x + (NODE_W - BOX) / 2              // left edge of the box
+  n.by = l.y + HEAD + n.row * ROW              // top of the box
+}
+
+const world = document.getElementById('world'), svg = document.getElementById('edges')
+const sizer = document.getElementById('sizer'), scroller = document.getElementById('scroller')
+world.style.width = W + 'px'; world.style.height = H + 'px'
+svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', W); svg.setAttribute('height', H)
+const NS = 'http://www.w3.org/2000/svg'
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+
+for (const l of LANES) {
+  const r = document.createElementNS(NS, 'rect')
+  Object.entries({ x: 16, y: l.y, width: W - 32, height: l.h, rx: 14, class: 'lane-bg' }).forEach(([k, v]) => r.setAttribute(k, v))
+  svg.appendChild(r)
+  const note = document.createElement('div')
+  note.className = 'note'; note.style.left = '34px'; note.style.top = (l.y + 12) + 'px'
+  note.innerHTML = `<b>${esc(l.title)}</b><span>${esc(l.text)}</span>`
+  world.appendChild(note)
+}
+
+const isIf = n => n.kind === 'logic'
+const edgeEls = []
+for (const e of E) {
+  const a = byId[e.from], b = byId[e.to]
+  const x1 = a.bx + BOX + 6, y1 = a.by + BOX * (isIf(a) && e.port ? (e.port === 't' ? 0.3 : 0.7) : 0.5)
+  const x2 = b.bx - 6, y2 = b.by + BOX / 2
+  const d = Math.max(50, (x2 - x1) / 2)
+  const p = document.createElementNS(NS, 'path')
+  p.setAttribute('d', `M${x1},${y1} C${x1 + d},${y1} ${x2 - d},${y2} ${x2},${y2}`)
+  p.setAttribute('class', 'edge' + (e.dash ? ' dash' : ''))
+  p.setAttribute('marker-end', 'url(#arrow)')
+  svg.appendChild(p); edgeEls.push({ e, p })
+  if (e.label) {
+    const t = document.createElementNS(NS, 'text')
+    t.setAttribute('class', 'elabel')
+    if (e.dash) { t.setAttribute('x', x1 + 18); t.setAttribute('y', y1 + 30) }
+    else { t.setAttribute('x', x1 + 10); t.setAttribute('y', y1 + (e.port === 'f' ? 16 : -7)) }
+    t.textContent = e.label; svg.appendChild(t)
+  }
+}
+const defs = document.createElementNS(NS, 'defs')
+defs.innerHTML = '<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill: var(--edge)"/></marker>'
+svg.prepend(defs)
+
+const nodeEls = {}
+for (const n of N) {
+  const el = document.createElement('button')
+  el.type = 'button'
+  el.className = `node c-${n.kind}` + (n.kind === 'trigger' ? ' trigger' : '')
+  el.style.left = n.x + 'px'; el.style.top = n.by + 'px'
+  const outs = isIf(n) ? '<span class="h out t"></span><span class="h out f"></span>' : '<span class="h out"></span>'
+  el.innerHTML = `<span class="box"><span class="h in"></span>${outs}<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[n.icon]}</svg></span>` +
+    `<span class="lbl">${esc(n.label)}</span>` + (n.sub ? `<span class="sub">${esc(n.sub)}</span>` : '')
+  el.setAttribute('aria-label', `${KIND[n.kind]}: ${n.label}`)
+  el.addEventListener('click', () => select(n.id))
+  world.appendChild(el); nodeEls[n.id] = el
+}
+
+const panel = document.getElementById('panel')
+function intro() {
+  panel.innerHTML = `<div class="kind c-trigger"><i></i>How to read it</div>
+  <h2>${N.length} nodes in ${LANES.length} flows</h2>
+  <p>Orange nodes with a lightning bolt start a flow: a person tapping something, the database scheduler (pg_cron) or a Claude scheduled task. Lines show where data goes next.</p>
+  <p>Coral nodes are server code (Supabase Edge Functions and database functions). Green nodes are tables. Violet nodes are outside services: Supabase Auth and Realtime, Web Push, Resend, IBKR, Garmin, web search, Vercel.</p>
+  <p>Click any node to see what it does, the file it lives in, and what it connects to.</p>`
+}
+function select(id) {
+  const n = byId[id]
+  Object.values(nodeEls).forEach(el => el.classList.remove('sel'))
+  nodeEls[id].classList.add('sel')
+  for (const { e, p } of edgeEls) p.classList.toggle('hot', e.from === id || e.to === id)
+  const link = (oid, lab) => `<li><button type="button" data-go="${oid}">${esc(byId[oid].label)}</button>${lab ? ` <small>${esc(lab)}</small>` : ''}</li>`
+  const ins = E.filter(e => e.to === id).map(e => link(e.from, e.label))
+  const outs = E.filter(e => e.from === id).map(e => link(e.to, e.label))
+  panel.innerHTML = `<div class="kind c-${n.kind}"><i></i>${KIND[n.kind]} · ${esc(laneY[n.lane].title)}</div>
+    <h2>${esc(n.label)}</h2>${n.sub ? `<span class="tag">${esc(n.sub)}</span>` : ''}
+    <p>${esc(n.does)}</p>
+    ${n.code ? `<div><div class="k">Where in the code</div><span class="code">${esc(n.code)}</span></div>` : ''}
+    ${ins.length ? `<div><div class="k">Comes from</div><ul class="links">${ins.join('')}</ul></div>` : ''}
+    ${outs.length ? `<div><div class="k">Goes to</div><ul class="links">${outs.join('')}</ul></div>` : ''}`
+  panel.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { select(b.dataset.go); reveal(b.dataset.go) }))
+}
+function reveal(id) {
+  const n = byId[id]
+  scroller.scrollTo({ left: Math.max(0, (n.x + NODE_W / 2) * scale - scroller.clientWidth / 2), top: Math.max(0, (n.by + BOX / 2) * scale - scroller.clientHeight / 2), behavior: 'smooth' })
+}
+
+let scale = 1
+function setScale(s) {
+  scale = Math.min(1.4, Math.max(0.35, s))
+  world.style.transform = `scale(${scale})`
+  sizer.style.width = W * scale + 'px'; sizer.style.height = H * scale + 'px'
+}
+const fit = () => setScale(Math.min(1, (scroller.clientWidth - 4) / W))
+document.getElementById('zin').onclick = () => setScale(scale * 1.15)
+document.getElementById('zout').onclick = () => setScale(scale / 1.15)
+document.getElementById('zfit').onclick = fit
+fit(); intro()
+</script>
