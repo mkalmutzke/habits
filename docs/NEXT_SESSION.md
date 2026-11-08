@@ -1,14 +1,14 @@
 # Next session – handoff
 
-*Written 8 November 2026 after Step 14. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
+*Written 8 November 2026 after Step 15. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
 
 ## Where we stopped
 
 - **v3.7.0 is live** (Steps 12–13): the Garmin window shows elevation – an "Elev." column with a total in the activity table, and an Elevation block (period total; 7 daily values or the month as calendar cells). A day's elevation = the sum of that day's activities (owner's choice). Migration `v3_7_garmin_elevation` and `garmin-sync` are on production (owner, 8 Nov).
-- **First thing next session:**
-  1. PR mkalmutzke/habits#11 (`release/v3.7` → `main`) – merge it once all checks are green (the owner already gave the OK: "merge v3.7"). Then merge `origin/main` into the working branch and open a small PR for this handoff commit.
-  2. **Tag `v3.7.0` is on the wrong commit** (`39912be`, old `main`). Owner, after #11 is merged, on their computer: `git fetch origin && git tag -f v3.7.0 origin/main && git push -f origin v3.7.0`.
-  3. Owner: link the Supabase CLI back to `habits-test` if not done.
+- **Merged:** mkalmutzke/habits#10 and #11 – `main` = `85419a2` = v3.7.0 (the same code that is live). Supabase CLI linked back to `habits-test` (owner).
+- **Open:**
+  1. **Tag `v3.7.0` still on the old commit `39912be`** (it was moved before #11 was merged). Owner, now: `git fetch origin && git tag -f v3.7.0 origin/main && git push -f origin v3.7.0`; check with `git rev-list -n1 v3.7.0` → `85419a2…`.
+  2. The handoff commits (Steps 14–15) are on `claude/exciting-heisenberg-3husfl`, PR into `main` – merge when green.
 - **Owner to check:** Vercel deployed `release/v3.7` to production before `main` changed → Vercel → Settings → Git → Production Branch should be `main` (recommended), otherwise release branches go live before they are merged.
 - The 3 end-to-end tests that fail in the cloud container (habit reminders, reminders, drag a habit on the phone) pass in CI – a container-only problem, not urgent.
 - **Brief tasks** (owner's Claude account, Zurich time, fresh cloud session per run, instructions in [`docs/briefs/`](briefs/README.md)): world news daily 07:37, Canada jobs daily 07:41, IBKR Tue–Sat 07:45. Changing a task's text: edit the file in `docs/briefs/`, then update the scheduled task. Open, owner: widen the Claude environment's network access (or allow the news sites) so the briefs can link each article.

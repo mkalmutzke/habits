@@ -439,3 +439,24 @@ git fetch origin --tags && git rev-list -n1 v3.7.0                 # 39912be = o
 **Result:** The next session starts from an accurate state.
 **Issues & fixes:** See the tag and Vercel points above.
 **Commit:** `docs: session handoff (Step 14)`
+
+### Step 15 – Release PR merged; tag still to move
+**Date:** 2026-11-08 15:26
+**Request:** Owner: "move the tag done and relinked to habits-test."
+**Why:** The owner moved the tag while mkalmutzke/habits#11 was still open, so `origin/main` was still the old commit and `v3.7.0` stayed on `39912be` (v3.6 code). With all 14 checks green, Claude merged #11 (owner's OK: "merge v3.7"); now the tag can be moved for real.
+- `main` = `85419a2` "Release v3.7.0: Garmin elevation (#11)". Supabase CLI linked back to `habits-test` (owner). The safety check-in for #11 was deleted.
+
+**Commands run:**
+```bash
+git fetch origin main --tags --force && git rev-list -n1 v3.7.0   # 39912be – unchanged
+# GitHub: merge mkalmutzke/habits#11 (all checks green)
+git merge origin/main                                            # working branch up to date with main
+```
+
+**Files changed:**
+- `docs/NEXT_SESSION.md` – modified: #11 merged; only the tag move is left.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** `main` holds v3.7.0, the same code that is live.
+**Issues & fixes:** Tag move must run again now (see NEXT_SESSION).
+**Commit:** `docs: release PR merged, tag still to move (Step 15)`
