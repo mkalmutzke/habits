@@ -3,11 +3,11 @@ import { useSectionOpen } from '../../shared/hooks/useSectionOpen.js'
 import Icon from '../../shared/ui/Icon.jsx'
 import Modal from '../../shared/ui/Modal.jsx'
 import { useToast } from '../../shared/ui/toast.js'
+import ActivityTable from './ActivityTable.jsx'
 import {
   fetchedLabel,
+  formatClimb,
   formatCount,
-  formatDistance,
-  formatDuration,
   headerSummary,
   isStale,
   lastFetched,
@@ -106,46 +106,25 @@ function GarminBody({ days, activities, week, showMonth, setShowMonth, today }) 
         {!showMonth && <DayRow perDay={view.perDay} value={(row) => row.restingHr ?? '–'} today={today} />}
       </div>
 
+      {/* v3.7 (owner): metres climbed in activities – the total of the period,
+          then each day: seven numbers, or the month as calendar cells */}
       <div className="garmin-block">
         <p className="garmin-label">
-          <span>Activities</span>
+          <span>Elevation</span>
+          <span>climbed in activities · total</span>
         </p>
-        {view.activities.length ? (
-          <table className="garmin-activities">
-            <thead>
-              <tr>
-                <th scope="col">Type</th>
-                <th scope="col">Count</th>
-                <th scope="col">Distance</th>
-                <th scope="col">Moving</th>
-              </tr>
-            </thead>
-            <tbody>
-              {view.activities.map((group) => (
-                <tr key={group.label}>
-                  <th scope="row">
-                    <span className="garmin-icon" aria-hidden="true">
-                      {group.icon}
-                    </span>
-                    {group.label}
-                  </th>
-                  <td>{group.count}×</td>
-                  <td>{formatDistance(group.meters)}</td>
-                  <td>{formatDuration(group.seconds)}</td>
-                </tr>
-              ))}
-              <tr className="garmin-total">
-                <th scope="row">Total</th>
-                <td>{view.total.count}×</td>
-                <td>{formatDistance(view.total.meters)}</td>
-                <td>{formatDuration(view.total.seconds)}</td>
-              </tr>
-            </tbody>
-          </table>
+        <p className="garmin-big">
+          {formatCount(view.total.elevation)}
+          <small>m</small>
+        </p>
+        {showMonth ? (
+          <MonthGrid perDay={view.perDay} today={today} kind="elevation" />
         ) : (
-          <p className="empty-note">No activities {showMonth ? 'this month' : 'in these 7 days'}.</p>
+          <DayRow perDay={view.perDay} value={(row) => formatClimb(row.elevation)} today={today} />
         )}
       </div>
+
+      <ActivityTable view={view} showMonth={showMonth} />
 
       <p className={stale ? 'garmin-stamp stale' : 'garmin-stamp'}>
         {stale

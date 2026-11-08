@@ -6,7 +6,9 @@ import {
   fetchedLabel,
   formatCount,
   formatDistance,
+  formatClimb,
   formatDuration,
+  formatElevation,
   formatThousands,
   headerSummary,
   isStale,
@@ -24,9 +26,9 @@ const DAYS = [
   { day: '2026-10-28', steps: 4180, resting_hr: null, fetched_at: '2026-10-28T07:42:00Z' },
 ]
 const ACTIVITIES = [
-  { day: '2026-10-22', activity_type: 'running', moving_s: 2700, duration_s: 2900, distance_m: 8200 },
-  { day: '2026-10-23', activity_type: 'trail_running', moving_s: 3000, duration_s: 3300, distance_m: 9050 },
-  { day: '2026-10-24', activity_type: 'gravel_cycling', moving_s: 5460, duration_s: 6000, distance_m: 41000 },
+  { day: '2026-10-22', activity_type: 'running', moving_s: 2700, duration_s: 2900, distance_m: 8200, elevation_gain_m: 85 },
+  { day: '2026-10-23', activity_type: 'trail_running', moving_s: 3000, duration_s: 3300, distance_m: 9050, elevation_gain_m: 410.6 },
+  { day: '2026-10-24', activity_type: 'gravel_cycling', moving_s: 5460, duration_s: 6000, distance_m: 41000, elevation_gain_m: 520 },
   { day: '2026-10-25', activity_type: 'strength_training', moving_s: null, duration_s: 1800 },
   { day: '2026-10-01', activity_type: 'walking', moving_s: 3600 },
 ]
@@ -49,7 +51,7 @@ describe('summarize', () => {
 
   it('gives a value per day of the view, missing days as null', () => {
     expect(week.perDay.map((row) => row.steps)).toEqual([9412, 11830, null, null, null, null, 4180])
-    expect(week.perDay.at(-1)).toEqual({ day: '2026-10-28', steps: 4180, restingHr: null })
+    expect(week.perDay.at(-1)).toEqual({ day: '2026-10-28', steps: 4180, restingHr: null, elevation: null })
   })
 
   it('averages only the days that have a value', () => {
@@ -75,6 +77,17 @@ describe('summarize', () => {
     expect(week.total.meters).toBe(58250)
   })
 
+  it('v3.7: adds up the elevation gain per type, per day and in total', () => {
+    expect(week.activities.map(({ label, elevation }) => [label, elevation])).toEqual([
+      ['Running', 495.6],
+      ['Cycling', 520],
+      ['Strength', 0],
+    ])
+    expect(week.total.elevation).toBe(1015.6)
+    // days without an activity are null; a strength day climbs 0 m
+    expect(week.perDay.map((row) => row.elevation)).toEqual([85, 410.6, 520, 0, null, null, null])
+  })
+
   it('v3.6: bar heights relative to the highest day; missing days are 0', () => {
     expect(barHeights(week.perDay).map((value) => Math.round(value * 100))).toEqual([80, 100, 0, 0, 0, 0, 35])
     expect(barHeights([{ steps: null }])).toEqual([0])
@@ -89,6 +102,14 @@ describe('helpers', () => {
   it('v3.6: formats a distance in km, or a dash without one', () => {
     expect(formatDistance(24630)).toBe('24.6 km')
     expect(formatDistance(0)).toBe('–')
+  })
+
+  it('v3.7: formats elevation in metres, a dash without one', () => {
+    expect(formatElevation(1240.6)).toBe('1’241 m')
+    expect(formatElevation(0)).toBe('–')
+    expect(formatClimb(412.8)).toBe('413')
+    expect(formatClimb(0)).toBe('0')
+    expect(formatClimb(null)).toBe('–')
   })
 
   it('folds Garmin type keys into groups', () => {
