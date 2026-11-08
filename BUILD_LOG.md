@@ -416,3 +416,26 @@ git push origin origin/main:refs/heads/release/v3.7
 **Still to do (owner):** `npx supabase db push` and `npx supabase functions deploy garmin-sync` on production (check the linked project first), then `git tag v3.7.0 && git push origin v3.7.0` on `main`, and link the CLI back to `habits-test`.
 **Issues & fixes:** None so far.
 **Commit:** `chore: release v3.7.0 (Step 13)`
+
+### Step 14 – v3.7.0 live; session handoff
+**Date:** 2026-11-08 15:24
+**Request:** Owner: "everything is done. The production app is updated. We can close this session"
+**Why:** End of session – the state goes into the repository so the next session can continue.
+- **Live:** https://habits.mkalmutzke.com serves 3.7.0 (checked: the live JavaScript contains "3.7.0"). The owner applied the migration and deployed `garmin-sync` on production.
+- **Merged:** mkalmutzke/habits#10 (working branch → `release/v3.7`, all checks green). **Still open:** mkalmutzke/habits#11 (`release/v3.7` → `main`) – the two end-to-end runs were still going at handoff; all other checks green. Step 13 said "merged into main" too early – it is not yet.
+- **Vercel deployed `release/v3.7` to production before `main` changed.** Either the project's production branch is not `main`, or the build was promoted by hand – the owner should check (Vercel → Settings → Git → Production Branch).
+- **Tag `v3.7.0` points to the wrong commit:** `39912be` (old `main`, v3.6 code), because it was created before #11 was merged. Fix after the merge (see NEXT_SESSION).
+
+**Commands run:**
+```bash
+curl https://habits.mkalmutzke.com/ (+ its main JavaScript file)   # live version: 3.7.0
+git fetch origin --tags && git rev-list -n1 v3.7.0                 # 39912be = old main
+```
+
+**Files changed:**
+- `docs/NEXT_SESSION.md` – modified: where we stopped (v3.7.0 live, #11 open, tag to fix, Vercel check).
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** The next session starts from an accurate state.
+**Issues & fixes:** See the tag and Vercel points above.
+**Commit:** `docs: session handoff (Step 14)`
