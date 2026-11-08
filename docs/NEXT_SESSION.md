@@ -1,16 +1,18 @@
 # Next session – handoff
 
-*Written 1 November 2026 after Step 11. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
+*Written 8 November 2026 after Step 15. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
 
 ## Where we stopped
 
-- **v3.6.0 is live** (Steps 4–11): habit groups (Sport, Dog, default "Other") with an icon to show all habits, managed in Settings; Settings sections fold; Garmin as a window from the header with Refresh, steps chart and distances; three daily briefs with an amber dot and on/off switches.
-- **Brief tasks** (owner's Claude account, Zurich time, fresh cloud session per run, instructions in [`docs/briefs/`](briefs/README.md)): "Habits – World news brief" daily 07:37, "Habits – Canada jobs brief" daily 07:41, "Habits – IBKR morning brief" Tue–Sat 07:45. Test runs on 1 Nov: world and jobs stored, IBKR correctly skipped (Sunday). Changing a task's text: edit the file in `docs/briefs/`, then update the scheduled task.
-- **Open, owner:** tag `v3.6.0` if not done yet; widen the Claude environment's network access (or allow the news sites) so the briefs can open articles and link each one – the test runs often had to share one overview link.
-
-- **Fresh start (Step 1):** this repository (`mkalmutzke/habits`, public) starts from the code of v3.5.0 with one commit and no history. The old repository `habit-tracker` was deleted by the owner on 30 Oct (Step 3); its design documents and old build log (Steps 1–153) are in the owner's download.
-- **Move done (Step 2):** the app runs at `https://habits.mkalmutzke.com` from this repository; emails come from `…@habits.mkalmutzke.com`. The end-to-end test pattern was fixed for the new folder name.
-- App live: v3.6.0. 18 migrations, Edge Functions `send-reminders`, `send-test-notification`, `ibkr-sync`, `garmin-sync`, `brief-ingest`.
+- **v3.7.0 is live** (Steps 12–13): the Garmin window shows elevation – an "Elev." column with a total in the activity table, and an Elevation block (period total; 7 daily values or the month as calendar cells). A day's elevation = the sum of that day's activities (owner's choice). Migration `v3_7_garmin_elevation` and `garmin-sync` are on production (owner, 8 Nov).
+- **Merged:** mkalmutzke/habits#10 and #11 – `main` = `85419a2` = v3.7.0 (the same code that is live). Supabase CLI linked back to `habits-test` (owner).
+- **Open:**
+  1. **Tag `v3.7.0` still on the old commit `39912be`** (it was moved before #11 was merged). Owner, now: `git fetch origin && git tag -f v3.7.0 origin/main && git push -f origin v3.7.0`; check with `git rev-list -n1 v3.7.0` → `85419a2…`.
+  2. The handoff commits (Steps 14–15) are on `claude/exciting-heisenberg-3husfl`, PR into `main` – merge when green.
+- **Owner to check:** Vercel deployed `release/v3.7` to production before `main` changed → Vercel → Settings → Git → Production Branch should be `main` (recommended), otherwise release branches go live before they are merged.
+- The 3 end-to-end tests that fail in the cloud container (habit reminders, reminders, drag a habit on the phone) pass in CI – a container-only problem, not urgent.
+- **Brief tasks** (owner's Claude account, Zurich time, fresh cloud session per run, instructions in [`docs/briefs/`](briefs/README.md)): world news daily 07:37, Canada jobs daily 07:41, IBKR Tue–Sat 07:45. Changing a task's text: edit the file in `docs/briefs/`, then update the scheduled task. Open, owner: widen the Claude environment's network access (or allow the news sites) so the briefs can link each article.
+- App live: v3.7.0. 19 migrations, Edge Functions `send-reminders`, `send-test-notification`, `ibkr-sync`, `garmin-sync`, `brief-ingest`. Repository `mkalmutzke/habits` (fresh start from v3.5.0, Step 1); app at `https://habits.mkalmutzke.com`.
 - The IBKR token and the Garmin key expire around 28 Oct 2027 – renew them in **both** Supabase projects (owner's guide, outside the repository).
 
 ## Open, owner's choice
@@ -33,7 +35,9 @@
 - A plugin hook blocks shell commands whose text contains words like "secret", ".env", "key" or "credential" → write such text with the editor tool or into a script file.
 - Run the **whole** end-to-end suite locally before pushing (`npx playwright test`, local stack via `npm run db:start`).
 - Cloud container: Docker may not be running → start it with `dockerd &`; the `pg_prove` image may not download → run the pgTAP files with `psql` inside the database container; Playwright may expect a newer headless browser than the installed one → link the installed one under `/opt/pw-browsers` (local only).
-- Force-pushing is blocked in the cloud container → after a PR is merged, merge `release/v3.6` into the working branch instead of rebasing.
+- Force-pushing is blocked in the cloud container → after a PR is merged, merge the release branch (or `main`) into the working branch instead of rebasing.
+- Tag a release only **after** the release PR is merged into `main` (v3.7.0 was tagged too early).
+- No Prettier in this project – don't run `npx prettier` (its defaults reformat whole files).
 - Database tests run as the owner and see all rows → tests count only their own rows.
 - CI sometimes fails to start Docker (port) – rerun the failed job.
 - With `--linked`, the Supabase CLI seemed to ignore `--project-ref` – for production, check in the dashboard.
