@@ -764,3 +764,21 @@ git fetch origin main && git checkout -B claude/habits-app-updates-design-m8o858
 **Result:** The owner opens the Dawn Theme Studio link, changes colours, corners and fonts, and writes notes; it saves by itself.
 **Issues & fixes:** The first screenshot showed the What's up? phone too wide (title row and habit grid cut off on the right) → the phone's content now shrinks to its width and the tabs are a little narrower.
 **Commit:** `docs: build log – Dawn theme mockup page (Step 25)`
+
+### Step 26 – Dawn dark theme discarded
+**Date:** 2026-11-18 18:29
+**Request:** Owner: "discard the theme change".
+**Why:** The owner tried the theme page from Step 25 (the saved version had other status colours) and decided not to change the app's look. Nothing from the theme ever reached the app's code, so nothing needs to be undone there. The app keeps its current warm charcoal and amber theme from v3.8. The topic is taken off the list of next topics. The theme page and its saved values stay on the owner's claude.ai account until the owner says otherwise.
+
+**Commands run:**
+```bash
+# ArtifactData list on the theme page (read only): one saved version, not used
+```
+
+**Files changed:**
+- `docs/NEXT_SESSION.md` – modified: the theme removed from the next topics.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** No change in the app. Next topic in the list: configurable briefs.
+**Issues & fixes:** None.
+**Commit:** `docs: theme discarded (Step 26)`
