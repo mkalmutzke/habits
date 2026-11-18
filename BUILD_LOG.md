@@ -690,3 +690,26 @@ npx playwright test --trace off e2e/shell.spec.js    # 6 passed ("Version 3.8.0"
 **Still to do:** as soon as `picomatch` 4.0.8 or newer is out: `npm update picomatch`, push, audit green again. Owner: `db push` and `functions deploy server-ingest` on `habits-test`, check, then "merge v3.8" for `main`.
 **Issues & fixes:** `npm audit` red in CI (see above), merged with the owner's OK.
 **Commit:** `docs: build log – PR #14 merged (Step 22)`
+
+### Step 23 – Release v3.8.0 (PR #15 → main, branch rule bypassed by the owner)
+**Date:** 2026-11-18 14:05
+**Request:** Owner: "merge v3.8", then "db done", "tests are done", "bypass the test and merge".
+**Why:** v3.8 writes to the new columns (`habit_completions.status`, module settings), so the order was: the owner ran the three migrations and `functions deploy server-ingest` on production first (additive, the live v3.7 kept working), and only then was the app merged.
+- PR #15 `release/v3.8` → `main`. The `main` ruleset requires five checks. The database and end-to-end tests of the push run at 13:09 had failed before any test ran (Docker: "port 54322 already in use", the known CI quirk); rerun once, both green. `npm audit` stays red (picomatch GHSA-fc5q-39xc-vjpf, no fixed version yet, build tools only). Claude's merge was refused by the ruleset ("required status check failing"). The owner merged with "bypass rules" on GitHub.
+
+**Commands run:**
+```bash
+# GitHub (tools): open PR #15, rerun failed jobs of run 44310850793, merge attempt (refused by the ruleset)
+# Owner on their computer: supabase link (production) → db push → functions deploy server-ingest
+# Owner on GitHub: "Bypass rules and merge" on PR #15
+git fetch origin main && git merge --no-edit FETCH_HEAD   # main into the working branch (no force-push)
+```
+
+**Files changed:**
+- `BUILD_LOG.md` – modified: this entry.
+- `docs/NEXT_SESSION.md` – modified: state after v3.8.0, open items.
+
+**Result:** v3.8.0 is on `main`; Vercel deploys it to https://habits.mkalmutzke.com (the middle tab is "Dawn", Settings → Modules, Habit breaks, Servers).
+**Still to do (owner):** `git tag v3.8.0 && git push origin v3.8.0` on `main`; link the CLI back to `habits-test` (and `db push` + `functions deploy server-ingest` there if not done yet); in the live app, switch on Server health and add the VPS (Settings → Servers).
+**Issues & fixes:** The ruleset blocks every merge while `npm audit` is red → when `picomatch` 4.0.8+ is out: `npm update picomatch` and push.
+**Commit:** `docs: release v3.8.0 (Step 23)`
