@@ -21,6 +21,9 @@ test('TS-U1 habits and ToDo’s on one page; ＋ opens a new task with the title
 
   // ToDo's: no big add bar any more (TS-T8) – the small ＋ opens the details
   await expect(page.getByRole('heading', { name: /^ToDo’s/ })).toBeVisible()
+  // v3.8 (owner): the shopping list sits between habits and to-dos, folded
+  await expect(page.locator('.card-section-title')).toHaveText(['IBKR', 'Habits', 'Shopping', 'ToDo’s'])
+  await expect(page.getByRole('button', { name: /^Shopping/ })).toHaveAttribute('aria-expanded', 'false')
   await expect(page.getByLabel(/Add a task to/)).toHaveCount(0)
   await page.getByRole('button', { name: 'Add a task' }).click()
   await expect(page).toHaveURL(/#\/task\/new\?source=all$/)

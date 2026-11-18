@@ -442,3 +442,33 @@ node shot.cjs (Playwright screenshot of the design page, in the session's scratc
 **Result:** The design page (private, on the owner's claude.ai account) shows the check of all nine requests, the "Dawn" dark style guide, nine phone mockups, seven workflow diagrams, the database changes and Steps 15–25 with files and tests. Six open questions for the owner are listed at its end.
 **Issues & fixes:** A plugin hook blocked the shell command that wrote this entry (it contains words like "key"), so the entry was added with the editor tool instead – the known quirk from `docs/NEXT_SESSION.md`.
 **Commit:** `docs: design plan for v3.8 – v4.0 (Step 14)`
+
+### Step 15 – Shopping list moves to What's up? (v3.8)
+**Date:** 2026-11-18 12:16
+**Request:** Owner: start with server health, Week → Dawn, modules show/hide, habit breaks, habit month view and the shopping list on What's up?; answers to the six design questions.
+**Why:** The owner wants the shopping list where they look every day: on What's up?, between Habits and To-dos, folded at every app start (it was open on Week). The six topics are built in this order: shopping list (smallest), habit breaks, month view, modules, server health, and last the rename to Dawn, because it touches the most files. All six go into one release, v3.8.
+- Owner's answers from the design: breaks don't count as streak days; no break limit to start with, but one can be set in Settings; invite-only for other users later; briefs for other users and Google sign-in skipped for now; the server agent also checks Docker and pending updates.
+
+**Commands run:**
+```bash
+npm ci                                   # install the packages from the lock file (container was fresh)
+dockerd &                                # Docker for the local database (cloud container)
+npm run db:start                         # local Supabase stack
+npx vitest run && npm run lint           # 269 tests passed, no warnings
+ln -sfn chromium_headless_shell-1243 /opt/pw-browsers/chromium_headless_shell-1248   # container only, not committed
+npx playwright test --trace off e2e/habits.spec.js e2e/habit-groups.spec.js e2e/today.spec.js e2e/week.spec.js
+```
+
+**Files changed:**
+- `src/features/whatsup/WhatsUpPage.jsx` – modified: shows the shopping list between Habits and ToDo's.
+- `src/features/week/WeekView.jsx` – modified: only "Due & overdue" is left on Week.
+- `src/features/shopping/ShoppingList.jsx` – modified: folded at app start (`useSectionOpen('shopping')` without "open").
+- `src/App.jsx` – modified: passes the shopping list to What's up? instead of Week.
+- `e2e/week.spec.js` – modified: the shopping tests open What's up? and unfold the card first; the Week test expects only "Due & overdue".
+- `e2e/today.spec.js` – modified: checks the order IBKR, Habits, Shopping, ToDo's and that Shopping starts folded.
+- `README.md` – modified: the shopping list is on What's up?.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** On What's up? the shopping list sits folded between Habits and To-dos; ＋ unfolds it. Week shows only the tasks due soon. Open the app → What's up? to see it.
+**Issues & fixes:** The installed headless browser (build 1243) is older than the one Playwright expects (1248) → linked under the new name, in the container only (known quirk). In the e2e run (together with Step 16), 31 of 32 tests passed. The failing one, "drag a habit to the top" on the phone, is the existing container problem from Step 12 and isn't caused by this change.
+**Commit:** `feat: shopping list on What's up?, folded (Step 15)`

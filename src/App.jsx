@@ -120,6 +120,7 @@ function SignedInApp({ user }) {
                 briefButton={briefButton('ibkr', 'section-icon-button')}
                 habits={habits}
                 todos={todos}
+                shopping={shopping}
                 today={today}
                 reminderText={reminders.reminderText}
                 settings={settings}
@@ -127,7 +128,7 @@ function SignedInApp({ user }) {
               />
             )}
             {tabView === 'week' && (
-              <WeekView todos={todos} shopping={shopping} today={today} reminderText={reminders.reminderText} />
+              <WeekView todos={todos} today={today} reminderText={reminders.reminderText} />
             )}
             {tabView === 'lists' && <ListsView todos={todos} today={today} />}
           </div>

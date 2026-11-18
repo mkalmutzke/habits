@@ -2,8 +2,8 @@
 
 A personal app for **habits, to-dos and a shopping list**, mobile-first and installable on
 Android. The start page "What's up?" shows a folded IBKR portfolio card (the day's move; holdings and
-performance when opened; a daily morning news brief), the habits in groups (tap a day to tick it) and every open to-do; the Week page has
-the tasks due soon and the shopping list. Icons in the header open Garmin (steps, resting heart rate, elevation and activities for 7 days or the month)
+performance when opened; a daily morning news brief), the habits in groups (tap a day to tick it), the shopping list (folded) and every
+open to-do; the Week page has the tasks due soon. Icons in the header open Garmin (steps, resting heart rate, elevation and activities for 7 days or the month)
 and two daily briefs (Canada jobs, world news), written each morning by Claude scheduled tasks. Data lives in the cloud and updates live on
 all your devices; reminders arrive by push, email or in the app.
 
