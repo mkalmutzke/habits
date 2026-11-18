@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS = {
   // v3.8: modules shown (Settings → Modules)
   ibkr_display: 'section',
   garmin_display: 'icon',
+  server_display: 'off',
 }
 
 // This user's settings row (or the defaults until it exists) and a way to change it.

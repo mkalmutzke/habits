@@ -574,3 +574,41 @@ npx playwright test --trace off e2e/modules.spec.js e2e/week.spec.js e2e/briefs.
 **Issues & fixes:** My first e2e version opened the Modules section twice; Settings remembers open sections during a visit, so the second click folded it. Fixed the test.
 **Still to do (owner, at release):** `npx supabase db push`.
 **Commit:** `feat: modules – show or hide IBKR, Garmin as icon or card (Step 18)`
+
+### Step 19 – Server health (v3.8)
+**Date:** 2026-11-18 12:32
+**Request:** Owner: show the VPS's health (netcup) in a popup at the top of the habit screen; the whole module configurable, so every user can use it or not and connect their own server at netcup or any other provider. The agent should also check Docker and pending updates.
+**Why:** netcup's REST API only says whether the machine is on, not what happens inside it. So a small **agent on the server** sends its figures (push), which works the same at every provider. Decisions:
+- **Per user from the start:** the tables `servers` and `server_reports` have row level security like every table, so this module doesn't need the later "per-user connections" step.
+- **Token:** each server gets 32 random bytes. The database stores only its SHA-256 fingerprint, in `private.server_tokens`, which the app can't read. The token is shown once in Settings (with the install command); "New token" replaces it. The installer reads it at a hidden prompt (not in the shell history), and the agent hands it to curl on standard input (not in the process list).
+- **Receiving:** the Edge Function `server-ingest` refuses bodies over 8000 characters and checks and trims every value (`_shared/serverReport.js`). The database function `store_server_report` stores at most one report per 50 seconds per server. Reports are kept 2 days (cleaned up hourly by the scheduler); the window draws CPU for 24 hours.
+- **Status rules** (plain functions, unit-tested): no report for 15 min → red "No report"; CPU/memory/disk above the server's limit (default 90/90/80 %, changeable), a watched service stopped, or the certificate ending within 14 days → amber; updates and "restart needed" are notes, not warnings. The header dot shows the worst server, and the time is re-checked every minute (new `useNow` hook), so a server that goes quiet turns red without a reload.
+- **Module:** Settings → Modules → Server health (`user_settings.server_display`, off to start with). Settings → Servers appears only when it is on.
+- **Not in this step:** the provider check through netcup's API ("is the machine on" from outside). It is still a beta and needs its own login; a missing report already shows a down server. Alerts by push or email when the status changes are also left for later.
+
+**Commands run:**
+```bash
+npx supabase migration up --local
+npm run test:db                                  # 17 files, 221 tests passed
+npx supabase stop --no-backup && npm run db:start   # the local function runtime only knows functions that existed at start
+sh scratchpad/agent-test/run.sh                  # the real agent against the local stack: report stored, second one refused (429)
+npx vitest run                                   # 313 tests passed
+npm run lint                                     # no warnings
+sh -n scripts/server-agent/habits-agent.sh && sh -n scripts/server-agent/install.sh   # syntax ok
+npx playwright test --trace off e2e/servers.spec.js e2e/modules.spec.js            # 2 passed
+```
+
+**Files changed:**
+- `supabase/migrations/20261118120000_v3_8_server_health.sql` – created: `servers`, `private.server_tokens`, `server_reports`, `add_server`, `renew_server_token`, `store_server_report`, the hourly cleanup, `user_settings.server_display`.
+- `supabase/tests/database/17_server_health.test.sql` – created: isolation, token only as fingerprint, no direct inserts, 50-second gap, unknown and replaced tokens.
+- `supabase/functions/server-ingest/index.ts` – created. `supabase/functions/_shared/serverReport.js` (+ test) – created: token format, report checks. `supabase/config.toml` – modified: `server-ingest` without user sign-in (it checks the server token itself).
+- `scripts/server-agent/habits-agent.sh`, `scripts/server-agent/install.sh` – created: the agent and its installer (systemd timer every 5 min, `--remove`).
+- `src/features/servers/` – created: `serverStatus.js` (+ test), `useServers.js`, `ServerWindow.jsx`, `ServerSettings.jsx`, `InstallSteps.jsx`, `servers.css`.
+- `src/shared/hooks/useNow.js` – created. `src/shared/ui/ToolButton.jsx`, `Icon.jsx`, `src/shared/styles/buttons.css` – modified: coloured status dot, server and copy icons.
+- `src/App.jsx`, `src/features/settings/SettingsView.jsx`, `ModuleSettings.jsx` (+ test), `modules.js`, `useSettings.js`, `HabitGroupSettings.jsx` (name field reused), `src/shared/data/tables.js` – modified: wiring.
+- `src/features/about/databaseTables.js`, `README.md` – modified: the new tables, a "Server health" section. `e2e/servers.spec.js` – created. `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Settings → Modules → Server health on → Settings → Servers → Add server → run the shown command on the server and paste the token. Within a minute the server icon in the header shows a green, amber or red dot; tap it for the figures.
+**Issues & fixes:** My database test first reset a timestamp as the server role, which correctly has no rights there; fixed the test. The local function runtime returned 404 for the new function until the local stack was restarted. The linter flagged reading the clock during render → the `useNow` hook. The installer could not be run in this container (no systemd), only syntax-checked; the agent itself ran for real.
+**Still to do (owner, at release):** `npx supabase db push` and `npx supabase functions deploy server-ingest` (test project first). Then, on the VPS: Settings → Servers → Add server and run the shown command. The install command downloads from `main`, so it works once v3.8 is merged.
+**Commit:** `feat: server health – agent, server-ingest, header icon and window (Step 19)`

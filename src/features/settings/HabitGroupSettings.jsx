@@ -92,7 +92,8 @@ function HabitGroupSettings({ habits, settings, update }) {
 
 // A name you can edit in place; saved when the field is left or Enter is
 // pressed. An empty name puts the old one back.
-function NameField({ name, label, onSave, disabled }) {
+// v3.8: also used for server names (Settings → Servers), same 40-character limit
+export function NameField({ name, label, onSave, disabled }) {
   const [value, setValue] = useState(name)
   const [prevName, setPrevName] = useState(name)
   // a rename from another device shows up here

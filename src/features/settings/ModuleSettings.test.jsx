@@ -16,10 +16,13 @@ describe('ModuleSettings', () => {
     expect(update).toHaveBeenLastCalledWith({ garmin_display: 'section' })
     await userEvent.click(screen.getByRole('button', { name: 'IBKR portfolio' }))
     expect(update).toHaveBeenLastCalledWith({ ibkr_display: 'off' })
+    expect(screen.getByRole('button', { name: 'Server health' })).toHaveAttribute('aria-pressed', 'false')
+    await userEvent.click(screen.getByRole('button', { name: 'Server health' }))
+    expect(update).toHaveBeenLastCalledWith({ server_display: 'icon' })
   })
 
   it('counts what is shown', () => {
     render(<ModuleSettings settings={{ ibkr_display: 'off', garmin_display: 'off' }} update={vi.fn()} />)
-    expect(screen.getByRole('button', { name: /^Modules/ })).toHaveTextContent('0 of 2 shown')
+    expect(screen.getByRole('button', { name: /^Modules/ })).toHaveTextContent('0 of 3 shown')
   })
 })

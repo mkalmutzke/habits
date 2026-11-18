@@ -445,3 +445,8 @@ verify_jwt = false
 # Claude scheduled tasks with its own password (checked inside).
 [functions.brief-ingest]
 verify_jwt = false
+
+# v3.8: called by the health agent on the user's server with its own token
+# (checked inside against the stored fingerprint), not with a user sign-in.
+[functions.server-ingest]
+verify_jwt = false

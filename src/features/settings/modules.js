@@ -19,3 +19,6 @@ export const GARMIN_HINTS = {
   icon: 'Icon in the header, opens a window',
   section: 'A card on What’s up?, under IBKR',
 }
+
+// v3.8: the server health icon in the header (off to start with).
+export const serverShown = (settings) => settings?.server_display === 'icon'
