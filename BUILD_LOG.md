@@ -671,3 +671,72 @@ npx playwright test --trace off e2e/shell.spec.js    # 6 passed ("Version 3.8.0"
 **Still to do (owner):** see the PR description – `db push` and two function deploys on `habits-test`, check, then the OK for production.
 **Issues & fixes:** None.
 **Commit:** `chore: version 3.8.0 (Step 21)`
+
+### Step 22 – PR #14 merged into release/v3.8, with npm audit red
+**Date:** 2026-11-18 13:15
+**Request:** Owner: "merge anyways" (after being told that `npm audit` is red), then "other tests are green".
+**Why:** In CI, lint, unit tests, build, database tests, end-to-end tests, Semgrep and gitleaks were green. Only `npm audit` failed, because of advisory GHSA-fc5q-39xc-vjpf (ReDoS in `picomatch` ≤ 4.0.7, high). 4.0.7 is the newest version, so no fix exists yet. It comes through the build and test tools `vite`, `vitest` and `vite-plugin-pwa` and isn't in the app the browser loads. The PR changed no package versions, so `main` fails the same way. npm's `--force` fix would downgrade `vitest` and `vite-plugin-pwa` by a major version and was not used. The owner decided to merge anyway; the reason is in a comment on PR #14 and in the merge commit.
+- Integration branch `release/v3.8` created from `main`; PR #14 (working branch → `release/v3.8`) merged.
+
+**Commands run:**
+```bash
+# GitHub (tools, not shell): create branch release/v3.8 from main, open PR #14, comment on the audit failure, merge PR #14
+```
+
+**Files changed:**
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** `release/v3.8` holds v3.8.0. Nothing is live yet.
+**Still to do:** as soon as `picomatch` 4.0.8 or newer is out: `npm update picomatch`, push, audit green again. Owner: `db push` and `functions deploy server-ingest` on `habits-test`, check, then "merge v3.8" for `main`.
+**Issues & fixes:** `npm audit` red in CI (see above), merged with the owner's OK.
+**Commit:** `docs: build log – PR #14 merged (Step 22)`
+
+### Step 23 – Release v3.8.0 (PR #15 → main, branch rule bypassed by the owner)
+**Date:** 2026-11-18 14:05
+**Request:** Owner: "merge v3.8", then "db done", "tests are done", "bypass the test and merge".
+**Why:** v3.8 writes to the new columns (`habit_completions.status`, module settings), so the order was: the owner ran the three migrations and `functions deploy server-ingest` on production first (additive, the live v3.7 kept working), and only then was the app merged.
+- PR #15 `release/v3.8` → `main`. The `main` ruleset requires five checks. The database and end-to-end tests of the push run at 13:09 had failed before any test ran (Docker: "port 54322 already in use", the known CI quirk); rerun once, both green. `npm audit` stays red (picomatch GHSA-fc5q-39xc-vjpf, no fixed version yet, build tools only). Claude's merge was refused by the ruleset ("required status check failing"). The owner merged with "bypass rules" on GitHub.
+
+**Commands run:**
+```bash
+# GitHub (tools): open PR #15, rerun failed jobs of run 44310850793, merge attempt (refused by the ruleset)
+# Owner on their computer: supabase link (production) → db push → functions deploy server-ingest
+# Owner on GitHub: "Bypass rules and merge" on PR #15
+git fetch origin main && git merge --no-edit FETCH_HEAD   # main into the working branch (no force-push)
+```
+
+**Files changed:**
+- `BUILD_LOG.md` – modified: this entry.
+- `docs/NEXT_SESSION.md` – modified: state after v3.8.0, open items.
+
+**Result:** v3.8.0 is on `main`; Vercel deploys it to https://habits.mkalmutzke.com (the middle tab is "Dawn", Settings → Modules, Habit breaks, Servers).
+**Still to do (owner):** `git tag v3.8.0 && git push origin v3.8.0` on `main`; link the CLI back to `habits-test` (and `db push` + `functions deploy server-ingest` there if not done yet); in the live app, switch on Server health and add the VPS (Settings → Servers).
+**Issues & fixes:** The ruleset blocks every merge while `npm audit` is red → when `picomatch` 4.0.8+ is out: `npm update picomatch` and push.
+**Commit:** `docs: release v3.8.0 (Step 23)`
+
+### Step 24 – Matt Pocock's engineering skills set up (code review)
+**Date:** 2026-11-18 17:42
+**Request:** Owner: steps to integrate and use the `code-review` skill from github.com/mattpocock/skills (engineering); then "option a and its already done", "it pushed".
+**Why:** The skill reviews all changes since a fixed point (commit, branch, tag) on two separate axes: **Standards** (the repo's documented rules plus a fixed list of code smells) and **Spec** (does it do what was asked?). Each axis runs in its own sub-agent. Decisions:
+- **Option A** (owner's choice): the whole plugin `mattpocock-skills` installed on the owner's computer (`claude plugin install mattpocock-skills@claude-plugins-official`), then `/setup-matt-pocock-skills` run there once. It is installed for that user only, not in cloud sessions. The skill is called `/mattpocock-skills:code-review <fixed point>`, because the built-in `/code-review` has the same name. The alternative, copying only this one skill into `.claude/skills/`, was not chosen.
+- The setup wrote the standard templates. Points to keep in mind: the project has **no GitHub issues**, so for `code-review` the spec is the owner's request plus the **Why** in `BUILD_LOG.md`. `docs/agents/domain.md` mentions `GLOSSARY.md` and ADRs under `docs/adr/`, while the working agreement keeps decisions in the build log only (no separate design documents in the repository). The `gh` CLI the templates use only works on the owner's computer.
+- Licence: MIT (Matt Pocock); the plugin brings its own notice.
+
+**Commands run:**
+```bash
+# owner, on their computer:
+claude plugin install mattpocock-skills@claude-plugins-official
+# /setup-matt-pocock-skills in Claude Code (GitHub Issues, default labels, single-context docs)
+git checkout -b chore/agent-skills-setup && git add docs/agents CLAUDE.md && git commit && git push -u origin chore/agent-skills-setup
+# Claude, in the cloud session:
+git fetch origin && git merge --no-edit origin/chore/agent-skills-setup   # into the working branch, together with Steps 22–23
+```
+
+**Files changed:**
+- `CLAUDE.md` – modified (by the setup): section "Agent skills" (issue tracker, triage labels, domain docs).
+- `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`, `docs/agents/domain.md` – created (by the setup).
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** On the owner's computer: `/mattpocock-skills:code-review v3.7.0` reviews all of v3.8. When it asks for the spec, answer with `BUILD_LOG.md` (Steps 14–21).
+**Issues & fixes:** `/setup-matt-pocock-skills` typed in the cloud session did nothing; the plugin isn't installed there.
+**Commit:** `docs: build log – engineering skills set up (Step 24)`

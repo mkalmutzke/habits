@@ -54,3 +54,17 @@ Rules:
 ## Sessions
 - At session start the hook `.claude/hooks/session-context.sh` shows the git state, `docs/NEXT_SESSION.md` and the latest build-log entry. If it is missing, read `docs/NEXT_SESSION.md` before starting work.
 - At the end of a session (or when the owner says "wrap up"), run the `handoff` skill (`/handoff`).
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues on `mkalmutzke/habits` (via the `gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
