@@ -143,7 +143,8 @@ test('TS-D5/D7/D8/F11/A10 v3.3/v3.8: Due & overdue on Dawn; due tasks of every l
   await openSignedIn(page, user, '/#/dawn')
   // v3.6: Garmin is a window from the header, no longer a card here
   // v3.8: the shopping list moved to What's up?
-  await expect(page.locator('.card-section-title')).toHaveText(['Due & overdue'])
+  // v3.9: the Calendar card on top
+  await expect(page.locator('.card-section-title')).toHaveText(['Calendar', 'Due & overdue'])
   // start state (owner Q5): Due & overdue folded
   const due = page.getByRole('button', { name: /^Due & overdue/ })
   await expect(due).toHaveAttribute('aria-expanded', 'false')

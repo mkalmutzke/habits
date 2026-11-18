@@ -16,6 +16,7 @@ import { usePortfolio } from './features/portfolio/usePortfolio.js'
 import ServerWindow from './features/servers/ServerWindow.jsx'
 import { serverStatus, worstTone } from './features/servers/serverStatus.js'
 import { useServers } from './features/servers/useServers.js'
+import { useCalendars } from './features/calendar/useCalendars.js'
 import { garminDisplay, ibkrShown, serverShown } from './features/settings/modules.js'
 import SettingsView from './features/settings/SettingsView.jsx'
 import ListsView from './features/todos/ListsView.jsx'
@@ -66,6 +67,7 @@ function SignedInApp({ user }) {
   const garmin = useGarmin()
   const briefs = useBriefs()
   const servers = useServers()
+  const calendars = useCalendars()
   const now = useNow()
   const reminders = useReminders(user.id)
   const { settings, update: updateSettings } = useSettings(user.id)
@@ -146,7 +148,7 @@ function SignedInApp({ user }) {
               />
             )}
             {tabView === 'dawn' && (
-              <DawnView todos={todos} today={today} reminderText={reminders.reminderText} />
+              <DawnView todos={todos} calendars={calendars} settings={settings} today={today} reminderText={reminders.reminderText} />
             )}
             {tabView === 'lists' && <ListsView todos={todos} today={today} />}
           </div>
@@ -185,7 +187,7 @@ function SignedInApp({ user }) {
             </Suspense>
           )}
           {route.view === 'settings' && route.id !== 'about' && (
-            <SettingsView user={user} settings={settings} update={updateSettings} habits={habits} servers={servers}>
+            <SettingsView user={user} settings={settings} update={updateSettings} habits={habits} servers={servers} calendars={calendars}>
               <NotificationSettings user={user} settings={settings} update={updateSettings} pushOnThisDevice={pushOnThisDevice} />
             </SettingsView>
           )}

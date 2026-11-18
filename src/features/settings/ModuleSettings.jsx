@@ -1,5 +1,5 @@
 import { useOnline } from '../../shared/data/hooks.js'
-import { GARMIN_CHOICES, GARMIN_HINTS, garminDisplay, ibkrShown, serverShown } from './modules.js'
+import { GARMIN_CHOICES, GARMIN_HINTS, calendarShown, garminDisplay, ibkrShown, serverShown } from './modules.js'
 import SettingsSection from './SettingsSection.jsx'
 import SwitchRow from './SwitchRow.jsx'
 
@@ -12,10 +12,11 @@ function ModuleSettings({ settings, update }) {
   const garmin = garminDisplay(settings)
   const ibkr = ibkrShown(settings)
   const server = serverShown(settings)
-  const shown = [ibkr, garmin !== 'off', server].filter(Boolean).length
+  const calendar = calendarShown(settings)
+  const shown = [ibkr, garmin !== 'off', server, calendar].filter(Boolean).length
 
   return (
-    <SettingsSection id="modules" title="Modules" summary={`${shown} of 3 shown`}>
+    <SettingsSection id="modules" title="Modules" summary={`${shown} of 4 shown`}>
       <div className="settings-card">
         <SwitchRow
           label="IBKR portfolio"
@@ -50,6 +51,13 @@ function ModuleSettings({ settings, update }) {
           hint={server ? 'Icon in the header · servers under Settings → Servers' : 'Hidden'}
           on={server}
           onToggle={() => update({ server_display: server ? 'off' : 'icon' })}
+          disabled={!online}
+        />
+        <SwitchRow
+          label="Calendar"
+          hint={calendar ? 'Card on Dawn · calendars under Settings → Calendars' : 'Hidden'}
+          on={calendar}
+          onToggle={() => update({ calendar_display: calendar ? 'off' : 'section' })}
           disabled={!online}
         />
       </div>

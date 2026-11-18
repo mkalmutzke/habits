@@ -22,7 +22,7 @@ describe('ModuleSettings', () => {
   })
 
   it('counts what is shown', () => {
-    render(<ModuleSettings settings={{ ibkr_display: 'off', garmin_display: 'off' }} update={vi.fn()} />)
-    expect(screen.getByRole('button', { name: /^Modules/ })).toHaveTextContent('0 of 3 shown')
+    render(<ModuleSettings settings={{ ibkr_display: 'off', garmin_display: 'off', calendar_display: 'off' }} update={vi.fn()} />)
+    expect(screen.getByRole('button', { name: /^Modules/ })).toHaveTextContent('0 of 4 shown')
   })
 })

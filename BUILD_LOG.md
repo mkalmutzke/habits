@@ -824,3 +824,42 @@ npx playwright test --trace off e2e/briefs.spec.js e2e/modules.spec.js
 **Still to do (owner, at release):** `npx supabase db push`, `npx supabase functions deploy brief-ingest`, then **once** copy the new text of `docs/briefs/jobs.md`, `world.md` and `ibkr.md` into the three scheduled tasks.
 **Issues & fixes:** In the e2e test, "Countries" named both the input field and the chip list → the test addresses the field as a text box.
 **Commit:** `feat: configurable daily briefs (Step 27)`
+
+### Step 28 – Calendars on Dawn via iCal (v3.9)
+**Date:** 2026-11-18 19:55
+**Request:** Owner: integrate iCal on the Dawn page (design question 5 from Step 14: iCal addresses first, Google sign-in later).
+**Why:** Each user adds calendars by their secret iCal address, and Dawn shows today and the next 6 days. Decisions:
+- **Several calendars** (up to 10), each with a name, one of 8 colours and an on/off switch; it works for Google, iCloud and Outlook (`webcal://` is read as `https://`). Read-only.
+- **The address works like a password**, so it goes into a private table (`private.calendar_addresses`). The app writes it only through `add_calendar()` / `change_calendar_address()` and can never read it back. The events are written only by the server function.
+- **Fetching is done by the server** (Edge Function `calendar-sync`): the browser can't fetch other sites' calendars (CORS), and the address must not reach the device. It runs every 15 minutes through the scheduler (like Garmin), plus Refresh on Dawn (at most once a minute; a calendar that was never read is exempt, so a new one shows at once).
+- **Safety of the fetch:** only `https` addresses to real host names (no IP addresses, no localhost or internal names, no other ports), checked again after every redirect (at most 3). At most 3 MB and 15 seconds per calendar. Logs only counts, never an address or event.
+- **Reading the iCal file** without extra packages (`_shared/ical.js`, 10 tests): folded lines, all-day and timed events, time zones (also Outlook's Windows names), repeats (daily, weekly by weekday, monthly by date or "last Friday", yearly, with INTERVAL, COUNT and UNTIL), skipped dates, moved or cancelled single dates. Repeats keep their wall-clock time across summer and winter time.
+- **Stored:** events from yesterday to two weeks ahead (`calendar_events`, at most 500 per calendar, replaced on each read). A failed read keeps the old events and shows the reason in plain words in Settings and on Dawn.
+- **No live message per event**, because a read replaces up to 500 rows. The calendar row's "last read" changes with every read and arrives live, and the app then reloads the events.
+- **Module:** Settings → Modules → Calendar (`user_settings.calendar_display`, on to start with). Settings → Calendars shows while it is on.
+
+**Commands run:**
+```bash
+npx supabase migration up --local
+npm run test:db                                   # 19 files, 241 tests passed
+npx vitest run                                    # 340 tests passed
+npm run lint && npm run build                     # no warnings; build ok
+sh scratchpad/push-setup.sh                       # local push settings + stack restart (new function served)
+npx playwright test --trace off                   # the whole suite: 80 passed
+npm run db:reset && npm run test:db               # fresh local database: passed
+```
+
+**Files changed:**
+- `supabase/migrations/20261118210000_v3_9_calendars.sql` – created: `calendar_sources`, `private.calendar_addresses`, `calendar_events`, `add_calendar`, `change_calendar_address`, `calendar_jobs`, `store_calendar_events`, the 15-minute schedule, `user_settings.calendar_display`.
+- `supabase/tests/database/19_calendars.test.sql` – created: private address, https and colours only, no direct inserts, server stores events, a failed read keeps them, isolation.
+- `supabase/functions/_shared/ical.js` (+ test), `supabase/functions/_shared/calendarSync.js` (+ test) – created.
+- `supabase/functions/calendar-sync/index.ts` – created. `supabase/config.toml` – modified: `calendar-sync` checks its callers itself.
+- `src/features/calendar/` – created: `calendar.js` (+ test), `useCalendars.js`, `CalendarSection.jsx`, `CalendarSettings.jsx`, `AddressForm.jsx`, `calendar.css`.
+- `src/features/dawn/DawnView.jsx`, `src/App.jsx`, `src/shared/data/tables.js`, `src/features/settings/` (`modules.js`, `ModuleSettings.jsx` + test, `SettingsView.jsx`, `useSettings.js`) – modified: wiring.
+- `src/features/about/databaseTables.js`, `README.md` – modified: the new tables, a "Calendars" section.
+- `e2e/calendars.spec.js` – created; `e2e/dawn.spec.js` – modified: Calendar card on top. `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Settings → Calendars → Add calendar (name, colour, secret iCal address) → Dawn shows today and the next 6 days, each calendar in its colour; Refresh reads them at once.
+**Issues & fixes:** The first version greyed out "Add calendar" for a wrong address without saying why → the button works and explains the problem on submit. "all day" broke onto two lines → kept on one. The plugin hook blocked a shell command (it contained "key") → ran it from a script file.
+**Still to do (owner, at release):** `npx supabase db push`, `npx supabase functions deploy calendar-sync`.
+**Commit:** `feat: calendars on Dawn via iCal (Step 28)`

@@ -19,7 +19,9 @@ export const DATABASE_TABLES = [
   { group: 'Briefs', name: 'briefs', what: 'The latest daily brief of each kind (IBKR, Canada jobs, world news), written by the server', columns: 'kind · for_day · content · seen_on', since: 'v3.6' },
   { group: 'Servers', name: 'servers', what: 'Your servers whose health agent reports here, with their warning limits; the agent token is kept only as a fingerprint, in a private table', columns: 'name · provider · cpu_warn · memory_warn · disk_warn · last_report_at', since: 'v3.8' },
   { group: 'Servers', name: 'server_reports', what: 'Health reports every 5 minutes, kept 2 days, written by the server (server-ingest)', columns: 'server_id · reported_at · cpu · load · memory · disk · uptime · services · containers · updates · cert_days', since: 'v3.8' },
-  { group: 'You', name: 'user_settings', what: 'Time zone, reminder channels, quiet hours, show deleted tasks, name of the default habit group, daily briefs on/off, breaks per habit and month, which modules show, the brief settings', columns: 'time_zone · inapp_on · email_on · quiet_start/end · show_deleted_tasks · default_habit_group · brief_*_on (v3.6) · habit_break_limit · ibkr_display · garmin_display · server_display (v3.8) · brief_prefs (v3.9)', since: 'v2' },
+  { group: 'Calendars', name: 'calendar_sources', what: 'Your calendars (name, colour, on/off, last read); the secret iCal address is kept in a private table the app can’t read back', columns: 'name · color · enabled · last_sync_at · last_error · event_count', since: 'v3.9' },
+  { group: 'Calendars', name: 'calendar_events', what: 'Events from yesterday to two weeks ahead, written by the server (calendar-sync, every 15 minutes)', columns: 'source_id · all_day · starts_at/ends_at or start_day/end_day · title · location', since: 'v3.9' },
+  { group: 'You', name: 'user_settings', what: 'Time zone, reminder channels, quiet hours, show deleted tasks, name of the default habit group, daily briefs on/off, breaks per habit and month, which modules show, the brief settings', columns: 'time_zone · inapp_on · email_on · quiet_start/end · show_deleted_tasks · default_habit_group · brief_*_on (v3.6) · habit_break_limit · ibkr_display · garmin_display · server_display (v3.8) · brief_prefs · calendar_display (v3.9)', since: 'v2' },
   { group: 'You', name: 'push_subscriptions', what: 'Devices with push switched on', columns: 'endpoint · device_label · last_used_at', since: 'v2' },
   { group: 'You', name: 'notification_log', what: 'What the server sent (kept 30 days)', columns: 'channel · result · task_id / habit_id', since: 'v2' },
 ]
@@ -32,5 +34,6 @@ export const RELATIONS = [
   'garmin_days, garmin_activities (one row per day / per activity)',
   'briefs (one row per kind – only the latest)',
   'servers → server_reports (v3.8)',
+  'calendar_sources → calendar_events (v3.9)',
   'every table → your account (user_id), deleted with it',
 ]

@@ -22,3 +22,6 @@ export const GARMIN_HINTS = {
 
 // v3.8: the server health icon in the header (off to start with).
 export const serverShown = (settings) => settings?.server_display === 'icon'
+
+// v3.9: the Calendar card on Dawn (on to start with).
+export const calendarShown = (settings) => settings?.calendar_display !== 'off'
