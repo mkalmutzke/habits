@@ -12,6 +12,7 @@ import '../about/about.css'
 import { disablePush } from '../notifications/pushDevice.js'
 import BriefSettings from '../briefs/BriefSettings.jsx'
 import HabitBreakSettings from './HabitBreakSettings.jsx'
+import ModuleSettings from './ModuleSettings.jsx'
 import HabitGroupSettings from './HabitGroupSettings.jsx'
 import SettingsSection from './SettingsSection.jsx'
 import SwitchRow from './SwitchRow.jsx'
@@ -58,6 +59,8 @@ function SettingsView({ user, settings, update, habits, children }) {
       <h1 className="page-title">Settings</h1>
 
       {children}
+
+      <ModuleSettings settings={settings} update={update} />
 
       {habits && <HabitGroupSettings habits={habits} settings={settings} update={update} />}
       <HabitBreakSettings settings={settings} update={update} />

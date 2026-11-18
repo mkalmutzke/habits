@@ -63,7 +63,8 @@ function GarminWindow({ garmin, today, onClose }) {
   )
 }
 
-function GarminBody({ days, activities, week, showMonth, setShowMonth, today }) {
+// v3.8: also the body of the Garmin card (GarminSection)
+export function GarminBody({ days, activities, week, showMonth, setShowMonth, today }) {
   const monthDays = viewDays('month', today)
   const view = showMonth ? summarize(days, activities, monthDays) : week
   const fetchedAt = lastFetched(days)

@@ -540,3 +540,37 @@ npx playwright test --trace off e2e/habits.spec.js -g "month view|breaks|TS-H1" 
 **Result:** What's up? → Habits → calendar icon: two month calendars with complete days in green (with breaks green/violet); tap a day to see each habit's state.
 **Issues & fixes:** The first screenshot showed very tall day cells (square cells on a wide phone) and an invisible "nothing" swatch → cells are now 38 px high and empty days have a visible fill. `HabitSection.jsx` is now 188 lines, above the ~150 aim; it is worth splitting when it is touched next.
 **Commit:** `feat: habit month view – this and last month (Step 17)`
+
+### Step 18 – Modules: show or hide IBKR and Garmin (v3.8)
+**Date:** 2026-11-18 12:23
+**Request:** Owner: make the IBKR portfolio and Garmin configurable – each user decides whether to use them; Garmin can be the header icon with its window (as now), a section on What's up?, or hidden.
+**Why:** New Settings section "Modules". Decisions:
+- Two settings columns, `ibkr_display` (section · off) and `garmin_display` (icon · section · off). The defaults are what v3.7 shows, so nothing changes until a choice is made. They are checked lists of allowed words rather than on/off switches, so Garmin's three forms fit, and the server module (Step 19) can follow the same pattern.
+- Garmin as a section is a foldable card under IBKR with the same content as the window (the window's body is reused, not copied), with Refresh in the card header.
+- With the IBKR card hidden, the IBKR morning brief's icon moves to the header, so the brief stays reachable (it still has its own switch under Daily briefs).
+- Hiding only changes the screen; syncing keeps running. Connecting other users' own accounts is the later "per-user connections" step.
+
+**Commands run:**
+```bash
+npx supabase migration up --local        # local database only
+npx vitest run                           # 301 tests passed
+npm run lint                             # no warnings
+npm run test:db                          # 16 files, 205 tests passed
+npx playwright test --trace off e2e/modules.spec.js e2e/week.spec.js e2e/briefs.spec.js
+```
+
+**Files changed:**
+- `supabase/migrations/20261118110000_v3_8_modules.sql` – created: `user_settings.ibkr_display`, `garmin_display`.
+- `supabase/tests/database/16_modules.test.sql` – created: defaults, changes, refused values.
+- `src/features/settings/modules.js` (+ `modules.test.js`) – created: `garminDisplay`, `ibkrShown`, choices and hints.
+- `src/features/settings/ModuleSettings.jsx` (+ `ModuleSettings.test.jsx`) – created: Settings → Modules.
+- `src/features/settings/SettingsView.jsx`, `useSettings.js`, `settings.css` – modified: show the section, defaults, the three-way choice.
+- `src/features/garmin/GarminSection.jsx` – created: Garmin as a card. `GarminWindow.jsx` – modified: exports its body for the card.
+- `src/features/whatsup/WhatsUpPage.jsx`, `src/App.jsx` – modified: follow the module settings (card, header icon, IBKR brief icon).
+- `e2e/modules.spec.js` – created: Garmin as a card, IBKR hidden, Garmin off; accessibility check.
+- `src/features/about/databaseTables.js`, `README.md` – modified: the new settings. `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Settings → Modules: IBKR on/off and Garmin Off / Icon / Section. With "Section", Garmin is a card on What's up? and its header icon goes.
+**Issues & fixes:** My first e2e version opened the Modules section twice; Settings remembers open sections during a visit, so the second click folded it. Fixed the test.
+**Still to do (owner, at release):** `npx supabase db push`.
+**Commit:** `feat: modules – show or hide IBKR, Garmin as icon or card (Step 18)`

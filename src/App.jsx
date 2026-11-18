@@ -13,6 +13,7 @@ import { useBriefs } from './features/briefs/useBriefs.js'
 import GarminWindow from './features/garmin/GarminWindow.jsx'
 import { useGarmin } from './features/garmin/useGarmin.js'
 import { usePortfolio } from './features/portfolio/usePortfolio.js'
+import { garminDisplay, ibkrShown } from './features/settings/modules.js'
 import SettingsView from './features/settings/SettingsView.jsx'
 import ListsView from './features/todos/ListsView.jsx'
 import ListView from './features/todos/ListView.jsx'
@@ -88,9 +89,12 @@ function SignedInApp({ user }) {
     isOn(settings, kind) && (
       <ToolButton key={kind} icon={BRIEFS[kind].icon} label={BRIEFS[kind].title} dot={isNew(briefs.byKind[kind], today)} onClick={() => setPanel(kind)} className={className} />
     )
+  // v3.8 (Settings → Modules): the Garmin icon only in its "icon" form; with
+  // the IBKR card hidden, the IBKR brief's icon moves to the header.
   const tools = (
     <>
-      <ToolButton icon="run" label="Garmin" onClick={() => setPanel('garmin')} />
+      {garminDisplay(settings) === 'icon' && <ToolButton icon="run" label="Garmin" onClick={() => setPanel('garmin')} />}
+      {!ibkrShown(settings) && briefButton('ibkr')}
       {briefButton('jobs')}
       {briefButton('world')}
     </>
@@ -117,6 +121,7 @@ function SignedInApp({ user }) {
             {tabView === 'today' && (
               <WhatsUpPage
                 portfolio={portfolio}
+                garmin={garmin}
                 briefButton={briefButton('ibkr', 'section-icon-button')}
                 habits={habits}
                 todos={todos}
