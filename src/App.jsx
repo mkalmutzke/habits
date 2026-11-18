@@ -13,6 +13,10 @@ import { useBriefs } from './features/briefs/useBriefs.js'
 import GarminWindow from './features/garmin/GarminWindow.jsx'
 import { useGarmin } from './features/garmin/useGarmin.js'
 import { usePortfolio } from './features/portfolio/usePortfolio.js'
+import ServerWindow from './features/servers/ServerWindow.jsx'
+import { serverStatus, worstTone } from './features/servers/serverStatus.js'
+import { useServers } from './features/servers/useServers.js'
+import { garminDisplay, ibkrShown, serverShown } from './features/settings/modules.js'
 import SettingsView from './features/settings/SettingsView.jsx'
 import ListsView from './features/todos/ListsView.jsx'
 import ListView from './features/todos/ListView.jsx'
@@ -21,12 +25,13 @@ import './features/todos/todos.css'
 import { isOpen } from './features/todos/smartLists.js'
 import { useTodos } from './features/todos/useTodos.js'
 import { useSettings, useTimeZoneSetting } from './features/settings/useSettings.js'
-import WeekView from './features/week/WeekView.jsx'
+import DawnView from './features/dawn/DawnView.jsx'
 import WhatsUpPage from './features/whatsup/WhatsUpPage.jsx'
 import DataProvider from './shared/data/DataProvider.jsx'
 import { useOnline, useTable } from './shared/data/hooks.js'
 import { isConfigured } from './shared/data/supabaseClient.js'
 import { useRoute } from './shared/hooks/useRoute.js'
+import { useNow } from './shared/hooks/useNow.js'
 import { useToday } from './shared/hooks/useToday.js'
 import ToolButton from './shared/ui/ToolButton.jsx'
 import './app.css'
@@ -60,10 +65,12 @@ function SignedInApp({ user }) {
   const portfolio = usePortfolio()
   const garmin = useGarmin()
   const briefs = useBriefs()
+  const servers = useServers()
+  const now = useNow()
   const reminders = useReminders(user.id)
   const { settings, update: updateSettings } = useSettings(user.id)
   const pushOnThisDevice = usePushOnThisDevice(useTable('push_subscriptions').rows)
-  // v3.6: the window opened from an icon ('garmin', 'ibkr', 'jobs', 'world'), or null
+  // v3.6: the window opened from an icon ('garmin', 'ibkr', 'jobs', 'world'; v3.8: 'server'), or null
   const [panel, setPanel] = useState(null)
   useTimeZoneSetting(user.id)
   useInAppReminders({
@@ -79,7 +86,7 @@ function SignedInApp({ user }) {
     window.scrollTo(0, 0)
   }, [route.view, route.id])
 
-  const isTab = ['today', 'week', 'lists'].includes(route.view)
+  const isTab = ['today', 'dawn', 'lists'].includes(route.view)
   const tabView = isTab ? route.view : 'today'
   // v3.6: header icons before the gear, on the three main pages only (owner);
   // a brief switched off in Settings has no icon. The amber dot: today's
@@ -88,9 +95,18 @@ function SignedInApp({ user }) {
     isOn(settings, kind) && (
       <ToolButton key={kind} icon={BRIEFS[kind].icon} label={BRIEFS[kind].title} dot={isNew(briefs.byKind[kind], today)} onClick={() => setPanel(kind)} className={className} />
     )
+  // v3.8 (Settings → Modules): the Garmin icon only in its "icon" form; with
+  // the IBKR card hidden, the IBKR brief's icon moves to the header.
+  // v3.8: server health – the dot shows the worst server (green, amber, red)
+  const serverTone = worstTone(servers.servers.map((server) => serverStatus(server, servers.latest.get(server.id), now).tone))
+  const SERVER_SPOKEN = { ok: 'all healthy', warn: 'needs a look', down: 'no report', none: null }
   const tools = (
     <>
-      <ToolButton icon="run" label="Garmin" onClick={() => setPanel('garmin')} />
+      {serverShown(settings) && (
+        <ToolButton icon="server" label="Servers" tone={serverTone === 'none' ? null : serverTone} status={SERVER_SPOKEN[serverTone]} onClick={() => setPanel('server')} />
+      )}
+      {garminDisplay(settings) === 'icon' && <ToolButton icon="run" label="Garmin" onClick={() => setPanel('garmin')} />}
+      {!ibkrShown(settings) && briefButton('ibkr')}
       {briefButton('jobs')}
       {briefButton('world')}
     </>
@@ -117,21 +133,24 @@ function SignedInApp({ user }) {
             {tabView === 'today' && (
               <WhatsUpPage
                 portfolio={portfolio}
+                garmin={garmin}
                 briefButton={briefButton('ibkr', 'section-icon-button')}
                 habits={habits}
                 todos={todos}
+                shopping={shopping}
                 today={today}
                 reminderText={reminders.reminderText}
                 settings={settings}
                 pushOnThisDevice={pushOnThisDevice}
               />
             )}
-            {tabView === 'week' && (
-              <WeekView todos={todos} shopping={shopping} today={today} reminderText={reminders.reminderText} />
+            {tabView === 'dawn' && (
+              <DawnView todos={todos} today={today} reminderText={reminders.reminderText} />
             )}
             {tabView === 'lists' && <ListsView todos={todos} today={today} />}
           </div>
           {panel === 'garmin' && <GarminWindow garmin={garmin} today={today} onClose={() => setPanel(null)} />}
+          {panel === 'server' && <ServerWindow servers={servers} onClose={() => setPanel(null)} />}
           {panel in BRIEFS && (
             <BriefWindow kind={panel} brief={briefs.byKind[panel]} today={today} onSeen={briefs.markSeen} onClose={() => setPanel(null)} />
           )}
@@ -165,7 +184,7 @@ function SignedInApp({ user }) {
             </Suspense>
           )}
           {route.view === 'settings' && route.id !== 'about' && (
-            <SettingsView user={user} settings={settings} update={updateSettings} habits={habits}>
+            <SettingsView user={user} settings={settings} update={updateSettings} habits={habits} servers={servers}>
               <NotificationSettings user={user} settings={settings} update={updateSettings} pushOnThisDevice={pushOnThisDevice} />
             </SettingsView>
           )}

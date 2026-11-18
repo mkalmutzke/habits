@@ -6,7 +6,7 @@ import { createUser, openSignedIn } from './helpers.js'
 const PAGES = [
   ['sign-in', null, '/'],
   ['today', 'What’s up?', '/#/today'],
-  ['week', 'Week', '/#/week'],
+  ['dawn', 'Dawn', '/#/dawn'],
   ['lists', 'Lists', '/#/lists'],
   ['all-tasks', 'All', '/#/list/all'],
   ['settings', 'Settings', '/#/settings'],

@@ -416,3 +416,258 @@ git push origin origin/main:refs/heads/release/v3.7
 **Still to do (owner):** `npx supabase db push` and `npx supabase functions deploy garmin-sync` on production (check the linked project first), then `git tag v3.7.0 && git push origin v3.7.0` on `main`, and link the CLI back to `habits-test`.
 **Issues & fixes:** None so far.
 **Commit:** `chore: release v3.7.0 (Step 13)`
+
+### Step 14 – Design for v3.8 – v4.0 (style guide, mockups, workflows, steps)
+**Date:** 2026-11-17 21:23
+**Request:** Owner: check nine planned changes (dark style guide, configurable IBKR/Garmin/server health/briefs, habit breaks and month overview, shopping list move, calendars, rename Week to Dawn) and design the implementation steps, mockups and n8n-like workflows.
+**Why:** The changes touch many parts of the app, so they were checked against the code first and planned before any building. Nothing in the app was changed in this step. Main decisions (details on the design page, which is kept outside the repository like earlier design documents):
+- **The app is owner-only today** (v3.2 allowlist, `brief_owner()`, the `store_*` functions and keys in function settings). Letting other users connect their own IBKR, Garmin, server or calendar needs a per-user connection layer first: an `integrations` table with keys in Supabase Vault (encrypted). This is planned as Step 21.
+- **Server health:** netcup's REST API only says whether the server is on. CPU, memory and disk come from a small "health agent" script on the server that sends figures every 5 minutes. This works with any hosting provider.
+- **Calendars:** Google sign-in for calendars needs Google's verification (until then access ends after 7 days). Phase 1 therefore uses each calendar's secret iCal address, which also works for several calendars and for iCloud/Outlook.
+- **Habit breaks:** the tap cycle is empty → done → break → empty. A break keeps the streak but doesn't add to it, and three breaks in a row reset it (owner to confirm).
+- **Workflows:** drawn n8n-style, but built with the tools the app already uses (database scheduler, Edge Functions, Vault) instead of a separate n8n server.
+- **Order:** three small releases: v3.8 (theme, shopping list, breaks, month overview), v3.9 (modules, configurable briefs), v4.0 (per-user connections, server health, calendars, rename to Dawn).
+
+**Commands run:**
+```bash
+git status --short                      # clean working tree on claude/habits-app-updates-design-m8o858
+cat / head / grep over src/, supabase/ and docs/briefs/   # reading the current code
+node (contrast check of the proposed colours)             # every text colour >= 4.5:1, outlines >= 3:1
+node shot.cjs (Playwright screenshot of the design page, in the session's scratch folder)
+```
+
+**Files changed:**
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** The design page (private, on the owner's claude.ai account) shows the check of all nine requests, the "Dawn" dark style guide, nine phone mockups, seven workflow diagrams, the database changes and Steps 15–25 with files and tests. Six open questions for the owner are listed at its end.
+**Issues & fixes:** A plugin hook blocked the shell command that wrote this entry (it contains words like "key"), so the entry was added with the editor tool instead – the known quirk from `docs/NEXT_SESSION.md`.
+**Commit:** `docs: design plan for v3.8 – v4.0 (Step 14)`
+
+### Step 15 – Shopping list moves to What's up? (v3.8)
+**Date:** 2026-11-18 12:16
+**Request:** Owner: start with server health, Week → Dawn, modules show/hide, habit breaks, habit month view and the shopping list on What's up?; answers to the six design questions.
+**Why:** The owner wants the shopping list where they look every day: on What's up?, between Habits and To-dos, folded at every app start (it was open on Week). The six topics are built in this order: shopping list (smallest), habit breaks, month view, modules, server health, and last the rename to Dawn, because it touches the most files. All six go into one release, v3.8.
+- Owner's answers from the design: breaks don't count as streak days; no break limit to start with, but one can be set in Settings; invite-only for other users later; briefs for other users and Google sign-in skipped for now; the server agent also checks Docker and pending updates.
+
+**Commands run:**
+```bash
+npm ci                                   # install the packages from the lock file (container was fresh)
+dockerd &                                # Docker for the local database (cloud container)
+npm run db:start                         # local Supabase stack
+npx vitest run && npm run lint           # 269 tests passed, no warnings
+ln -sfn chromium_headless_shell-1243 /opt/pw-browsers/chromium_headless_shell-1248   # container only, not committed
+npx playwright test --trace off e2e/habits.spec.js e2e/habit-groups.spec.js e2e/today.spec.js e2e/week.spec.js
+```
+
+**Files changed:**
+- `src/features/whatsup/WhatsUpPage.jsx` – modified: shows the shopping list between Habits and ToDo's.
+- `src/features/week/WeekView.jsx` – modified: only "Due & overdue" is left on Week.
+- `src/features/shopping/ShoppingList.jsx` – modified: folded at app start (`useSectionOpen('shopping')` without "open").
+- `src/App.jsx` – modified: passes the shopping list to What's up? instead of Week.
+- `e2e/week.spec.js` – modified: the shopping tests open What's up? and unfold the card first; the Week test expects only "Due & overdue".
+- `e2e/today.spec.js` – modified: checks the order IBKR, Habits, Shopping, ToDo's and that Shopping starts folded.
+- `README.md` – modified: the shopping list is on What's up?.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** On What's up? the shopping list sits folded between Habits and To-dos; ＋ unfolds it. Week shows only the tasks due soon. Open the app → What's up? to see it.
+**Issues & fixes:** The installed headless browser (build 1243) is older than the one Playwright expects (1248) → linked under the new name, in the container only (known quirk). In the e2e run (together with Step 16), 31 of 32 tests passed. The failing one, "drag a habit to the top" on the phone, is the existing container problem from Step 12 and isn't caused by this change.
+**Commit:** `feat: shopping list on What's up?, folded (Step 15)`
+
+### Step 16 – Habit breaks (v3.8)
+**Date:** 2026-11-18 12:17
+**Request:** Owner: take a break from a habit without breaking the streak – one tap = done, second tap = break, third tap = clear; three breaks in a row reset the streak; breaks don't count as streak days; no monthly limit to start with, but one can be set in Settings.
+**Why:** A habit day now has three states. Decisions:
+- **Storage:** a new column `status` (done · break) on `habit_completions`, default done. This is additive: old rows stay done days, clearing still deletes the row, and done ↔ break is an update of only this column (the only new database right). The alternative, a separate breaks table, would need a second query and two rows to keep apart.
+- **Streak rule** (plain function `getStreak`, unit-tested): counting back from today, a done day adds 1 and a break adds nothing but keeps the chain. The third break in a row ends it, so only the done days after those breaks count.
+- **Monthly limit:** `user_settings.habit_break_limit` (empty = no limit, 1–31). Once a habit has used its breaks in a calendar month, a second tap on a done day clears it, like before v3.8.
+- **Counting:** a break counts as looked after: "4 of 5 today · 1 on a break", in the groups' "x of y", and for reminders (no reminder on a break day, in the app as on the server, which already skips any row of the day).
+- **Look:** a violet ring with a pause sign (new colour token `--break`, 6.9:1 contrast on the cards); while a habit is on a break, its streak shows "9 ‖" instead of the flame. For screen readers the dot is "mixed" and says what the next tap does ("on a break – tap to clear").
+
+**Commands run:**
+```bash
+npx supabase migration up --local        # applies the new migration to the local database only
+npx vitest run                           # 289 tests passed
+npm run lint                             # no warnings
+npm run test:db                          # 15 files, 200 tests passed
+npx playwright test --trace off e2e/habits.spec.js e2e/habit-groups.spec.js e2e/today.spec.js e2e/week.spec.js
+```
+
+**Files changed:**
+- `supabase/migrations/20261118100000_v3_8_habit_breaks.sql` – created: `habit_completions.status`, the update right for it, `user_settings.habit_break_limit`.
+- `supabase/tests/database/15_habit_breaks.test.sql` – created: done by default, done → break, only done/break allowed, the day can't change, other users can't touch it, the limit's range.
+- `src/features/habits/streak.js` – modified: `getStreak` with breaks, new `isOnBreak`, `MAX_BREAKS_IN_A_ROW = 3`.
+- `src/features/habits/habitData.js` – modified: `breaks` per habit, `dayStatus`, `isMarked`, `breaksInMonth`, `nextStatus` (the tap cycle with the limit), `dayChanges`; groups count breaks.
+- `src/features/habits/useHabits.js` – modified: `cycleDay` replaces `toggleToday`.
+- `src/features/habits/HabitSection.jsx`, `HabitGroups.jsx`, `HabitWeekGrid.jsx`, `habits.css` – modified: three-state dots, labels, the "on a break" streak marker, the summary line.
+- `src/features/notifications/reminderTime.js` – modified: no in-app reminder on a break day.
+- `src/features/settings/HabitBreakSettings.jsx` – created: Settings → Habit breaks (breaks per habit and month).
+- `src/features/settings/SettingsView.jsx`, `useSettings.js` – modified: show the new section; default "no limit".
+- `src/shared/styles/base.css` – modified: colour tokens `--break`, `--break-soft`.
+- `src/features/about/databaseTables.js` – modified: the new columns on the About page.
+- Tests: `streak.test.js`, `habitData.test.js`, `HabitWeekGrid.test.jsx`, `reminderTime.test.js`, new `HabitBreakSettings.test.jsx`; e2e `habits.spec.js` (tap cycle saved as break, then cleared; limit in Settings), `habit-groups.spec.js` (labels).
+- `README.md` – modified: "again for a break". `BUILD_LOG.md` – modified: this entry.
+
+**Result:** On What's up?, tap a habit day once for done (green), again for a break (violet ring ‖), again to clear it. Settings → Habit breaks sets an optional limit per month.
+**Issues & fixes:** One of my own unit tests had a gap day in its data, so its expected "on a break" was wrong; fixed the test. The e2e run had the same single known failure as in Step 15 (dragging on the phone, container only).
+**Still to do (owner, at release):** `npx supabase db push` – `habits-test` first, then production.
+**Commit:** `feat: habit breaks – tap cycle done → break → clear (Step 16)`
+
+### Step 17 – Habit month view (v3.8)
+**Date:** 2026-11-18 12:40
+**Request:** Owner: a monthly overview of the habits as a popup (an icon in the Habits header) showing the current and previous calendar month and which days were fully marked or had breaks.
+**Why:** A calendar icon on the Habits card opens "Habit months": this month and last month, Monday first. Decisions:
+- A day is **complete** when every habit that existed on that day was done (green) or done-or-on-a-break with at least one break (green/violet). Partly done days have a green ring, empty days a dark fill. Habits count only from the day they were added, so a new habit doesn't spoil the past.
+- With habit groups, a filter row shows all habits or one group. Tapping a day lists its habits (Done / Break / –) below the calendars.
+- The logic is plain functions in `monthOverview.js` (unit-tested). No database change: the window uses the check-offs the app already has. The icon shows whenever there are habits, also on the folded card.
+
+**Commands run:**
+```bash
+npx vitest run                           # 297 tests passed
+npm run lint                             # no warnings
+npx playwright test --trace off e2e/habits.spec.js -g "month view|breaks|TS-H1"   # 6 passed (phone and laptop)
+```
+
+**Files changed:**
+- `src/features/habits/monthOverview.js` – created: `monthStart`, `monthDays`, `dayOverview`, `monthOverview`.
+- `src/features/habits/monthOverview.test.js` – created: months across the year, leap year, day states, habits added mid-month, Monday-first blanks.
+- `src/features/habits/HabitMonthWindow.jsx` – created: the window (two calendars, legend, group filter, day details).
+- `src/features/habits/HabitMonthWindow.test.jsx` – created: complete days and breaks, day details, group filter.
+- `src/features/habits/HabitSection.jsx` – modified: the "Habit months" calendar icon in the card header.
+- `src/features/habits/habits.css` – modified: styles of the month window.
+- `e2e/habits.spec.js` – modified: opens the window, checks today as "all done", accessibility check (axe), screenshot.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** What's up? → Habits → calendar icon: two month calendars with complete days in green (with breaks green/violet); tap a day to see each habit's state.
+**Issues & fixes:** The first screenshot showed very tall day cells (square cells on a wide phone) and an invisible "nothing" swatch → cells are now 38 px high and empty days have a visible fill. `HabitSection.jsx` is now 188 lines, above the ~150 aim; it is worth splitting when it is touched next.
+**Commit:** `feat: habit month view – this and last month (Step 17)`
+
+### Step 18 – Modules: show or hide IBKR and Garmin (v3.8)
+**Date:** 2026-11-18 12:23
+**Request:** Owner: make the IBKR portfolio and Garmin configurable – each user decides whether to use them; Garmin can be the header icon with its window (as now), a section on What's up?, or hidden.
+**Why:** New Settings section "Modules". Decisions:
+- Two settings columns, `ibkr_display` (section · off) and `garmin_display` (icon · section · off). The defaults are what v3.7 shows, so nothing changes until a choice is made. They are checked lists of allowed words rather than on/off switches, so Garmin's three forms fit, and the server module (Step 19) can follow the same pattern.
+- Garmin as a section is a foldable card under IBKR with the same content as the window (the window's body is reused, not copied), with Refresh in the card header.
+- With the IBKR card hidden, the IBKR morning brief's icon moves to the header, so the brief stays reachable (it still has its own switch under Daily briefs).
+- Hiding only changes the screen; syncing keeps running. Connecting other users' own accounts is the later "per-user connections" step.
+
+**Commands run:**
+```bash
+npx supabase migration up --local        # local database only
+npx vitest run                           # 301 tests passed
+npm run lint                             # no warnings
+npm run test:db                          # 16 files, 205 tests passed
+npx playwright test --trace off e2e/modules.spec.js e2e/week.spec.js e2e/briefs.spec.js
+```
+
+**Files changed:**
+- `supabase/migrations/20261118110000_v3_8_modules.sql` – created: `user_settings.ibkr_display`, `garmin_display`.
+- `supabase/tests/database/16_modules.test.sql` – created: defaults, changes, refused values.
+- `src/features/settings/modules.js` (+ `modules.test.js`) – created: `garminDisplay`, `ibkrShown`, choices and hints.
+- `src/features/settings/ModuleSettings.jsx` (+ `ModuleSettings.test.jsx`) – created: Settings → Modules.
+- `src/features/settings/SettingsView.jsx`, `useSettings.js`, `settings.css` – modified: show the section, defaults, the three-way choice.
+- `src/features/garmin/GarminSection.jsx` – created: Garmin as a card. `GarminWindow.jsx` – modified: exports its body for the card.
+- `src/features/whatsup/WhatsUpPage.jsx`, `src/App.jsx` – modified: follow the module settings (card, header icon, IBKR brief icon).
+- `e2e/modules.spec.js` – created: Garmin as a card, IBKR hidden, Garmin off; accessibility check.
+- `src/features/about/databaseTables.js`, `README.md` – modified: the new settings. `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Settings → Modules: IBKR on/off and Garmin Off / Icon / Section. With "Section", Garmin is a card on What's up? and its header icon goes.
+**Issues & fixes:** My first e2e version opened the Modules section twice; Settings remembers open sections during a visit, so the second click folded it. Fixed the test.
+**Still to do (owner, at release):** `npx supabase db push`.
+**Commit:** `feat: modules – show or hide IBKR, Garmin as icon or card (Step 18)`
+
+### Step 19 – Server health (v3.8)
+**Date:** 2026-11-18 12:32
+**Request:** Owner: show the VPS's health (netcup) in a popup at the top of the habit screen; the whole module configurable, so every user can use it or not and connect their own server at netcup or any other provider. The agent should also check Docker and pending updates.
+**Why:** netcup's REST API only says whether the machine is on, not what happens inside it. So a small **agent on the server** sends its figures (push), which works the same at every provider. Decisions:
+- **Per user from the start:** the tables `servers` and `server_reports` have row level security like every table, so this module doesn't need the later "per-user connections" step.
+- **Token:** each server gets 32 random bytes. The database stores only its SHA-256 fingerprint, in `private.server_tokens`, which the app can't read. The token is shown once in Settings (with the install command); "New token" replaces it. The installer reads it at a hidden prompt (not in the shell history), and the agent hands it to curl on standard input (not in the process list).
+- **Receiving:** the Edge Function `server-ingest` refuses bodies over 8000 characters and checks and trims every value (`_shared/serverReport.js`). The database function `store_server_report` stores at most one report per 50 seconds per server. Reports are kept 2 days (cleaned up hourly by the scheduler); the window draws CPU for 24 hours.
+- **Status rules** (plain functions, unit-tested): no report for 15 min → red "No report"; CPU/memory/disk above the server's limit (default 90/90/80 %, changeable), a watched service stopped, or the certificate ending within 14 days → amber; updates and "restart needed" are notes, not warnings. The header dot shows the worst server, and the time is re-checked every minute (new `useNow` hook), so a server that goes quiet turns red without a reload.
+- **Module:** Settings → Modules → Server health (`user_settings.server_display`, off to start with). Settings → Servers appears only when it is on.
+- **Not in this step:** the provider check through netcup's API ("is the machine on" from outside). It is still a beta and needs its own login; a missing report already shows a down server. Alerts by push or email when the status changes are also left for later.
+
+**Commands run:**
+```bash
+npx supabase migration up --local
+npm run test:db                                  # 17 files, 221 tests passed
+npx supabase stop --no-backup && npm run db:start   # the local function runtime only knows functions that existed at start
+sh scratchpad/agent-test/run.sh                  # the real agent against the local stack: report stored, second one refused (429)
+npx vitest run                                   # 313 tests passed
+npm run lint                                     # no warnings
+sh -n scripts/server-agent/habits-agent.sh && sh -n scripts/server-agent/install.sh   # syntax ok
+npx playwright test --trace off e2e/servers.spec.js e2e/modules.spec.js            # 2 passed
+```
+
+**Files changed:**
+- `supabase/migrations/20261118120000_v3_8_server_health.sql` – created: `servers`, `private.server_tokens`, `server_reports`, `add_server`, `renew_server_token`, `store_server_report`, the hourly cleanup, `user_settings.server_display`.
+- `supabase/tests/database/17_server_health.test.sql` – created: isolation, token only as fingerprint, no direct inserts, 50-second gap, unknown and replaced tokens.
+- `supabase/functions/server-ingest/index.ts` – created. `supabase/functions/_shared/serverReport.js` (+ test) – created: token format, report checks. `supabase/config.toml` – modified: `server-ingest` without user sign-in (it checks the server token itself).
+- `scripts/server-agent/habits-agent.sh`, `scripts/server-agent/install.sh` – created: the agent and its installer (systemd timer every 5 min, `--remove`).
+- `src/features/servers/` – created: `serverStatus.js` (+ test), `useServers.js`, `ServerWindow.jsx`, `ServerSettings.jsx`, `InstallSteps.jsx`, `servers.css`.
+- `src/shared/hooks/useNow.js` – created. `src/shared/ui/ToolButton.jsx`, `Icon.jsx`, `src/shared/styles/buttons.css` – modified: coloured status dot, server and copy icons.
+- `src/App.jsx`, `src/features/settings/SettingsView.jsx`, `ModuleSettings.jsx` (+ test), `modules.js`, `useSettings.js`, `HabitGroupSettings.jsx` (name field reused), `src/shared/data/tables.js` – modified: wiring.
+- `src/features/about/databaseTables.js`, `README.md` – modified: the new tables, a "Server health" section. `e2e/servers.spec.js` – created. `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Settings → Modules → Server health on → Settings → Servers → Add server → run the shown command on the server and paste the token. Within a minute the server icon in the header shows a green, amber or red dot; tap it for the figures.
+**Issues & fixes:** My database test first reset a timestamp as the server role, which correctly has no rights there; fixed the test. The local function runtime returned 404 for the new function until the local stack was restarted. The linter flagged reading the clock during render → the `useNow` hook. The installer could not be run in this container (no systemd), only syntax-checked; the agent itself ran for real.
+**Still to do (owner, at release):** `npx supabase db push` and `npx supabase functions deploy server-ingest` (test project first). Then, on the VPS: Settings → Servers → Add server and run the shown command. The install command downloads from `main`, so it works once v3.8 is merged.
+**Commit:** `feat: server health – agent, server-ingest, header icon and window (Step 19)`
+
+### Step 20 – Week becomes Dawn (v3.8)
+**Date:** 2026-11-18 12:55
+**Request:** Owner: once everything works, rename the Week page to Dawn.
+**Why:** Renamed last, because it touches the most files. Decisions:
+- Tab, title and address are now "Dawn" and `#/dawn`. Old `#/week` links (bookmarks, links in earlier notifications) still open the page: the router maps the old name to the new one.
+- The small line under the title said "Last 7 days", left over from when habits were on the Week page. The page now shows tasks due today, in the next 6 days or overdue, so it reads "Today + next 6 days · 18 Nov – 24 Nov".
+- The folder `src/features/week/` is now `src/features/dawn/` (`WeekView` → `DawnView`). `week.js` keeps its name, because it holds the 7-day helper that habits and Garmin also use.
+- Test fix along the way: the e2e helper that unfolds Habits checked for the card without waiting, so right after a reload it sometimes left it folded. That made "drag a habit to the top" fail in cloud containers since Step 12. It now waits for the card.
+- The two reminder tests that failed in this container since Step 12 failed only because the local push settings were missing. CI creates them with `npm run dev:push-keys`; done the same here, they pass.
+
+**Commands run:**
+```bash
+git mv src/features/week src/features/dawn
+git mv src/features/dawn/WeekView.jsx src/features/dawn/DawnView.jsx
+git mv src/features/dawn/week.css src/features/dawn/dawn.css
+git mv e2e/week.spec.js e2e/dawn.spec.js
+npx vitest run                           # 314 tests passed
+npm run lint                             # no warnings
+npm run dev:push-keys                    # local push settings, ignored file only (as in CI), then the local stack restarted
+npx playwright test --trace off          # the whole suite: 77 passed
+npm run db:reset && npm run test:db      # fresh local database: 17 files, 221 tests passed
+```
+
+**Files changed:**
+- `src/features/dawn/` (was `week/`) – moved: `DawnView.jsx` (was `WeekView.jsx`), `dawn.css` (was `week.css`), `DueSection.jsx`, `dueSoon.js`, `week.js` and their tests; comments updated.
+- `src/AppHeader.jsx`, `src/headerLine.js`, `src/App.jsx`, `src/shared/hooks/useRoute.js` – modified: tab, title, header line, `#/dawn` with `#/week` still working.
+- `src/features/habits/HabitWeekGrid.jsx`, `src/features/garmin/garmin.js` – modified: import path of `week.js`.
+- `src/features/about/BlocksDiagram.jsx`, `databaseTables.js`, `src/features/shopping/shopping.css`, `README.md` – modified: names.
+- Tests: `src/AppHeader.test.jsx`, `src/shared/hooks/useRoute.test.js` (old link → Dawn); e2e `dawn.spec.js` (was `week.spec.js`), `today.spec.js` (tab, address, old link), `a11y.spec.js`, `shell.spec.js`, `briefs.spec.js`; `habits.spec.js` (the waiting unfold helper); `supabase/tests/database/17_server_health.test.sql` (only looks at its own row).
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** The middle tab is "Dawn" (open https://habits.mkalmutzke.com/#/dawn after the release); `#/week` still works.
+**Issues & fixes:** Database tests run right after the e2e suite failed, because the e2e users and servers were still in the local database (CI uses a fresh one) → reset the local database. One server-health check now only looks at its own row.
+**Commit:** `feat: the Week page is now Dawn (Step 20)`
+
+### Step 21 – v3.8.0: version bump and pull request (v3.8)
+**Date:** 2026-11-18 13:00
+**Request:** Owner: "open the PR and list me the steps I need to take".
+**Why:** Steps 15–20 are ready, so the version becomes 3.8.0 and the work goes into the integration branch `release/v3.8` (new, made from `main`) by pull request. The steps were made one after another on one working branch, so they arrive as one PR with one commit per step instead of one PR per step; each commit has its own build-log entry. The PR is merged into `release/v3.8` once all checks are green. `release/v3.8` → `main` (going live) waits for the owner's explicit OK.
+
+**Commands run:**
+```bash
+npm version 3.8.0 --no-git-tag-version   # package.json and package-lock.json
+npx vitest run                           # 314 tests passed
+npm run lint                             # no warnings
+npx supabase stop --no-backup && npm run db:start   # the local database had stopped while the session paused
+npx playwright test --trace off e2e/shell.spec.js    # 6 passed ("Version 3.8.0")
+```
+
+**Files changed:**
+- `package.json`, `package-lock.json` – modified: version 3.8.0.
+- `src/features/about/AboutPage.test.jsx`, `e2e/shell.spec.js` – modified: expect "Version 3.8.0".
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Pull request from the working branch into `release/v3.8`.
+**Still to do (owner):** see the PR description – `db push` and two function deploys on `habits-test`, check, then the OK for production.
+**Issues & fixes:** None.
+**Commit:** `chore: version 3.8.0 (Step 21)`

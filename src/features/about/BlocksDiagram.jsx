@@ -16,7 +16,7 @@ const LAYERS = [
       { name: 'whatsup', role: 'start page: IBKR, Habits + ToDo’s cards' },
       { name: 'habits', role: 'week grid, drag to reorder, dialog, streaks' },
       { name: 'todos', role: 'lists, groups, sources (Show in All), task details' },
-      { name: 'week', role: 'Week page: Due & overdue, Shopping' },
+      { name: 'dawn', role: 'Dawn page (Week until v3.8): Due & overdue' },
       { name: 'shopping', role: 'shopping list' },
       { name: 'portfolio', role: 'IBKR card: holdings, day move, TWR (v3.4)' },
       { name: 'garmin', role: 'Garmin window from the header (v3.6): steps chart, resting heart rate, activities with distance – 7 days or month; Refresh on demand' },

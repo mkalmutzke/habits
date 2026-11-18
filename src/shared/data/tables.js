@@ -24,6 +24,9 @@ export const TABLES = {
   garmin_activities: { key: ['id'], order: ['day'] },
   // v3.6: written by the server only (brief-ingest); the app reads them and sets seen_on
   briefs: { key: ['id'], order: ['kind'] },
+  // v3.8: the user's servers; their health reports are written by the server only (server-ingest)
+  servers: { key: ['id'], order: ['created_at'] },
+  server_reports: { key: ['id'], order: ['reported_at'] },
 }
 
 // The Data API returns at most 1000 rows per request, so bigger tables

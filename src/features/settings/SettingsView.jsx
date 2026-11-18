@@ -11,6 +11,10 @@ import { version } from '../../../package.json'
 import '../about/about.css'
 import { disablePush } from '../notifications/pushDevice.js'
 import BriefSettings from '../briefs/BriefSettings.jsx'
+import HabitBreakSettings from './HabitBreakSettings.jsx'
+import ServerSettings from '../servers/ServerSettings.jsx'
+import ModuleSettings from './ModuleSettings.jsx'
+import { serverShown } from './modules.js'
 import HabitGroupSettings from './HabitGroupSettings.jsx'
 import SettingsSection from './SettingsSection.jsx'
 import SwitchRow from './SwitchRow.jsx'
@@ -19,7 +23,7 @@ import './settings.css'
 // Settings (mockup 6): reminders (passed in as children), to-dos, about, and
 // account and data. v3.6: every section is a foldable card, folded at app
 // start, and habit groups are managed here.
-function SettingsView({ user, settings, update, habits, children }) {
+function SettingsView({ user, settings, update, habits, servers, children }) {
   const queryClient = useQueryClient()
   const online = useOnline()
   const [busy, setBusy] = useState(null)
@@ -58,7 +62,11 @@ function SettingsView({ user, settings, update, habits, children }) {
 
       {children}
 
+      <ModuleSettings settings={settings} update={update} />
+      {servers && serverShown(settings) && <ServerSettings servers={servers} />}
+
       {habits && <HabitGroupSettings habits={habits} settings={settings} update={update} />}
+      <HabitBreakSettings settings={settings} update={update} />
       <BriefSettings settings={settings} update={update} />
       <SettingsSection id="todos" title="To-dos">
         <div className="settings-card">

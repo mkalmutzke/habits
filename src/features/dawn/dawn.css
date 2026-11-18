@@ -1,6 +1,6 @@
-/* Week page (design v3.3 §3.4): Habits, Due & overdue and Shopping cards. */
+/* Dawn page (v3.8; the Week page until then, design v3.3 §3.4): Due & overdue. */
 
-.week-page {
+.dawn-page {
   display: flex;
   flex-direction: column;
   gap: 14px;

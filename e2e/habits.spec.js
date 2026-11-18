@@ -1,18 +1,24 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
-import { createUser, openSignedIn, restAs } from './helpers.js'
+import { createUser, openSettingsSection, openSignedIn, restAs } from './helpers.js'
 
 // Test plan v3 TS-H (habit week grid on What's up?), v2 TS-H/TS-O (cloud,
 // offline) and TS-S5 (isolation).
 
+const shot = (page, name) =>
+  page.screenshot({ path: `test-results/screens/${test.info().project.name}-${name}.png`, fullPage: true })
+
 // The day buttons of a habit's row (4 since v3.1), oldest first – the last one is today.
-const dayButtons = (page, name) => page.getByRole('button', { name: new RegExp(`^${name}, \\w+ \\d+ \\w+: (done|not done)`) })
+const dayButtons = (page, name) => page.getByRole('button', { name: new RegExp(`^${name}, \\w+ \\d+ \\w+: (done|not done|on a break)`) })
 const todayButton = (page, name) => dayButtons(page, name).last()
 
 // The section starts folded every time the app opens (owner, mockup review).
+// v3.8: waits for the card first – right after a reload it isn't there yet,
+// and checking too early left it folded (the drag test failed that way).
 async function showHabits(page) {
-  const show = page.getByRole('button', { name: /^Habits/, expanded: false })
-  if (await show.isVisible()) await show.click()
+  const header = page.getByRole('button', { name: /^Habits/ })
+  await expect(header).toBeVisible()
+  if ((await header.getAttribute('aria-expanded')) === 'false') await header.click()
 }
 
 async function addHabit(page, name) {
@@ -48,8 +54,17 @@ test('TS-H1/H2 the grid shows 4 days (v3.1); ticking today and a past day is sav
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
   expect(axe.violations.map((violation) => `${violation.id}: ${violation.nodes.length}`)).toEqual([])
 
-  // untick the past day again
-  await dayButtons(page, 'Drink water').first().click()
+  // v3.8 (owner): tap again = a break (kept as a row with status "break"),
+  // tap once more = cleared
+  const past = dayButtons(page, 'Drink water').first()
+  await past.click()
+  await expect(past).toHaveAttribute('aria-pressed', 'mixed')
+  await expect(past).toHaveAccessibleName(/: on a break – tap to clear$/)
+  await expect
+    .poll(async () => (await restAs(user, 'habit_completions?select=day,status&order=day')).body.map((row) => row.status))
+    .toEqual(['break', 'done'])
+  await past.click()
+  await expect(past).toHaveAttribute('aria-pressed', 'false')
   await expect.poll(async () => (await restAs(user, 'habit_completions?select=day')).body.length).toBe(1)
 
   // fresh start: folded, and still ticked when opened
@@ -57,6 +72,57 @@ test('TS-H1/H2 the grid shows 4 days (v3.1); ticking today and a past day is sav
   await expect(page.getByRole('button', { name: /^Habits/, expanded: false })).toHaveAttribute('aria-expanded', 'false')
   await showHabits(page)
   await expect(todayButton(page, 'Drink water')).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('v3.8 breaks: a break today counts in “x of y”; the monthly limit in Settings turns break into clear', async ({ page }) => {
+  const user = await createUser('breaks')
+  await openSignedIn(page, user)
+  await addHabit(page, 'Gym')
+  await todayButton(page, 'Gym').click()
+  await todayButton(page, 'Gym').click()
+  await expect(todayButton(page, 'Gym')).toHaveAttribute('aria-pressed', 'mixed')
+  await expect(page.getByText('1 of 1 today · 1 on a break')).toBeVisible()
+  await todayButton(page, 'Gym').click()
+  await expect(page.getByText('0 of 1 today')).toBeVisible()
+
+  // Settings → Habit breaks: 1 per month
+  await page.goto('/#/settings')
+  await openSettingsSection(page, 'Habit breaks')
+  await page.getByLabel(/Breaks per habit and month/).selectOption('1')
+  await expect.poll(async () => (await restAs(user, 'user_settings?select=habit_break_limit')).body[0]?.habit_break_limit).toBe(1)
+
+  // the one break of this month is used on the 1st (written straight to the
+  // database); then a done day today: a second tap clears it
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Zurich' })
+  test.skip(today.endsWith('-01'), 'no other day of this month before today')
+  const [gym] = (await restAs(user, 'habits?select=id')).body
+  await restAs(user, 'habit_completions', { method: 'POST', body: JSON.stringify({ habit_id: gym.id, day: `${today.slice(0, 7)}-01`, status: 'break' }) })
+  await page.goto('/#/today')
+  await showHabits(page)
+  await todayButton(page, 'Gym').click()
+  await expect(todayButton(page, 'Gym')).toHaveAccessibleName(/: done – tap to clear$/)
+  await todayButton(page, 'Gym').click()
+  await expect(todayButton(page, 'Gym')).toHaveAttribute('aria-pressed', 'false')
+})
+
+test('v3.8 month view: the calendar icon opens this and last month; days show done and breaks; readable', async ({ page }) => {
+  const user = await createUser('months')
+  await openSignedIn(page, user)
+  await addHabit(page, 'Walk')
+  await todayButton(page, 'Walk').click()
+  await expect(page.getByText('1 of 1 today')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Habit months' }).click()
+  const window = page.getByRole('dialog', { name: 'Habit months' })
+  await expect(window.getByRole('region')).toHaveCount(2)
+  await expect(window.getByRole('button', { name: /: all done, 1 of 1 done$/ })).toHaveCount(1)
+  await expect(window.getByRole('heading', { level: 3 }).first()).toContainText('1 complete')
+  await page.waitForTimeout(400)
+  await shot(page, 'habit-months')
+  const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
+  expect(axe.violations.map((violation) => `${violation.id}: ${violation.nodes.length}`)).toEqual([])
+  await window.getByRole('button', { name: 'Close' }).click()
+  await expect(window).toHaveCount(0)
 })
 
 test('TS-H5 starts folded; folded shows only the count, no icons', async ({ page }) => {

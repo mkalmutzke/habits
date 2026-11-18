@@ -8,13 +8,14 @@ import { cleanTitle } from './shopping.js'
 import ShoppingItem, { RenameField } from './ShoppingItem.jsx'
 import './shopping.css'
 
-// The shopping list on the Week page (design v3 §2.5): plain text only. ＋
+// The shopping list (design v3 §2.5; v3.8: on What's up?, before Week): plain text only. ＋
 // opens the input; adding an item closes it again – the next item needs ＋
 // again (owner, v3.1); tap = ticked (struck
 // through, moves to the bottom), tap again = back; long-press (or F2) =
 // rename (owner, review point 4); "Clear ticked" removes the ticked ones,
 // with Undo. v3.3 (R4): a foldable card like Habits, open at app start,
 // with "n to buy" in the header and "Clear ticked" at the bottom.
+// v3.8 (owner): on What's up?, folded at every app start.
 function ShoppingList({ shopping }) {
   const online = useOnline()
   const { items, addItem, toggleItem, renameItem, clearTicked, restoreItems } = shopping
@@ -22,7 +23,7 @@ function ShoppingList({ shopping }) {
   const [adding, setAdding] = useState(false)
   const [draft, setDraft] = useState('')
   const [renaming, setRenaming] = useState(null)
-  const section = useSectionOpen('shopping', true)
+  const section = useSectionOpen('shopping')
   const hasTicked = items.some((item) => item.ticked_at)
   const toBuy = items.length - items.filter((item) => item.ticked_at).length
 

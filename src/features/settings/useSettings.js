@@ -10,6 +10,12 @@ export const DEFAULT_SETTINGS = {
   quiet_start: null,
   quiet_end: null,
   show_deleted_tasks: true,
+  // v3.8: breaks per habit and month; null = no limit
+  habit_break_limit: null,
+  // v3.8: modules shown (Settings → Modules)
+  ibkr_display: 'section',
+  garmin_display: 'icon',
+  server_display: 'off',
 }
 
 // This user's settings row (or the defaults until it exists) and a way to change it.
