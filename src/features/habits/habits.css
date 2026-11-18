@@ -189,6 +189,21 @@ span.wg-habit {
   background: var(--success);
 }
 
+/* v3.8 (owner): a break – violet ring with a soft fill and a pause sign */
+.wg-cell.break .wg-dot {
+  position: relative;
+  border-color: var(--break);
+  background: var(--break-soft);
+}
+
+.wg-cell.break .wg-dot::after {
+  content: '';
+  position: absolute;
+  inset: 3px 4px;
+  border-left: 2px solid var(--break);
+  border-right: 2px solid var(--break);
+}
+
 .wg-cell.pop .wg-dot {
   animation: wg-pop 420ms var(--ease-pop);
 }
@@ -213,6 +228,10 @@ span.wg-habit {
   font-size: 0.78rem;
   white-space: nowrap;
   color: var(--ink-soft);
+}
+
+.wg-flame.on-break {
+  color: var(--break);
 }
 
 .wg-flame.tier-7 {

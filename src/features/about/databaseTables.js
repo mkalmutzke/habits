@@ -4,7 +4,7 @@
 export const DATABASE_TABLES = [
   { group: 'Habits', name: 'habits', what: 'Your habits', columns: 'name · subtitle (v3.1) · emoji · position (v3.3: drag to reorder) · group_id (v3.6)', since: 'v2' },
   { group: 'Habits', name: 'habit_groups', what: 'Groups of habits (Sport, Dog, …); habits without a group are in the default group', columns: 'name · position', since: 'v3.6' },
-  { group: 'Habits', name: 'habit_completions', what: 'One row per habit and ticked day', columns: 'habit_id · day', since: 'v2' },
+  { group: 'Habits', name: 'habit_completions', what: 'One row per habit and ticked day – done or a break (v3.8)', columns: 'habit_id · day · status', since: 'v2' },
   { group: 'Habits', name: 'habit_reminders', what: 'Daily reminder of a habit – only if not done that day', columns: 'habit_id · remind_time · channels · starts_on · last_sent_on', since: 'v3' },
   { group: 'To-dos', name: 'todo_groups', what: 'Groups (folders) of lists', columns: 'name · collapsed · position', since: 'v2' },
   { group: 'To-dos', name: 'todo_lists', what: 'Your lists', columns: 'name · color · group_id · show_in_all (v3.3) · position', since: 'v2' },
@@ -17,7 +17,7 @@ export const DATABASE_TABLES = [
   { group: 'Garmin', name: 'garmin_days', what: 'One Garmin daily summary per day (kept 365 days), written by the server', columns: 'day · steps · step_goal · resting_hr', since: 'v3.5' },
   { group: 'Garmin', name: 'garmin_activities', what: 'Your Garmin activities (kept 365 days), written by the server', columns: 'day · activity_type · moving_s · duration_s · distance_m · elevation_gain_m (v3.7)', since: 'v3.5' },
   { group: 'Briefs', name: 'briefs', what: 'The latest daily brief of each kind (IBKR, Canada jobs, world news), written by the server', columns: 'kind · for_day · content · seen_on', since: 'v3.6' },
-  { group: 'You', name: 'user_settings', what: 'Time zone, reminder channels, quiet hours, show deleted tasks, name of the default habit group, daily briefs on/off', columns: 'time_zone · inapp_on · email_on · quiet_start/end · show_deleted_tasks · default_habit_group · brief_*_on (v3.6)', since: 'v2' },
+  { group: 'You', name: 'user_settings', what: 'Time zone, reminder channels, quiet hours, show deleted tasks, name of the default habit group, daily briefs on/off, breaks per habit and month', columns: 'time_zone · inapp_on · email_on · quiet_start/end · show_deleted_tasks · default_habit_group · brief_*_on (v3.6) · habit_break_limit (v3.8)', since: 'v2' },
   { group: 'You', name: 'push_subscriptions', what: 'Devices with push switched on', columns: 'endpoint · device_label · last_used_at', since: 'v2' },
   { group: 'You', name: 'notification_log', what: 'What the server sent (kept 30 days)', columns: 'channel · result · task_id / habit_id', since: 'v2' },
 ]

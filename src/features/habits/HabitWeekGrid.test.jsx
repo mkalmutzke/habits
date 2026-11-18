@@ -62,6 +62,24 @@ describe('HabitWeekGrid (design v3 §2.2, v3.1)', () => {
     expect(onEdit).toHaveBeenCalledWith(habits[1])
   })
 
+  it('v3.8: a break day is “mixed”, keeps the streak and shows a pause sign instead of the flame', () => {
+    const resting = { id: 'gym', name: 'Gym', subtitle: '', emoji: '🏃', completions: ['2026-10-05', '2026-10-06'], breaks: ['2026-10-07'] }
+    render(<HabitWeekGrid habits={[resting]} today={TODAY} onToggle={vi.fn()} />)
+    const days = dayButtons('Gym')
+    expect(days[1]).toHaveAccessibleName('Gym, Tue 6 Oct: done – tap for a break')
+    expect(days[2]).toHaveAttribute('aria-pressed', 'mixed')
+    expect(days[2]).toHaveAccessibleName('Gym, Wed 7 Oct: on a break – tap to clear')
+    expect(days[3]).toHaveAccessibleName('Gym, Thu 8 Oct: not done – tap to tick')
+    expect(screen.getByLabelText('2 days in a row, on a break')).toHaveTextContent('2 ‖')
+    expect(screen.queryByText(/🔥/)).not.toBeInTheDocument()
+  })
+
+  it('v3.8: with the month’s breaks used up, a done day says it clears', () => {
+    const used = { id: 'gym', name: 'Gym', subtitle: '', emoji: '🏃', completions: ['2026-10-06'], breaks: ['2026-10-01'] }
+    render(<HabitWeekGrid habits={[used]} today={TODAY} onToggle={vi.fn()} breakLimit={1} />)
+    expect(dayButtons('Gym')[1]).toHaveAccessibleName('Gym, Tue 6 Oct: done – tap to clear')
+  })
+
   it('can’t tick while offline', () => {
     renderGrid({ disabled: true })
     expect(dayButtons('Gym')[3]).toBeDisabled()

@@ -472,3 +472,42 @@ npx playwright test --trace off e2e/habits.spec.js e2e/habit-groups.spec.js e2e/
 **Result:** On What's up? the shopping list sits folded between Habits and To-dos; ＋ unfolds it. Week shows only the tasks due soon. Open the app → What's up? to see it.
 **Issues & fixes:** The installed headless browser (build 1243) is older than the one Playwright expects (1248) → linked under the new name, in the container only (known quirk). In the e2e run (together with Step 16), 31 of 32 tests passed. The failing one, "drag a habit to the top" on the phone, is the existing container problem from Step 12 and isn't caused by this change.
 **Commit:** `feat: shopping list on What's up?, folded (Step 15)`
+
+### Step 16 – Habit breaks (v3.8)
+**Date:** 2026-11-18 12:17
+**Request:** Owner: take a break from a habit without breaking the streak – one tap = done, second tap = break, third tap = clear; three breaks in a row reset the streak; breaks don't count as streak days; no monthly limit to start with, but one can be set in Settings.
+**Why:** A habit day now has three states. Decisions:
+- **Storage:** a new column `status` (done · break) on `habit_completions`, default done. This is additive: old rows stay done days, clearing still deletes the row, and done ↔ break is an update of only this column (the only new database right). The alternative, a separate breaks table, would need a second query and two rows to keep apart.
+- **Streak rule** (plain function `getStreak`, unit-tested): counting back from today, a done day adds 1 and a break adds nothing but keeps the chain. The third break in a row ends it, so only the done days after those breaks count.
+- **Monthly limit:** `user_settings.habit_break_limit` (empty = no limit, 1–31). Once a habit has used its breaks in a calendar month, a second tap on a done day clears it, like before v3.8.
+- **Counting:** a break counts as looked after: "4 of 5 today · 1 on a break", in the groups' "x of y", and for reminders (no reminder on a break day, in the app as on the server, which already skips any row of the day).
+- **Look:** a violet ring with a pause sign (new colour token `--break`, 6.9:1 contrast on the cards); while a habit is on a break, its streak shows "9 ‖" instead of the flame. For screen readers the dot is "mixed" and says what the next tap does ("on a break – tap to clear").
+
+**Commands run:**
+```bash
+npx supabase migration up --local        # applies the new migration to the local database only
+npx vitest run                           # 289 tests passed
+npm run lint                             # no warnings
+npm run test:db                          # 15 files, 200 tests passed
+npx playwright test --trace off e2e/habits.spec.js e2e/habit-groups.spec.js e2e/today.spec.js e2e/week.spec.js
+```
+
+**Files changed:**
+- `supabase/migrations/20261118100000_v3_8_habit_breaks.sql` – created: `habit_completions.status`, the update right for it, `user_settings.habit_break_limit`.
+- `supabase/tests/database/15_habit_breaks.test.sql` – created: done by default, done → break, only done/break allowed, the day can't change, other users can't touch it, the limit's range.
+- `src/features/habits/streak.js` – modified: `getStreak` with breaks, new `isOnBreak`, `MAX_BREAKS_IN_A_ROW = 3`.
+- `src/features/habits/habitData.js` – modified: `breaks` per habit, `dayStatus`, `isMarked`, `breaksInMonth`, `nextStatus` (the tap cycle with the limit), `dayChanges`; groups count breaks.
+- `src/features/habits/useHabits.js` – modified: `cycleDay` replaces `toggleToday`.
+- `src/features/habits/HabitSection.jsx`, `HabitGroups.jsx`, `HabitWeekGrid.jsx`, `habits.css` – modified: three-state dots, labels, the "on a break" streak marker, the summary line.
+- `src/features/notifications/reminderTime.js` – modified: no in-app reminder on a break day.
+- `src/features/settings/HabitBreakSettings.jsx` – created: Settings → Habit breaks (breaks per habit and month).
+- `src/features/settings/SettingsView.jsx`, `useSettings.js` – modified: show the new section; default "no limit".
+- `src/shared/styles/base.css` – modified: colour tokens `--break`, `--break-soft`.
+- `src/features/about/databaseTables.js` – modified: the new columns on the About page.
+- Tests: `streak.test.js`, `habitData.test.js`, `HabitWeekGrid.test.jsx`, `reminderTime.test.js`, new `HabitBreakSettings.test.jsx`; e2e `habits.spec.js` (tap cycle saved as break, then cleared; limit in Settings), `habit-groups.spec.js` (labels).
+- `README.md` – modified: "again for a break". `BUILD_LOG.md` – modified: this entry.
+
+**Result:** On What's up?, tap a habit day once for done (green), again for a break (violet ring ‖), again to clear it. Settings → Habit breaks sets an optional limit per month.
+**Issues & fixes:** One of my own unit tests had a gap day in its data, so its expected "on a break" was wrong; fixed the test. The e2e run had the same single known failure as in Step 15 (dragging on the phone, container only).
+**Still to do (owner, at release):** `npx supabase db push` – `habits-test` first, then production.
+**Commit:** `feat: habit breaks – tap cycle done → break → clear (Step 16)`

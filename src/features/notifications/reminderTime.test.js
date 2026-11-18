@@ -79,6 +79,11 @@ describe('isHabitDueInApp (v3 TS-R8)', () => {
     expect(isHabitDueInApp({ ...reminder, active: false }, habit, now, new Set())).toBe(false)
   })
 
+  it('v3.8: not on a break day either', () => {
+    expect(isHabitDueInApp(reminder, { ...habit, breaks: ['2026-10-08'] }, now, new Set())).toBe(false)
+    expect(isHabitDueInApp(reminder, { ...habit, breaks: ['2026-10-07'] }, now, new Set())).toBe(true)
+  })
+
   it('not before its first day (set after its time → starts tomorrow), like the server', () => {
     expect(isHabitDueInApp({ ...reminder, starts_on: '2026-10-09' }, habit, now, new Set())).toBe(false)
     expect(isHabitDueInApp({ ...reminder, starts_on: '2026-10-08' }, habit, now, new Set())).toBe(true)

@@ -11,6 +11,7 @@ import { version } from '../../../package.json'
 import '../about/about.css'
 import { disablePush } from '../notifications/pushDevice.js'
 import BriefSettings from '../briefs/BriefSettings.jsx'
+import HabitBreakSettings from './HabitBreakSettings.jsx'
 import HabitGroupSettings from './HabitGroupSettings.jsx'
 import SettingsSection from './SettingsSection.jsx'
 import SwitchRow from './SwitchRow.jsx'
@@ -59,6 +60,7 @@ function SettingsView({ user, settings, update, habits, children }) {
       {children}
 
       {habits && <HabitGroupSettings habits={habits} settings={settings} update={update} />}
+      <HabitBreakSettings settings={settings} update={update} />
       <BriefSettings settings={settings} update={update} />
       <SettingsSection id="todos" title="To-dos">
         <div className="settings-card">

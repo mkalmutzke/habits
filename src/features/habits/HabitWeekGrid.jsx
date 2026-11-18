@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useDragReorder } from '../../shared/hooks/useDragReorder.js'
 import { formatShortDate, formatWeekday } from '../../shared/utils/date.js'
 import { getRollingDays } from '../week/week.js'
-import { getMilestone, getStreak } from './streak.js'
+import { dayStatus, nextStatus } from './habitData.js'
+import { getMilestone, getStreak, isOnBreak } from './streak.js'
 import './habits.css'
 
 const POP_MS = 450
@@ -17,7 +18,10 @@ const SHOWN_DAYS = 4
 // The habit's text opens its dialog. Used on What's up? and Week alike.
 // v3.3 (§3.2): with `onMove(from, to)` every row starts with a grip to
 // reorder the habits by drag and drop or with the keyboard.
-function HabitWeekGrid({ habits, today, onToggle, onEdit, onMove, disabled = false, label = 'Habits, last days' }) {
+// v3.8 (owner): a dot has three states – tap = done, tap again = break (a
+// violet ring with a pause sign; keeps the streak), tap again = nothing.
+// While a habit is on a break, its streak shows a pause sign instead of the flame.
+function HabitWeekGrid({ habits, today, onToggle, onEdit, onMove, breakLimit = null, disabled = false, label = 'Habits, last days' }) {
   const days = getRollingDays(today).slice(-SHOWN_DAYS)
   const sortable = Boolean(onMove)
   const { containerRef, drag, announcement, gripProps, rowStyle } = useDragReorder({ count: habits.length, onMove: onMove ?? (() => {}), nameOf: (index) => habits[index]?.name ?? '' })
@@ -31,8 +35,7 @@ function HabitWeekGrid({ habits, today, onToggle, onEdit, onMove, disabled = fal
   }, [popped])
 
   function handleTick(habit, day, event) {
-    const done = habit.completions.includes(day)
-    if (!done) setPopped(`${habit.id}:${day}`)
+    if (dayStatus(habit, day) === null) setPopped(`${habit.id}:${day}`)
     const rect = event.currentTarget.getBoundingClientRect()
     onToggle(habit, day, { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
   }
@@ -62,7 +65,8 @@ function HabitWeekGrid({ habits, today, onToggle, onEdit, onMove, disabled = fal
         </div>
 
         {habits.map((habit, index) => {
-          const streak = getStreak(habit.completions, today)
+          const streak = getStreak(habit.completions, today, habit.breaks)
+          const resting = isOnBreak(habit.completions, today, habit.breaks)
           const name = habit.subtitle ? `${habit.name} – ${habit.subtitle}` : habit.name
           const lifted = drag?.from === index
           return (
@@ -105,15 +109,15 @@ function HabitWeekGrid({ habits, today, onToggle, onEdit, onMove, disabled = fal
                 )}
               </span>
               {days.map((day) => {
-                const done = habit.completions.includes(day)
-                const classes = ['wg-cell', done && 'done', day === today && 'is-today', popped === `${habit.id}:${day}` && 'pop']
+                const status = dayStatus(habit, day)
+                const classes = ['wg-cell', status === 'done' && 'done', status === 'break' && 'break', day === today && 'is-today', popped === `${habit.id}:${day}` && 'pop']
                 return (
                   <span key={day} role="cell">
                     <button
                       type="button"
                       className={classes.filter(Boolean).join(' ')}
-                      aria-pressed={done}
-                      aria-label={`${habit.name}, ${formatWeekday(day)} ${formatShortDate(day)}: ${done ? 'done – tap to undo' : 'not done – tap to tick'}`}
+                      aria-pressed={status === 'done' ? true : status === 'break' ? 'mixed' : false}
+                      aria-label={`${habit.name}, ${formatWeekday(day)} ${formatShortDate(day)}: ${dayLabel(status, nextStatus(habit, day, breakLimit))}`}
                       disabled={disabled}
                       onClick={(event) => handleTick(habit, day, event)}
                     >
@@ -123,9 +127,14 @@ function HabitWeekGrid({ habits, today, onToggle, onEdit, onMove, disabled = fal
                 )
               })}
               <span role="cell" className="wg-count">
-                {streak >= 2 && (
+                {streak >= 2 && !resting && (
                   <span className={`wg-flame tier-${getMilestone(streak)}`} aria-label={`${streak} days in a row`}>
                     {streak} 🔥
+                  </span>
+                )}
+                {streak >= 1 && resting && (
+                  <span className="wg-flame on-break" aria-label={`${streak} ${streak === 1 ? 'day' : 'days'} in a row, on a break`}>
+                    {streak} <span aria-hidden="true">‖</span>
                   </span>
                 )}
               </span>
@@ -152,6 +161,13 @@ function HabitLabel({ habit }) {
       {habit.subtitle && <span className="wg-subtitle">{habit.subtitle}</span>}
     </>
   )
+}
+
+// What the dot's label says: its state, then what a tap does (v3.8).
+function dayLabel(status, next) {
+  const now = status === 'done' ? 'done' : status === 'break' ? 'on a break' : 'not done'
+  const tap = next === 'done' ? 'tap to tick' : next === 'break' ? 'tap for a break' : 'tap to clear'
+  return `${now} – ${tap}`
 }
 
 export default HabitWeekGrid

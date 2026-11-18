@@ -5,7 +5,7 @@ import { createUser, openSettingsSection, openSignedIn, restAs } from './helpers
 // shown on What's up? as foldable bars (folded at app start), with an icon to
 // switch to one list of all habits.
 
-const todayButton = (page, name) => page.getByRole('button', { name: new RegExp(`^${name}, \\w+ \\d+ \\w+: (done|not done)`) }).last()
+const todayButton = (page, name) => page.getByRole('button', { name: new RegExp(`^${name}, \\w+ \\d+ \\w+: (done|not done|on a break)`) }).last()
 
 test('v3.6 groups: add in Settings, pick in the dialog, folded bars and the all-habits icon', async ({ page }) => {
   const user = await createUser('groups')
