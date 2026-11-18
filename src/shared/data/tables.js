@@ -27,6 +27,9 @@ export const TABLES = {
   // v3.8: the user's servers; their health reports are written by the server only (server-ingest)
   servers: { key: ['id'], order: ['created_at'] },
   server_reports: { key: ['id'], order: ['reported_at'] },
+  // v3.9: the user's calendars; their events are written by the server only (calendar-sync)
+  calendar_sources: { key: ['id'], order: ['created_at'] },
+  calendar_events: { key: ['id'], order: ['source_id'] },
 }
 
 // The Data API returns at most 1000 rows per request, so bigger tables

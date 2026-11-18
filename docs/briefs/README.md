@@ -1,18 +1,18 @@
-# Daily briefs – how they are made (v3.6)
+# Daily briefs – how they are made (v3.6; settings from the app since v3.9)
 
 Three Claude **scheduled tasks** on the owner's Claude plan write the briefs every morning, at no extra cost:
 
 | Brief | Prompt | Runs (owner's time zone) | Icon in the app |
 |---|---|---|---|
 | IBKR morning brief | [`ibkr.md`](ibkr.md) | Tuesday–Saturday, ready by 08:00 | 📰 on the IBKR card |
-| Canada jobs brief | [`jobs.md`](jobs.md) | every day, ready by 08:00 | 💼 in the header |
+| Job market brief (called "Canada jobs brief" while the only country is Canada) | [`jobs.md`](jobs.md) | every day, ready by 08:00 | 💼 in the header |
 | World news | [`world.md`](world.md) | every day, ready by 08:00 | 🌐 in the header |
 
 ## How one run works
 
 1. The task starts a fresh Claude cloud session in the owner's cloud environment (about 07:40).
 2. It asks the Edge Function `brief-ingest` whether to run (`action: start`). If the brief is switched off in Settings, or today isn't one of its days, the answer is `run: false` and the task stops at once – no research, almost no usage.
-3. It researches with web search and builds the brief as JSON (see below).
+3. It researches with web search and builds the brief as JSON (see below). Since v3.9 the start answer also carries `prefs`: the brief's settings from **Settings → Daily briefs** (countries, job titles, regions, symbols, topics, things to leave out, "about me", number of items, anything else to follow), cleaned up by `supabase/functions/_shared/briefPrefs.js`. The prompts use them, so changing what a brief covers needs no new prompt – only the run times are set in the scheduled tasks themselves.
 4. It sends the brief to `brief-ingest` (`action: store`), which checks and trims it and stores it as today's brief, replacing the previous one. The app shows an amber dot until the brief is opened that day.
 
 The IBKR brief never connects to the IBKR account: `brief-ingest` hands it the holdings of the newest stored IBKR report – symbol and name only, never quantities or values. If there are none, it gets VT and VWO with `fallback: true`, and the brief adds a note at the top.

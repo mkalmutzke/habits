@@ -16,6 +16,10 @@ export const DEFAULT_SETTINGS = {
   ibkr_display: 'section',
   garmin_display: 'icon',
   server_display: 'off',
+  // v3.9: settings of the daily briefs ({} = as before)
+  brief_prefs: {},
+  // v3.9: the Calendar card on Dawn
+  calendar_display: 'section',
 }
 
 // This user's settings row (or the defaults until it exists) and a way to change it.
