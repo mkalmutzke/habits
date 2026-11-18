@@ -935,3 +935,21 @@ git fetch origin main && git checkout -B claude/habits-app-updates-design-m8o858
 **Still to do (owner):** copy the new text of `docs/briefs/jobs.md`, `world.md` and `ibkr.md` into the three scheduled tasks; `git tag v3.9.0 && git push origin v3.9.0` on `main`; link the CLI back to `habits-test`; add the Google calendar under Settings → Calendars.
 **Issues & fixes:** The settings race (Step 30); one CI rerun for the Docker port.
 **Commit:** `docs: release v3.9.0 (Step 31)`
+
+### Step 32 – Session handoff
+**Date:** 2026-11-18 19:56
+**Request:** Owner: "everything looks good. Wrap up the session".
+**Why:** The owner checked v3.9 live. This session (Steps 14–31) brought v3.8.0 and v3.9.0. Every step has its own entry; `docs/NEXT_SESSION.md` now says where the next session starts. The last docs (Steps 31–32) go to `main` by PR, like every change.
+
+**Commands run:**
+```bash
+git status -sb && git log --oneline origin/main..HEAD
+```
+
+**Files changed:**
+- `docs/NEXT_SESSION.md` – modified: written after Step 32; v3.9 confirmed live by the owner.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** The next session starts from `docs/NEXT_SESSION.md` – next topic: per-user connections for IBKR/Garmin + invite screen.
+**Issues & fixes:** None.
+**Commit:** `docs: session handoff (Step 32)`

@@ -1,6 +1,6 @@
 # Next session – handoff
 
-*Written 18 November 2026 after Step 31. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
+*Written 18 November 2026 after Step 32 (session handoff). Details: [`BUILD_LOG.md`](../BUILD_LOG.md). The owner checked v3.9 live ("everything looks good").*
 
 ## Where we stopped
 
