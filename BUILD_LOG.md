@@ -863,3 +863,25 @@ npm run db:reset && npm run test:db               # fresh local database: passed
 **Issues & fixes:** The first version greyed out "Add calendar" for a wrong address without saying why → the button works and explains the problem on submit. "all day" broke onto two lines → kept on one. The plugin hook blocked a shell command (it contained "key") → ran it from a script file.
 **Still to do (owner, at release):** `npx supabase db push`, `npx supabase functions deploy calendar-sync`.
 **Commit:** `feat: calendars on Dawn via iCal (Step 28)`
+
+### Step 29 – v3.9.0: version bump and pull request (v3.9)
+**Date:** 2026-11-18 18:55
+**Request:** Owner: last updates for today – configurable briefs and iCal on Dawn.
+**Why:** Steps 25–28 are ready, so the version becomes 3.9.0. The work goes by pull request into the integration branch `release/v3.9`, made from `main`, with one commit per step. Going live (`release/v3.9` → `main`) waits for the owner's OK. It will need the owner's bypass while `npm audit` is red (picomatch).
+
+**Commands run:**
+```bash
+npm version 3.9.0 --no-git-tag-version
+npx vitest run src/features/about                 # 3 passed
+npx playwright test --trace off e2e/shell.spec.js  # 6 passed ("Version 3.9.0")
+```
+
+**Files changed:**
+- `package.json`, `package-lock.json` – modified: version 3.9.0.
+- `src/features/about/AboutPage.test.jsx`, `e2e/shell.spec.js` – modified: expect "Version 3.9.0".
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Pull request from the working branch into `release/v3.9`.
+**Still to do (owner, at release):** production first: `npx supabase db push`, `npx supabase functions deploy brief-ingest`, `npx supabase functions deploy calendar-sync`; then the merge; then copy the new `docs/briefs/*.md` texts into the three scheduled tasks; tag `v3.9.0`.
+**Issues & fixes:** None.
+**Commit:** `chore: version 3.9.0 (Step 29)`
