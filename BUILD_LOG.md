@@ -713,3 +713,30 @@ git fetch origin main && git merge --no-edit FETCH_HEAD   # main into the workin
 **Still to do (owner):** `git tag v3.8.0 && git push origin v3.8.0` on `main`; link the CLI back to `habits-test` (and `db push` + `functions deploy server-ingest` there if not done yet); in the live app, switch on Server health and add the VPS (Settings → Servers).
 **Issues & fixes:** The ruleset blocks every merge while `npm audit` is red → when `picomatch` 4.0.8+ is out: `npm update picomatch` and push.
 **Commit:** `docs: release v3.8.0 (Step 23)`
+
+### Step 24 – Matt Pocock's engineering skills set up (code review)
+**Date:** 2026-11-18 17:42
+**Request:** Owner: steps to integrate and use the `code-review` skill from github.com/mattpocock/skills (engineering); then "option a and its already done", "it pushed".
+**Why:** The skill reviews all changes since a fixed point (commit, branch, tag) on two separate axes: **Standards** (the repo's documented rules plus a fixed list of code smells) and **Spec** (does it do what was asked?). Each axis runs in its own sub-agent. Decisions:
+- **Option A** (owner's choice): the whole plugin `mattpocock-skills` installed on the owner's computer (`claude plugin install mattpocock-skills@claude-plugins-official`), then `/setup-matt-pocock-skills` run there once. It is installed for that user only, not in cloud sessions. The skill is called `/mattpocock-skills:code-review <fixed point>`, because the built-in `/code-review` has the same name. The alternative, copying only this one skill into `.claude/skills/`, was not chosen.
+- The setup wrote the standard templates. Points to keep in mind: the project has **no GitHub issues**, so for `code-review` the spec is the owner's request plus the **Why** in `BUILD_LOG.md`. `docs/agents/domain.md` mentions `GLOSSARY.md` and ADRs under `docs/adr/`, while the working agreement keeps decisions in the build log only (no separate design documents in the repository). The `gh` CLI the templates use only works on the owner's computer.
+- Licence: MIT (Matt Pocock); the plugin brings its own notice.
+
+**Commands run:**
+```bash
+# owner, on their computer:
+claude plugin install mattpocock-skills@claude-plugins-official
+# /setup-matt-pocock-skills in Claude Code (GitHub Issues, default labels, single-context docs)
+git checkout -b chore/agent-skills-setup && git add docs/agents CLAUDE.md && git commit && git push -u origin chore/agent-skills-setup
+# Claude, in the cloud session:
+git fetch origin && git merge --no-edit origin/chore/agent-skills-setup   # into the working branch, together with Steps 22–23
+```
+
+**Files changed:**
+- `CLAUDE.md` – modified (by the setup): section "Agent skills" (issue tracker, triage labels, domain docs).
+- `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`, `docs/agents/domain.md` – created (by the setup).
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** On the owner's computer: `/mattpocock-skills:code-review v3.7.0` reviews all of v3.8. When it asks for the spec, answer with `BUILD_LOG.md` (Steps 14–21).
+**Issues & fixes:** `/setup-matt-pocock-skills` typed in the cloud session did nothing; the plugin isn't installed there.
+**Commit:** `docs: build log – engineering skills set up (Step 24)`
