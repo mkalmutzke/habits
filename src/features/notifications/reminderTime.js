@@ -76,7 +76,8 @@ export function isDueInApp(reminder, task, now, alreadyShown) {
 export function isHabitDueInApp(reminder, habit, now, alreadyShown) {
   if (!habit || !reminder.active || !reminder.channels.includes('inapp')) return false
   const today = toDateKey(now)
-  if (habit.completions.includes(today)) return false
+  // v3.8: a break day needs no reminder either (the server skips it too)
+  if (habit.completions.includes(today) || (habit.breaks ?? []).includes(today)) return false
   const [hours, minutes] = parseTime(reminder.remind_time)
   const at = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes)
   if (now < at) return false

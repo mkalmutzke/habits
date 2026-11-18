@@ -3,7 +3,7 @@ import CollapsibleSection from '../../shared/ui/CollapsibleSection.jsx'
 import TaskList from '../todos/TaskList.jsx'
 import { dueDayLabel, dueSoon } from './dueSoon.js'
 
-// "Due & overdue" on the Week page (design v3.3 §3.4): open tasks of every
+// "Due & overdue" on the Dawn page (the Week page until v3.8; design v3.3 §3.4): open tasks of every
 // list that are overdue or due today and in the next 6 days – overdue first,
 // then one group per day. Tick, star and open them like everywhere else.
 // Folded at app start (owner Q5).

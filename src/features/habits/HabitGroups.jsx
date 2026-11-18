@@ -7,17 +7,17 @@ import HabitWeekGrid from './HabitWeekGrid.jsx'
 // "x of y" ticked today; every group is folded at app start and opens and
 // closes like the Habits card itself. `groups` comes from groupHabits().
 // Dragging reorders the habits inside a group only.
-function HabitGroups({ groups, today, onToggle, onEdit, onMove, disabled }) {
+function HabitGroups({ groups, today, onToggle, onEdit, onMove, breakLimit = null, disabled }) {
   return (
     <div className="habit-groups">
       {groups.map((group) => (
-        <HabitGroup key={group.id ?? 'default'} group={group} today={today} onToggle={onToggle} onEdit={onEdit} onMove={onMove} disabled={disabled} />
+        <HabitGroup key={group.id ?? 'default'} group={group} today={today} onToggle={onToggle} onEdit={onEdit} onMove={onMove} breakLimit={breakLimit} disabled={disabled} />
       ))}
     </div>
   )
 }
 
-function HabitGroup({ group, today, onToggle, onEdit, onMove, disabled }) {
+function HabitGroup({ group, today, onToggle, onEdit, onMove, breakLimit, disabled }) {
   const [open, setOpen] = useSectionOpen(`habit-group-${group.id ?? 'default'}`)
   const id = useId()
 
@@ -40,6 +40,7 @@ function HabitGroup({ group, today, onToggle, onEdit, onMove, disabled }) {
             onToggle={onToggle}
             onEdit={onEdit}
             onMove={(from, to) => onMove(from, to, group.habits)}
+            breakLimit={breakLimit}
             disabled={disabled}
             label={`${group.name}, last days`}
           />

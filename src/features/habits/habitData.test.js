@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { firstReminderDay, groupHabits, reminderChanges, shapeHabits } from './habitData.js'
+import { breaksInMonth, dayChanges, dayStatus, firstReminderDay, groupHabits, nextStatus, reminderChanges, shapeHabits } from './habitData.js'
 
 const habit = (id, position, created_at = '2026-10-01T10:00:00Z') => ({ id, name: id, emoji: '📚', position, created_at })
 
@@ -19,8 +19,21 @@ describe('shapeHabits', () => {
     ])
   })
 
+  it('v3.8: rows with status "break" are break days, all others done days', () => {
+    const [shaped] = shapeHabits(
+      [habit('a', 1)],
+      [
+        { habit_id: 'a', day: '2026-11-16', status: 'done' },
+        { habit_id: 'a', day: '2026-11-17', status: 'break' },
+        { habit_id: 'a', day: '2026-11-18' },
+      ],
+    )
+    expect(shaped.completions).toEqual(['2026-11-16', '2026-11-18'])
+    expect(shaped.breaks).toEqual(['2026-11-17'])
+  })
+
   it('a missing subtitle becomes an empty text; no check-offs an empty list', () => {
-    expect(shapeHabits([habit('a', 1)], [])[0]).toMatchObject({ subtitle: '', completions: [], createdAt: '2026-10-01T10:00:00Z' })
+    expect(shapeHabits([habit('a', 1)], [])[0]).toMatchObject({ subtitle: '', completions: [], breaks: [], createdAt: '2026-10-01T10:00:00Z' })
   })
 })
 
@@ -92,5 +105,55 @@ describe('reminderChanges', () => {
     const [created, startsOn] = reminderChanges({ habitId: 'h', userId: 'u', existing: undefined, reminder, now })
     expect(created).toMatchObject({ table: 'habit_reminders', action: 'insert', values: { user_id: 'u', habit_id: 'h', remind_time: '09:00', active: true } })
     expect(startsOn).toEqual({ table: 'habit_reminders', action: 'update', match: { id: created.values.id }, values: { starts_on: '2026-10-28' }, localOnly: true })
+  })
+})
+
+describe('habit day states (v3.8)', () => {
+  const gym = { id: 'gym', completions: ['2026-11-16', '2026-11-18'], breaks: ['2026-11-17', '2026-10-30'] }
+
+  it('knows each day’s state', () => {
+    expect(dayStatus(gym, '2026-11-16')).toBe('done')
+    expect(dayStatus(gym, '2026-11-17')).toBe('break')
+    expect(dayStatus(gym, '2026-11-15')).toBe(null)
+    expect(dayStatus({ id: 'old', completions: [] }, '2026-11-15')).toBe(null)
+  })
+
+  it('a tap goes nothing → done → break → nothing', () => {
+    expect(nextStatus(gym, '2026-11-15')).toBe('done')
+    expect(nextStatus(gym, '2026-11-16')).toBe('break')
+    expect(nextStatus(gym, '2026-11-17')).toBe(null)
+  })
+
+  it('counts breaks per calendar month, the day itself not counted', () => {
+    expect(breaksInMonth(gym, '2026-11-18')).toBe(1)
+    expect(breaksInMonth(gym, '2026-11-17')).toBe(0)
+    expect(breaksInMonth(gym, '2026-10-01')).toBe(1)
+  })
+
+  it('with the limit used up, a done day clears instead of becoming a break', () => {
+    expect(nextStatus(gym, '2026-11-18', 1)).toBe(null)
+    expect(nextStatus(gym, '2026-11-18', 2)).toBe('break')
+    // October has its own breaks
+    expect(nextStatus({ ...gym, completions: ['2026-10-29'] }, '2026-10-29', 2)).toBe('break')
+  })
+
+  it('saves each step as one change on the row of that habit and day', () => {
+    const match = { habit_id: 'gym', day: '2026-11-15' }
+    expect(dayChanges({ habit: gym, day: '2026-11-15', next: 'done', userId: 'u' })).toEqual([
+      { table: 'habit_completions', action: 'insert', values: { ...match, user_id: 'u', status: 'done' } },
+    ])
+    expect(dayChanges({ habit: gym, day: '2026-11-16', next: 'break', userId: 'u' })).toEqual([
+      { table: 'habit_completions', action: 'update', match: { habit_id: 'gym', day: '2026-11-16' }, values: { status: 'break' } },
+    ])
+    expect(dayChanges({ habit: gym, day: '2026-11-17', next: null, userId: 'u' })).toEqual([
+      { table: 'habit_completions', action: 'delete', match: { habit_id: 'gym', day: '2026-11-17' } },
+    ])
+    expect(dayChanges({ habit: gym, day: '2026-11-17', next: 'break', userId: 'u' })).toEqual([])
+  })
+
+  it('groups count a break as looked after today', () => {
+    const today = '2026-11-17'
+    const [group] = groupHabits([gym, { id: 'run', completions: [] }], [], 'Other', today)
+    expect(group.done).toBe(1)
   })
 })

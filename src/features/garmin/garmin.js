@@ -1,5 +1,5 @@
 import { addDays, formatMonth, formatShortDate, formatTime12, formatWeekday, toDateKey, weekdayIndex } from '../../shared/utils/date.js'
-import { getRollingDays } from '../week/week.js'
+import { getRollingDays } from '../dawn/week.js'
 
 // The Garmin card's logic (v3.5): plain
 // functions, no React. Rows come from the tables written by garmin-sync.

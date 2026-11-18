@@ -21,6 +21,9 @@ test('TS-U1 habits and ToDo’s on one page; ＋ opens a new task with the title
 
   // ToDo's: no big add bar any more (TS-T8) – the small ＋ opens the details
   await expect(page.getByRole('heading', { name: /^ToDo’s/ })).toBeVisible()
+  // v3.8 (owner): the shopping list sits between habits and to-dos, folded
+  await expect(page.locator('.card-section-title')).toHaveText(['IBKR', 'Habits', 'Shopping', 'ToDo’s'])
+  await expect(page.getByRole('button', { name: /^Shopping/ })).toHaveAttribute('aria-expanded', 'false')
   await expect(page.getByLabel(/Add a task to/)).toHaveCount(0)
   await page.getByRole('button', { name: 'Add a task' }).click()
   await expect(page).toHaveURL(/#\/task\/new\?source=all$/)
@@ -98,12 +101,18 @@ test('TS-T1/T3/T6 every task regardless of the day; the switcher filters; new ta
   expect((await restAs(user, 'todo_tasks?select=id')).body).toHaveLength(3)
 })
 
-test('TS-U3 tabs and addresses: What’s up?, Week, Lists, a task, Settings', async ({ page }) => {
+test('TS-U3 tabs and addresses: What’s up?, Dawn, Lists, a task, Settings', async ({ page }) => {
   const user = await createUser('nav')
   await openSignedIn(page, user)
-  await page.getByRole('tab', { name: 'Week' }).click()
-  await expect(page).toHaveURL(/#\/week$/)
-  await expect(page.getByRole('heading', { name: 'Week' })).toBeVisible()
+  // v3.8 (owner): the Week page is called Dawn
+  await page.getByRole('tab', { name: 'Dawn' }).click()
+  await expect(page).toHaveURL(/#\/dawn$/)
+  await expect(page.getByRole('heading', { name: 'Dawn', exact: true })).toBeVisible()
+  await expect(page.getByText(/^Today \+ next 6 days · /)).toBeVisible()
+  await expect(page.getByRole('tab', { name: 'Week' })).toHaveCount(0)
+  // an old link (bookmark, notification) still opens it
+  await page.goto('/#/week')
+  await expect(page.getByRole('heading', { name: 'Dawn', exact: true })).toBeVisible()
   await page.getByRole('tab', { name: 'Lists' }).click()
   await expect(page.getByRole('heading', { name: 'Lists' })).toBeVisible()
   await page.getByRole('link', { name: 'Settings' }).click()

@@ -2,8 +2,8 @@
 
 A personal app for **habits, to-dos and a shopping list**, mobile-first and installable on
 Android. The start page "What's up?" shows a folded IBKR portfolio card (the day's move; holdings and
-performance when opened; a daily morning news brief), the habits in groups (tap a day to tick it) and every open to-do; the Week page has
-the tasks due soon and the shopping list. Icons in the header open Garmin (steps, resting heart rate, elevation and activities for 7 days or the month)
+performance when opened; a daily morning news brief), the habits in groups (tap a day to tick it, again for a break that keeps the streak), the shopping list (folded) and every
+open to-do; the Dawn page (called Week until v3.8) has the tasks due today, in the next 6 days or overdue. Icons in the header open Garmin (steps, resting heart rate, elevation and activities for 7 days or the month; in Settings → Modules it can also be a card on What's up? or hidden, like the IBKR card)
 and two daily briefs (Canada jobs, world news), written each morning by Claude scheduled tasks. Data lives in the cloud and updates live on
 all your devices; reminders arrive by push, email or in the app.
 
@@ -48,11 +48,12 @@ gitleaks. The end-to-end tests refuse to run against anything but the local stac
 src/
   App.jsx, AppHeader.jsx   app shell: sign-in first, routes, fixed header, tab bar
   features/
-    whatsup/               What's up?: IBKR card, habit section + ToDo's
+    whatsup/               What's up?: IBKR card, Garmin card (optional), habits, shopping list, ToDo's
     portfolio/             IBKR card: newest snapshot, holdings, day move, TWR (read-only)
     habits/                week grid, habit groups, habit dialog (icons, group, daily reminder), streaks
     todos/                 sources, lists, groups, task details, deleted tasks
-    week/, shopping/       Week page, shopping list
+    dawn/, shopping/       Dawn page (due tasks; Week until v3.8), shopping list
+    servers/               server health: window from the header icon, Settings → Servers, status rules
     garmin/                Garmin window from the header: 7 days or month, steps chart, resting heart rate, elevation, activities, Refresh
     briefs/                daily briefs (IBKR, Canada jobs, world news): windows, amber dot, Settings switches
     notifications/         reminders, push on this device, in-app pop-ups
@@ -62,12 +63,27 @@ src/
   storage/                 small per-device preferences (localStorage)
 supabase/
   migrations/              tables, row level security, functions, scheduler
-  functions/               Edge Functions: send-reminders, send-test-notification, ibkr-sync, garmin-sync, brief-ingest
+  functions/               Edge Functions: send-reminders, send-test-notification, ibkr-sync, garmin-sync, brief-ingest, server-ingest
   tests/database/          pgTAP tests
+scripts/server-agent/      the server health agent and its installer (runs on your own server)
 e2e/                       Playwright tests
 docs/NEXT_SESSION.md      where the last session stopped (shown at every session start)
 docs/briefs/               how the daily briefs are made, and the scheduled tasks' instructions
 ```
+
+## Server health (v3.8)
+
+Settings → Modules → **Server health** shows a server icon in the header; its dot is green
+(all fine), amber (a limit crossed, a service stopped, the certificate ends within 14 days) or
+red (no report for 15 minutes). Settings → **Servers** → *Add server* shows two things once:
+the install command and the server's token. On the server (any Linux with systemd – netcup,
+Hetzner or any other provider), run the command and paste the token when it asks; it is read
+without showing it, so it never lands in the shell history. The agent
+(`scripts/server-agent/habits-agent.sh`) then sends CPU, load, memory, disk, uptime, the
+watched services, Docker containers, pending updates (Debian/Ubuntu) and the TLS certificate's
+days left every 5 minutes to the Edge Function `server-ingest`. It only sends; it opens no port.
+The database keeps only the token's fingerprint. Remove the agent with
+`sudo sh habits-install.sh --remove`; *New token* in Settings makes the old one stop working.
 
 ## Environments and deployment
 

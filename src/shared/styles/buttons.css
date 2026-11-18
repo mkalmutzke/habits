@@ -233,6 +233,19 @@
 }
 
 /* the dot on a card's icon (IBKR morning brief) sits on the card colour */
+/* v3.8: the server health dot – green, amber or red */
+.tool-dot.tone-ok {
+  background: var(--success);
+}
+
+.tool-dot.tone-warn {
+  background: var(--gold);
+}
+
+.tool-dot.tone-down {
+  background: var(--coral);
+}
+
 .section-icon-button .tool-dot {
   top: 10px;
   right: 10px;

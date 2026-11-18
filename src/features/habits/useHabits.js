@@ -3,11 +3,12 @@ import { insert, localOnly, newId, nextPosition, nowIso, remove, update } from '
 import { useSave, useTable } from '../../shared/data/hooks.js'
 import { toDateKey } from '../../shared/utils/date.js'
 import { byPosition, planMove } from '../../shared/utils/position.js'
-import { reminderChanges, shapeHabits } from './habitData.js'
+import { dayChanges, nextStatus, reminderChanges, shapeHabits } from './habitData.js'
 
 // Habits from the database (tables `habits` and `habit_completions`), shaped
 // like before – { id, name, emoji, createdAt, completions: ['YYYY-MM-DD', …] } –
-// so streaks, the week grid and the habit cards work unchanged.
+// so streaks, the week grid and the habit cards work unchanged. v3.8: plus
+// `breaks`, the days marked as a break.
 export function useHabits(userId) {
   const habitRows = useTable('habits')
   const completionRows = useTable('habit_completions')
@@ -78,14 +79,15 @@ export function useHabits(userId) {
     if (changes.length > 0) save(changes.map(({ id, position }) => update('habit_groups', id, { position })))
   }
 
-  function toggleToday(id, day = toDateKey()) {
+  // v3.8 (owner): a tap moves the day on – nothing → done → break → nothing
+  // (see nextStatus; `breakLimit` from Settings). Returns the new status.
+  function cycleDay(id, day = toDateKey(), breakLimit = null) {
     const habit = habits.find((item) => item.id === id)
-    if (!habit) return
-    save(
-      habit.completions.includes(day)
-        ? remove('habit_completions', { habit_id: id, day })
-        : insert('habit_completions', { habit_id: id, day, user_id: userId }),
-    )
+    if (!habit) return undefined
+    const next = nextStatus(habit, day, breakLimit)
+    const changes = dayChanges({ habit, day, next, userId })
+    if (changes.length > 0) save(changes)
+    return next
   }
 
   return {
@@ -103,6 +105,6 @@ export function useHabits(userId) {
     editHabit,
     deleteHabit,
     moveHabit,
-    toggleToday,
+    cycleDay,
   }
 }

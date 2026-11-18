@@ -11,8 +11,8 @@ describe('headerLine (v3 §2.1: one small line on every tab page)', () => {
     expect(headerLine('today', TODAY, 0)).toMatch(/8 October/)
   })
 
-  it('shows the last 7 days on Week', () => {
-    expect(headerLine('week', TODAY, 0)).toBe('Last 7 days · 2 Oct – 8 Oct')
+  it('v3.8: shows today and the next 6 days on Dawn', () => {
+    expect(headerLine('dawn', TODAY, 0)).toBe('Today + next 6 days · 8 Oct – 14 Oct')
   })
 
   it('shows the open tasks on Lists, singular and plural', () => {
@@ -24,7 +24,7 @@ describe('headerLine (v3 §2.1: one small line on every tab page)', () => {
 describe('AppHeader', () => {
   it.each([
     ['today', 'What’s up?'],
-    ['week', 'Week'],
+    ['dawn', 'Dawn'],
     ['lists', 'Lists'],
   ])('%s: top bar, one small line and the title – the same parts on every page (TS-W4)', (view, title) => {
     const { container } = render(<AppHeader today={TODAY} view={view} openTasks={3} />)

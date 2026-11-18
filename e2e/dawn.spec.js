@@ -2,13 +2,21 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { createUser, openSignedIn, restAs } from './helpers.js'
 
-// Test plan v3 TS-K: the Week page – the shopping list; TS-G: Garmin (v3.5 a
-// card on Week, v3.6 a window opened from the header).
+// Test plan v3 TS-K: the shopping list (v3.8: on What's up?, folded at app
+// start); TS-G: Garmin (v3.5 a card on Week, v3.6 a window opened from the
+// header); TS-D: the Dawn page (called Week until v3.8).
 
 const shot = (page, name) =>
   page.screenshot({ path: `test-results/screens/${test.info().project.name}-${name}.png`, fullPage: true })
 
 const items = async (user) => (await restAs(user, 'shopping_items?select=title,ticked_at&order=position')).body
+
+// v3.8: the shopping list is on What's up?, folded at every app start
+async function openShopping(page) {
+  const header = page.getByRole('button', { name: /^Shopping/ })
+  await expect(header).toHaveAttribute('aria-expanded', 'false')
+  await header.click()
+}
 
 // v3.1: every item needs its own tap on ＋ – the field closes after adding
 async function addItems(page, ...titles) {
@@ -23,8 +31,8 @@ async function addItems(page, ...titles) {
 test('TS-G1 v3.6: Garmin opens from the header on every main page – no card on Week; refresh; readable', async ({ page }) => {
   const user = await createUser('week')
   await openSignedIn(page, user)
-  await page.getByRole('tab', { name: 'Week' }).click()
-  await expect(page.getByText(/^Last 7 days · /)).toBeVisible()
+  await page.getByRole('tab', { name: 'Dawn' }).click()
+  await expect(page.getByText(/^Today \+ next 6 days · /)).toBeVisible()
   // neither Habits (v3.5) nor Garmin (v3.6) are cards on Week any more
   await expect(page.getByRole('button', { name: /^Habits/ })).toHaveCount(0)
   await expect(page.locator('.card-section', { hasText: 'Garmin' })).toHaveCount(0)
@@ -55,7 +63,8 @@ test('TS-G1 v3.6: Garmin opens from the header on every main page – no card on
 
 test('TS-K2/K3/K4 shopping: add several, tick moves to the bottom, clear ticked with undo', async ({ page }) => {
   const user = await createUser('shop')
-  await openSignedIn(page, user, '/#/week')
+  await openSignedIn(page, user, '/#/today')
+  await openShopping(page)
   await expect(page.getByText('Nothing to buy')).toBeVisible()
   // each item needs ＋; the field closes after adding (TS-K2, v3.1)
   await addItems(page, 'Oat milk', 'Dog food', 'Tomatoes')
@@ -65,7 +74,7 @@ test('TS-K2/K3/K4 shopping: add several, tick moves to the bottom, clear ticked 
   await page.getByRole('button', { name: 'Oat milk' }).click()
   await expect(page.getByRole('button', { name: 'Oat milk' })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.shopping-title')).toHaveText(['Dog food', 'Tomatoes', 'Oat milk'])
-  await shot(page, 'week-shopping')
+  await shot(page, 'whatsup-shopping')
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
   expect(axe.violations.map((violation) => `${violation.id}: ${violation.nodes.length}`)).toEqual([])
 
@@ -85,7 +94,7 @@ test('TS-K2/K3/K4 shopping: add several, tick moves to the bottom, clear ticked 
 
 test('TS-K8 long-press (or F2) renames an item', async ({ page }) => {
   const user = await createUser('rename')
-  await openSignedIn(page, user, '/#/week')
+  await openSignedIn(page, user, '/#/today')
   await addItems(page, 'Coffe')
 
   // hold for longer than half a second: rename instead of tick
@@ -111,18 +120,19 @@ test('TS-K7 an item added on one device appears on the other', async ({ browser 
   const user = await createUser('shop-live')
   const phone = await (await browser.newContext()).newPage()
   const laptop = await (await browser.newContext()).newPage()
-  await openSignedIn(phone, user, '/#/week')
-  await openSignedIn(laptop, user, '/#/week')
+  await openSignedIn(phone, user, '/#/today')
+  await openSignedIn(laptop, user, '/#/today')
+  await openShopping(laptop)
   await expect(laptop.getByText('Nothing to buy')).toBeVisible()
   await addItems(phone, 'Batteries')
   await expect(laptop.getByRole('button', { name: 'Batteries' })).toBeVisible({ timeout: 10_000 })
 })
 
-// v3.3 (test plan TS-D, TS-F11): the Week page's three cards (v3.5: Garmin first)
+// v3.3 (test plan TS-D, TS-F11): the Dawn page (v3.8: only Due & overdue)
 // A date key `offset` days from today, in the tests' time zone.
 const dayKey = (offset) => new Date(Date.now() + offset * 86_400_000).toLocaleDateString('en-CA', { timeZone: 'Europe/Zurich' })
 
-test('TS-D5/D7/D8/F11/A10 v3.3/v3.6: Due & overdue and Shopping; due tasks of every list', async ({ page }) => {
+test('TS-D5/D7/D8/F11/A10 v3.3/v3.8: Due & overdue on Dawn; due tasks of every list', async ({ page }) => {
   const user = await createUser('due')
   const [work] = (await restAs(user, 'todo_lists', { method: 'POST', body: JSON.stringify({ name: 'Work', color: 'blue', show_in_all: false }) })).body
   const task = (title, due_date, list_id = null) => restAs(user, 'todo_tasks', { method: 'POST', body: JSON.stringify({ title, due_date, list_id }) })
@@ -130,13 +140,13 @@ test('TS-D5/D7/D8/F11/A10 v3.3/v3.6: Due & overdue and Shopping; due tasks of ev
   await task('Quarterly report', dayKey(1), work.id)
   await task('Far away', dayKey(10))
 
-  await openSignedIn(page, user, '/#/week')
+  await openSignedIn(page, user, '/#/dawn')
   // v3.6: Garmin is a window from the header, no longer a card here
-  await expect(page.locator('.card-section-title')).toHaveText(['Due & overdue', 'Shopping'])
-  // start states (owner Q5): Due & overdue folded, Shopping open
+  // v3.8: the shopping list moved to What's up?
+  await expect(page.locator('.card-section-title')).toHaveText(['Due & overdue'])
+  // start state (owner Q5): Due & overdue folded
   const due = page.getByRole('button', { name: /^Due & overdue/ })
   await expect(due).toHaveAttribute('aria-expanded', 'false')
-  await expect(page.getByRole('button', { name: /^Shopping/ })).toHaveAttribute('aria-expanded', 'true')
   await expect(due).toContainText('1 overdue · 1 this week')
 
   await due.click()

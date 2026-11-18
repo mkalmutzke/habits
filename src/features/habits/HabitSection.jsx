@@ -6,9 +6,10 @@ import Confetti from '../../shared/ui/Confetti.jsx'
 import Icon from '../../shared/ui/Icon.jsx'
 import { hapticCelebrate, hapticLight, hapticSuccess } from '../../shared/utils/haptics.js'
 import EmptyState from './EmptyState.jsx'
-import { groupHabits } from './habitData.js'
+import { groupHabits, isMarked, nextStatus } from './habitData.js'
 import HabitGroups from './HabitGroups.jsx'
 import HabitModal from './HabitModal.jsx'
+import HabitMonthWindow from './HabitMonthWindow.jsx'
 import HabitWeekGrid from './HabitWeekGrid.jsx'
 import { MILESTONES, getStreak } from './streak.js'
 import { defaultChannels } from '../notifications/reminderTime.js'
@@ -25,7 +26,9 @@ const CONFETTI_MS = 1600
 // habits. Every app start begins with the groups, like the IBKR eye.
 function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }) {
   const online = useOnline()
-  const { habits, groups = [], remindersByHabit, addHabit, editHabit, deleteHabit, moveHabit, toggleToday, loading } = model
+  const { habits, groups = [], remindersByHabit, addHabit, editHabit, deleteHabit, moveHabit, cycleDay, loading } = model
+  // v3.8: breaks per habit and month (Settings; empty = no limit)
+  const breakLimit = settings?.habit_break_limit ?? null
   // a new reminder starts at the default time with the channels that are on
   const reminderDefaults = {
     defaultTime: settings?.default_remind_time ?? '09:00',
@@ -42,7 +45,12 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
   const [adding, setAdding] = useState(null)
   const [editing, setEditing] = useState(null)
   const [confetti, setConfetti] = useState(null)
+  // v3.8: the month overview window
+  const [showMonths, setShowMonths] = useState(false)
   const doneToday = habits.filter((habit) => habit.completions.includes(today)).length
+  // v3.8: a break counts as looked after in "x of y today"
+  const markedToday = habits.filter((habit) => isMarked(habit, today)).length
+  const breaksToday = markedToday - doneToday
 
   useEffect(() => {
     if (!confetti) return
@@ -60,12 +68,14 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
 
   // Ticking keeps the v2 celebrations: haptics, big confetti for a milestone
   // (7, 30, 100 days), a small one for the first habit ticked today.
+  // v3.8: a tap moves the day on (nothing → done → break → nothing); only
+  // "done" celebrates, a break or clearing gets the light tick.
   function handleToggle(habit, day, origin) {
-    if (habit.completions.includes(day)) {
+    if (nextStatus(habit, day, breakLimit) !== 'done') {
       hapticLight()
     } else {
-      const newStreak = getStreak([...habit.completions, day], today)
-      if (MILESTONES.includes(newStreak) && !MILESTONES.includes(getStreak(habit.completions, today))) {
+      const newStreak = getStreak([...habit.completions, day], today, habit.breaks)
+      if (MILESTONES.includes(newStreak) && !MILESTONES.includes(getStreak(habit.completions, today, habit.breaks))) {
         hapticCelebrate()
         fireConfetti({ ...origin, count: 70, spread: 260 })
       } else {
@@ -73,7 +83,7 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
         if (day === today && doneToday === 0) fireConfetti(origin)
       }
     }
-    toggleToday(habit.id, day)
+    cycleDay(habit.id, day, breakLimit)
   }
 
   return (
@@ -82,10 +92,16 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
         state={section}
         className="habit-section"
         title="Habits"
-        summary={habits.length === 0 ? 'none yet' : `${doneToday} of ${habits.length} today`}
+        summary={habits.length === 0 ? 'none yet' : `${markedToday} of ${habits.length} today${breaksToday > 0 ? ` · ${breaksToday} on a break` : ''}`}
         alwaysOpen={habits.length === 0}
         actions={
           <>
+            {/* v3.8 (owner): this month and last month, from the calendar icon */}
+            {habits.length > 0 && (
+              <button type="button" className="section-icon-button" aria-label="Habit months" onClick={() => setShowMonths(true)}>
+                <Icon name="calendar" />
+              </button>
+            )}
             {open && hasGroups && habits.length > 0 && (
               <button
                 type="button"
@@ -116,15 +132,20 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
             onToggle={handleToggle}
             onEdit={setEditing}
             onMove={moveHabit}
+            breakLimit={breakLimit}
             disabled={!online}
           />
         ) : (
-          <HabitWeekGrid habits={habits} today={today} onToggle={handleToggle} onEdit={setEditing} onMove={moveHabit} disabled={!online} />
+          <HabitWeekGrid habits={habits} today={today} onToggle={handleToggle} onEdit={setEditing} onMove={moveHabit} breakLimit={breakLimit} disabled={!online} />
         )}
       </CollapsibleSection>
 
       {confetti && (
         <Confetti key={`confetti-${confetti.id}`} x={confetti.x} y={confetti.y} count={confetti.count} spread={confetti.spread} />
+      )}
+
+      {showMonths && (
+        <HabitMonthWindow habits={habits} groups={groups} defaultGroupName={defaultGroupName} today={today} onClose={() => setShowMonths(false)} />
       )}
 
       {adding && (
