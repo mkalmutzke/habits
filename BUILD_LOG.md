@@ -740,3 +740,27 @@ git fetch origin && git merge --no-edit origin/chore/agent-skills-setup   # into
 **Result:** On the owner's computer: `/mattpocock-skills:code-review v3.7.0` reviews all of v3.8. When it asks for the spec, answer with `BUILD_LOG.md` (Steps 14–21).
 **Issues & fixes:** `/setup-matt-pocock-skills` typed in the cloud session did nothing; the plugin isn't installed there.
 **Commit:** `docs: build log – engineering skills set up (Step 24)`
+
+### Step 25 – Dawn dark theme: interactive mockup page (v3.9, step 1)
+**Date:** 2026-11-18 18:11
+**Request:** Owner: start with the more modern dark theme and create a mockup page to go through and make changes.
+**Why:** Before the theme goes into the app's stylesheets, the owner should be able to see it on real screens and adjust it. So the first step is an interactive page outside the repository (like the design page from Step 14), "Dawn Theme Studio". Decisions:
+- It shows five app screens drawn from the same colour, corner and font settings the app will use: What's up?, Dawn (with Garmin as a card), Habit months, Servers, and Settings with buttons and a toast. Every change redraws them at once.
+- It has three starting points: "Dawn (proposed)" from the Step 14 style guide, "Today's look (v3.8)" for comparison, and "Midnight teal" as an alternative.
+- It has a readability check that shows the contrast of each text and outline colour against the cards, with the WCAG AA limits (4.5 : 1 for text, 3 : 1 for outlines) that the app's accessibility test enforces.
+- It has notes for Claude, one general field and one per screen.
+- **Saving:** the page keeps the choices in its own small database (one document `themes/dawn`), and only the owner can write to it. Claude reads that document back to build the theme from exactly those values. Others who open the page can only try things out without saving.
+- Nothing in the app changes in this step. The next step turns the saved values into the app's stylesheets.
+
+**Commands run:**
+```bash
+node shot2.cjs (Playwright screenshot of the page, in the session's scratch folder)
+git fetch origin main && git checkout -B claude/habits-app-updates-design-m8o858 origin/main   # the working branch was deleted after PR #16; restarted from main
+```
+
+**Files changed:**
+- `BUILD_LOG.md` – modified: this entry. (The page itself lives on the owner's claude.ai account, not in the repository.)
+
+**Result:** The owner opens the Dawn Theme Studio link, changes colours, corners and fonts, and writes notes; it saves by itself.
+**Issues & fixes:** The first screenshot showed the What's up? phone too wide (title row and habit grid cut off on the right) → the phone's content now shrinks to its width and the tabs are a little narrower.
+**Commit:** `docs: build log – Dawn theme mockup page (Step 25)`
