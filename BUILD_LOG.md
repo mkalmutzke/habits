@@ -912,3 +912,26 @@ npx playwright test --trace off # the whole suite: 80 passed
 **Result:** Quick changes in Settings (also on a slow phone or connection) all stay. The release PR #18 gets this fix through `release/v3.9`.
 **Issues & fixes:** The linter flagged reading the "changes on their way" note during rendering → it is now checked inside the save.
 **Commit:** `fix: quick settings changes no longer overwrite each other (Step 30)`
+
+### Step 31 – Release v3.9.0 (PR #18 → main)
+**Date:** 2026-11-18 19:45
+**Request:** Owner: "db done in habit-test and prod", after the go-live instructions for v3.9.
+**Why:** The owner had run the two migrations and deployed `brief-ingest` and `calendar-sync` on `habits-test` and production first. That order is needed because the new app writes `brief_prefs` and calls `add_calendar`. Then the release was merged.
+- PR #17 (Steps 25–29) → `release/v3.9`; on PR #18 (→ `main`), CI found the settings bug, fixed in Step 30 by PR #19 → `release/v3.9`. PR #18 then had all checks green, after one rerun of the database tests job that failed before any test ran (Docker: "port 54324 already in use", the known CI quirk).
+- `npm audit` is green again since PR #17 (the `picomatch` warning no longer fails), so this release needed no bypass.
+
+**Commands run:**
+```bash
+# GitHub (tools): merge PR #17, open PR #18, merge PR #19, rerun the failed job of run 44381539174 once, merge PR #18
+# Owner on their computer: supabase db push + functions deploy brief-ingest, calendar-sync (habits-test and production)
+git fetch origin main && git checkout -B claude/habits-app-updates-design-m8o858 origin/main   # working branch restarted from main
+```
+
+**Files changed:**
+- `BUILD_LOG.md` – modified: this entry.
+- `docs/NEXT_SESSION.md` – modified: state after v3.9.0.
+
+**Result:** v3.9.0 is on `main`; Vercel deploys it to https://habits.mkalmutzke.com: Settings → Daily briefs (configurable), Settings → Calendars, the Calendar card on Dawn.
+**Still to do (owner):** copy the new text of `docs/briefs/jobs.md`, `world.md` and `ibkr.md` into the three scheduled tasks; `git tag v3.9.0 && git push origin v3.9.0` on `main`; link the CLI back to `habits-test`; add the Google calendar under Settings → Calendars.
+**Issues & fixes:** The settings race (Step 30); one CI rerun for the Docker port.
+**Commit:** `docs: release v3.9.0 (Step 31)`

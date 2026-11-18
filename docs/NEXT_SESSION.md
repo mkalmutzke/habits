@@ -1,13 +1,16 @@
 # Next session – handoff
 
-*Written 18 November 2026 after Step 23. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
+*Written 18 November 2026 after Step 31. Details: [`BUILD_LOG.md`](../BUILD_LOG.md).*
 
 ## Where we stopped
 
-- **v3.8.0 is live** (Steps 14–23, PRs #14 and #15): shopping list on What's up? (folded); habit breaks (tap: done → break → clear, three breaks in a row end the streak, optional monthly limit in Settings → Habit breaks); habit month view (calendar icon on the Habits card); Settings → Modules (IBKR on/off, Garmin off / icon / section, Server health); server health (agent in `scripts/server-agent`, Edge Function `server-ingest`, header icon with status dot, Settings → Servers); the Week page is now **Dawn** (`#/week` still works). 21 migrations, Edge Functions now also `server-ingest`.
-- **Checked by the owner (18 Nov):** v3.8 works live; the netcup VPS reports to Server health (agent installed, watching caddy and docker). Still open: tag `v3.8.0` if not pushed yet; CLI back to `habits-test` (and `db push` + `functions deploy server-ingest` there if not done yet).
-- **Blocker for every merge into `main`:** `npm audit` is red because of `picomatch` (GHSA-fc5q-39xc-vjpf, ≤ 4.0.7, no fixed version yet, build tools only). The `main` ruleset requires the check, and v3.8 was merged by the owner with "bypass rules". As soon as 4.0.8+ is out: `npm update picomatch`, push, check green.
-- **Next topics, in the recommended order** (design page from Step 14, outside the repository): 1) configurable briefs (icon vs. run, countries, job titles, topics), 2) per-user connections for IBKR/Garmin + invite screen (owner: invite-only), 3) calendars on Dawn via iCal addresses. The Dawn dark theme was dropped by the owner on 18 Nov (Step 26); the app keeps its current look. Later: Google sign-in for calendars, briefs for other users (owner: skip for now), netcup API check, alerts on server status changes.
+- **v3.9.0 is live** (Steps 25–31, PRs #17, #19, #18): **configurable daily briefs** (Settings → Daily briefs: run and icon separately, name, topics, items at most, "also follow"; jobs: countries, job titles, about me; world: regions, leave out; IBKR: extra symbols – stored in `user_settings.brief_prefs`, handed to the runs as `prefs`) and **calendars on Dawn** (Settings → Calendars: secret iCal addresses, up to 10, kept in a private table; Edge Function `calendar-sync` every 15 minutes and on Refresh; Calendar card with today + 6 days). Fix in Step 30: settings saves send only the changed columns, so quick changes no longer undo each other. 23 migrations; Edge Functions now also `calendar-sync`.
+- **v3.8.0** (Steps 14–23): habit breaks, month view, Modules, server health (the netcup VPS reports, watching caddy and docker), shopping list on What's up?, Week → Dawn.
+- **Open, owner:** copy the new `docs/briefs/jobs.md`, `world.md`, `ibkr.md` into the three scheduled tasks (until then the briefs run with the old text and ignore the new settings); tag `v3.8.0` / `v3.9.0` if not pushed yet; link the CLI back to `habits-test`; add the Google calendar under Settings → Calendars.
+- **`npm audit` is green again** since PR #17 (the `picomatch` warning no longer fails). If it turns red again: no bypass by default – first check whether a fixed version exists.
+- **Dawn dark theme:** tried on a mockup page (Step 25, "Dawn Theme Studio" on the owner's claude.ai account) and dropped by the owner (Step 26); the app keeps its look.
+- **Next topics, in the recommended order:** 1) per-user connections for IBKR/Garmin + invite screen (owner: invite-only) – the biggest step, with a security review. Later: Google sign-in for calendars (needs Google's verification), briefs for other users (owner: skip for now), netcup API check, alerts on server status changes.
+- **Matt Pocock's engineering skills** (Step 24) are installed on the owner's computer only: `/mattpocock-skills:code-review <fixed point>`; its spec is the owner's request plus the build log's **Why**. Open question for the owner: allow ADRs under `docs/adr/` (the skills may create them), or keep decisions only in the build log.
 - **Owner's decisions (Step 15):** breaks don't count as streak days; monthly break limit settable (none to start with); other users invite-only; briefs for others and Google sign-in skipped for now; the agent also checks Docker and updates.
 
 - **Brief tasks** (owner's Claude account, Zurich time, fresh cloud session per run, instructions in [`docs/briefs/`](briefs/README.md)): "Habits – World news brief" daily 07:37, "Habits – Canada jobs brief" daily 07:41, "Habits – IBKR morning brief" Tue–Sat 07:45. Test runs on 1 Nov: world and jobs stored, IBKR correctly skipped (Sunday). Changing a task's text: edit the file in `docs/briefs/`, then update the scheduled task.
@@ -22,7 +25,7 @@
 | Item | Recommendation |
 |---|---|
 | Old address `todo.mkalmutzke.com` | It points to `185.181.104.242`, not Vercel – check at INWX; redirect it to habits.mkalmutzke.com for a while, then remove it (also the old redirect URL in Supabase and the old domain in Resend) |
-| Branch protection for `main` | Done: a ruleset requires five checks (seen on 18 Nov). Keep yourself on its bypass list for cases like the `picomatch` audit |
+| Branch protection for `main` | Done: a ruleset requires five checks. Keep yourself on its bypass list for emergencies |
 | Calendar reminder for the keys | about 21 Oct 2027 |
 
 ## Working agreements
