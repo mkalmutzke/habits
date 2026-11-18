@@ -647,3 +647,27 @@ npm run db:reset && npm run test:db      # fresh local database: 17 files, 221 t
 **Result:** The middle tab is "Dawn" (open https://habits.mkalmutzke.com/#/dawn after the release); `#/week` still works.
 **Issues & fixes:** Database tests run right after the e2e suite failed, because the e2e users and servers were still in the local database (CI uses a fresh one) → reset the local database. One server-health check now only looks at its own row.
 **Commit:** `feat: the Week page is now Dawn (Step 20)`
+
+### Step 21 – v3.8.0: version bump and pull request (v3.8)
+**Date:** 2026-11-18 13:00
+**Request:** Owner: "open the PR and list me the steps I need to take".
+**Why:** Steps 15–20 are ready, so the version becomes 3.8.0 and the work goes into the integration branch `release/v3.8` (new, made from `main`) by pull request. The steps were made one after another on one working branch, so they arrive as one PR with one commit per step instead of one PR per step; each commit has its own build-log entry. The PR is merged into `release/v3.8` once all checks are green. `release/v3.8` → `main` (going live) waits for the owner's explicit OK.
+
+**Commands run:**
+```bash
+npm version 3.8.0 --no-git-tag-version   # package.json and package-lock.json
+npx vitest run                           # 314 tests passed
+npm run lint                             # no warnings
+npx supabase stop --no-backup && npm run db:start   # the local database had stopped while the session paused
+npx playwright test --trace off e2e/shell.spec.js    # 6 passed ("Version 3.8.0")
+```
+
+**Files changed:**
+- `package.json`, `package-lock.json` – modified: version 3.8.0.
+- `src/features/about/AboutPage.test.jsx`, `e2e/shell.spec.js` – modified: expect "Version 3.8.0".
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Pull request from the working branch into `release/v3.8`.
+**Still to do (owner):** see the PR description – `db push` and two function deploys on `habits-test`, check, then the OK for production.
+**Issues & fixes:** None.
+**Commit:** `chore: version 3.8.0 (Step 21)`
