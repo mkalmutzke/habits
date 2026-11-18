@@ -612,3 +612,38 @@ npx playwright test --trace off e2e/servers.spec.js e2e/modules.spec.js         
 **Issues & fixes:** My database test first reset a timestamp as the server role, which correctly has no rights there; fixed the test. The local function runtime returned 404 for the new function until the local stack was restarted. The linter flagged reading the clock during render → the `useNow` hook. The installer could not be run in this container (no systemd), only syntax-checked; the agent itself ran for real.
 **Still to do (owner, at release):** `npx supabase db push` and `npx supabase functions deploy server-ingest` (test project first). Then, on the VPS: Settings → Servers → Add server and run the shown command. The install command downloads from `main`, so it works once v3.8 is merged.
 **Commit:** `feat: server health – agent, server-ingest, header icon and window (Step 19)`
+
+### Step 20 – Week becomes Dawn (v3.8)
+**Date:** 2026-11-18 12:55
+**Request:** Owner: once everything works, rename the Week page to Dawn.
+**Why:** Renamed last, because it touches the most files. Decisions:
+- Tab, title and address are now "Dawn" and `#/dawn`. Old `#/week` links (bookmarks, links in earlier notifications) still open the page: the router maps the old name to the new one.
+- The small line under the title said "Last 7 days", left over from when habits were on the Week page. The page now shows tasks due today, in the next 6 days or overdue, so it reads "Today + next 6 days · 18 Nov – 24 Nov".
+- The folder `src/features/week/` is now `src/features/dawn/` (`WeekView` → `DawnView`). `week.js` keeps its name, because it holds the 7-day helper that habits and Garmin also use.
+- Test fix along the way: the e2e helper that unfolds Habits checked for the card without waiting, so right after a reload it sometimes left it folded. That made "drag a habit to the top" fail in cloud containers since Step 12. It now waits for the card.
+- The two reminder tests that failed in this container since Step 12 failed only because the local push settings were missing. CI creates them with `npm run dev:push-keys`; done the same here, they pass.
+
+**Commands run:**
+```bash
+git mv src/features/week src/features/dawn
+git mv src/features/dawn/WeekView.jsx src/features/dawn/DawnView.jsx
+git mv src/features/dawn/week.css src/features/dawn/dawn.css
+git mv e2e/week.spec.js e2e/dawn.spec.js
+npx vitest run                           # 314 tests passed
+npm run lint                             # no warnings
+npm run dev:push-keys                    # local push settings, ignored file only (as in CI), then the local stack restarted
+npx playwright test --trace off          # the whole suite: 77 passed
+npm run db:reset && npm run test:db      # fresh local database: 17 files, 221 tests passed
+```
+
+**Files changed:**
+- `src/features/dawn/` (was `week/`) – moved: `DawnView.jsx` (was `WeekView.jsx`), `dawn.css` (was `week.css`), `DueSection.jsx`, `dueSoon.js`, `week.js` and their tests; comments updated.
+- `src/AppHeader.jsx`, `src/headerLine.js`, `src/App.jsx`, `src/shared/hooks/useRoute.js` – modified: tab, title, header line, `#/dawn` with `#/week` still working.
+- `src/features/habits/HabitWeekGrid.jsx`, `src/features/garmin/garmin.js` – modified: import path of `week.js`.
+- `src/features/about/BlocksDiagram.jsx`, `databaseTables.js`, `src/features/shopping/shopping.css`, `README.md` – modified: names.
+- Tests: `src/AppHeader.test.jsx`, `src/shared/hooks/useRoute.test.js` (old link → Dawn); e2e `dawn.spec.js` (was `week.spec.js`), `today.spec.js` (tab, address, old link), `a11y.spec.js`, `shell.spec.js`, `briefs.spec.js`; `habits.spec.js` (the waiting unfold helper); `supabase/tests/database/17_server_health.test.sql` (only looks at its own row).
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** The middle tab is "Dawn" (open https://habits.mkalmutzke.com/#/dawn after the release); `#/week` still works.
+**Issues & fixes:** Database tests run right after the e2e suite failed, because the e2e users and servers were still in the local database (CI uses a fresh one) → reset the local database. One server-health check now only looks at its own row.
+**Commit:** `feat: the Week page is now Dawn (Step 20)`

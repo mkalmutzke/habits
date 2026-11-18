@@ -11,7 +11,7 @@ export const DATABASE_TABLES = [
   { group: 'To-dos', name: 'todo_tasks', what: 'Tasks; deleted ones are kept 10 days, completed ones 360 days', columns: 'title · list_id · due_date · important · repeat_rule · completed_at · deleted_at', since: 'v2' },
   { group: 'To-dos', name: 'todo_steps', what: 'Steps of a task', columns: 'task_id · title · done', since: 'v2' },
   { group: 'To-dos', name: 'todo_reminders', what: 'One reminder per task, at a moment', columns: 'task_id · remind_at · channels · status', since: 'v2' },
-  { group: 'Week', name: 'shopping_items', what: 'The shopping list', columns: 'title · ticked_at · position', since: 'v3' },
+  { group: 'What’s up?', name: 'shopping_items', what: 'The shopping list', columns: 'title · ticked_at · position', since: 'v3' },
   { group: 'IBKR', name: 'portfolio_snapshots', what: 'One snapshot of your IBKR portfolio per trading day (kept 400 days), written by the server', columns: 'as_of · nav · cash · day_change · day_twr · twr (YTD)', since: 'v3.4' },
   { group: 'IBKR', name: 'portfolio_positions', what: 'The holdings of a snapshot (kept 7 days), in CHF', columns: 'symbol · quantity · value_base · prev_close_price · cost_basis_base', since: 'v3.4' },
   { group: 'Garmin', name: 'garmin_days', what: 'One Garmin daily summary per day (kept 365 days), written by the server', columns: 'day · steps · step_goal · resting_hr', since: 'v3.5' },

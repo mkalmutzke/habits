@@ -11,6 +11,11 @@ describe('parseRoute', () => {
     expect(parseRoute('#/task/new?source=group%3Ag1')).toEqual({ view: 'task', id: 'new', query: { source: 'group:g1' } })
   })
 
+  it('v3.8: Dawn, and old Week links open Dawn', () => {
+    expect(parseRoute('#/dawn')).toMatchObject({ view: 'dawn', id: null })
+    expect(parseRoute('#/week')).toMatchObject({ view: 'dawn', id: null })
+  })
+
   it('falls back to What’s up? and to Lists', () => {
     expect(parseRoute('#/nonsense')).toMatchObject({ view: 'today', id: null })
     expect(parseRoute('')).toMatchObject({ view: 'today' })

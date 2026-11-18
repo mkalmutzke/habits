@@ -4,11 +4,12 @@ import ViewTabs from './shared/ui/ViewTabs.jsx'
 
 const VIEW_OPTIONS = [
   { id: 'today', label: 'What’s up?' },
-  { id: 'week', label: 'Week' },
+  { id: 'dawn', label: 'Dawn' },
   { id: 'lists', label: 'Lists' },
 ]
 
-const TITLES = { today: 'What’s up?', week: 'Week', lists: 'Lists' }
+// v3.8 (owner): the Week page is called Dawn
+const TITLES = { today: 'What’s up?', dawn: 'Dawn', lists: 'Lists' }
 
 // The top row (app name and settings) on every page. v3.6: `tools` are the
 // icon buttons before the gear (Garmin, the daily briefs) – only on the

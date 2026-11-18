@@ -13,9 +13,12 @@ const dayButtons = (page, name) => page.getByRole('button', { name: new RegExp(`
 const todayButton = (page, name) => dayButtons(page, name).last()
 
 // The section starts folded every time the app opens (owner, mockup review).
+// v3.8: waits for the card first – right after a reload it isn't there yet,
+// and checking too early left it folded (the drag test failed that way).
 async function showHabits(page) {
-  const show = page.getByRole('button', { name: /^Habits/, expanded: false })
-  if (await show.isVisible()) await show.click()
+  const header = page.getByRole('button', { name: /^Habits/ })
+  await expect(header).toBeVisible()
+  if ((await header.getAttribute('aria-expanded')) === 'false') await header.click()
 }
 
 async function addHabit(page, name) {

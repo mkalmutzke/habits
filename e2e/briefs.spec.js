@@ -40,7 +40,7 @@ test('v3.6 briefs: icons open their windows; a switch in Settings hides the icon
   await page.goto('/#/today')
   await expect(page.getByRole('button', { name: 'World news' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Canada jobs brief' })).toHaveCount(0)
-  await page.getByRole('tab', { name: 'Week' }).click()
+  await page.getByRole('tab', { name: 'Dawn' }).click()
   await expect(page.getByRole('button', { name: 'Canada jobs brief' })).toHaveCount(0)
 
   // the app can't write a brief itself (only brief-ingest can)

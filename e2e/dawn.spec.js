@@ -4,7 +4,7 @@ import { createUser, openSignedIn, restAs } from './helpers.js'
 
 // Test plan v3 TS-K: the shopping list (v3.8: on What's up?, folded at app
 // start); TS-G: Garmin (v3.5 a card on Week, v3.6 a window opened from the
-// header); TS-D: the Week page.
+// header); TS-D: the Dawn page (called Week until v3.8).
 
 const shot = (page, name) =>
   page.screenshot({ path: `test-results/screens/${test.info().project.name}-${name}.png`, fullPage: true })
@@ -31,8 +31,8 @@ async function addItems(page, ...titles) {
 test('TS-G1 v3.6: Garmin opens from the header on every main page – no card on Week; refresh; readable', async ({ page }) => {
   const user = await createUser('week')
   await openSignedIn(page, user)
-  await page.getByRole('tab', { name: 'Week' }).click()
-  await expect(page.getByText(/^Last 7 days · /)).toBeVisible()
+  await page.getByRole('tab', { name: 'Dawn' }).click()
+  await expect(page.getByText(/^Today \+ next 6 days · /)).toBeVisible()
   // neither Habits (v3.5) nor Garmin (v3.6) are cards on Week any more
   await expect(page.getByRole('button', { name: /^Habits/ })).toHaveCount(0)
   await expect(page.locator('.card-section', { hasText: 'Garmin' })).toHaveCount(0)
@@ -128,11 +128,11 @@ test('TS-K7 an item added on one device appears on the other', async ({ browser 
   await expect(laptop.getByRole('button', { name: 'Batteries' })).toBeVisible({ timeout: 10_000 })
 })
 
-// v3.3 (test plan TS-D, TS-F11): the Week page (v3.8: only Due & overdue)
+// v3.3 (test plan TS-D, TS-F11): the Dawn page (v3.8: only Due & overdue)
 // A date key `offset` days from today, in the tests' time zone.
 const dayKey = (offset) => new Date(Date.now() + offset * 86_400_000).toLocaleDateString('en-CA', { timeZone: 'Europe/Zurich' })
 
-test('TS-D5/D7/D8/F11/A10 v3.3/v3.8: Due & overdue on Week; due tasks of every list', async ({ page }) => {
+test('TS-D5/D7/D8/F11/A10 v3.3/v3.8: Due & overdue on Dawn; due tasks of every list', async ({ page }) => {
   const user = await createUser('due')
   const [work] = (await restAs(user, 'todo_lists', { method: 'POST', body: JSON.stringify({ name: 'Work', color: 'blue', show_in_all: false }) })).body
   const task = (title, due_date, list_id = null) => restAs(user, 'todo_tasks', { method: 'POST', body: JSON.stringify({ title, due_date, list_id }) })
@@ -140,7 +140,7 @@ test('TS-D5/D7/D8/F11/A10 v3.3/v3.8: Due & overdue on Week; due tasks of every l
   await task('Quarterly report', dayKey(1), work.id)
   await task('Far away', dayKey(10))
 
-  await openSignedIn(page, user, '/#/week')
+  await openSignedIn(page, user, '/#/dawn')
   // v3.6: Garmin is a window from the header, no longer a card here
   // v3.8: the shopping list moved to What's up?
   await expect(page.locator('.card-section-title')).toHaveText(['Due & overdue'])

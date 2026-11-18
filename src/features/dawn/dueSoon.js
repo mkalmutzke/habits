@@ -2,7 +2,7 @@ import { addDays, formatShortDate, formatWeekday } from '../../shared/utils/date
 import { byPosition } from '../../shared/utils/position.js'
 import { isOpen } from '../todos/smartLists.js'
 
-// "Due & overdue" on the Week page (design v3.3 §3.4): today and the next 6
+// "Due & overdue" on the Dawn page (the Week page until v3.8; design v3.3 §3.4): today and the next 6
 // days (owner Q4: rolling, like the habit grid's "last 7 days").
 export const DUE_DAYS = 7
 

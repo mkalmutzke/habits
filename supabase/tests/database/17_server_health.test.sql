@@ -35,7 +35,7 @@ select is(public.store_server_report((select token from added), '{"cpu": 12.5, "
 select is(public.store_server_report((select token from added), '{"cpu": 13}'::jsonb), 'too soon', 'a second report within 50 seconds is refused');
 select is(public.store_server_report(repeat('0', 64), '{"cpu": 13}'::jsonb), 'unknown', 'an unknown token stores nothing');
 set local role postgres;
-select is((select token_hash from private.server_tokens), encode(extensions.digest((select token from added), 'sha256'), 'hex'), 'only the fingerprint is kept');
+select is((select token_hash from private.server_tokens where server_id = (select id from added)), encode(extensions.digest((select token from added), 'sha256'), 'hex'), 'only the fingerprint is kept');
 
 -- A sees the report; B sees nothing and can't change A's server
 select pg_temp.act_as('11111111-1111-1111-1111-111111111111');

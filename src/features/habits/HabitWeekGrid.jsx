@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useDragReorder } from '../../shared/hooks/useDragReorder.js'
 import { formatShortDate, formatWeekday } from '../../shared/utils/date.js'
-import { getRollingDays } from '../week/week.js'
+import { getRollingDays } from '../dawn/week.js'
 import { dayStatus, nextStatus } from './habitData.js'
 import { getMilestone, getStreak, isOnBreak } from './streak.js'
 import './habits.css'

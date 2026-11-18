@@ -43,7 +43,7 @@ test('TS-W4 switching tabs moves nothing: same header height, page starts at the
   await expect(page.getByRole('heading', { level: 1, name: 'What’s up?' })).toBeVisible()
   const first = await layout(page)
 
-  for (const [tab, title] of [['Week', 'Week'], ['Lists', 'Lists'], ['What’s up?', 'What’s up?']]) {
+  for (const [tab, title] of [['Dawn', 'Dawn'], ['Lists', 'Lists'], ['What’s up?', 'What’s up?']]) {
     // record every position the header and page take while switching
     await page.evaluate(() => {
       window.__tops = []

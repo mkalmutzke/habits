@@ -25,7 +25,7 @@ import './features/todos/todos.css'
 import { isOpen } from './features/todos/smartLists.js'
 import { useTodos } from './features/todos/useTodos.js'
 import { useSettings, useTimeZoneSetting } from './features/settings/useSettings.js'
-import WeekView from './features/week/WeekView.jsx'
+import DawnView from './features/dawn/DawnView.jsx'
 import WhatsUpPage from './features/whatsup/WhatsUpPage.jsx'
 import DataProvider from './shared/data/DataProvider.jsx'
 import { useOnline, useTable } from './shared/data/hooks.js'
@@ -86,7 +86,7 @@ function SignedInApp({ user }) {
     window.scrollTo(0, 0)
   }, [route.view, route.id])
 
-  const isTab = ['today', 'week', 'lists'].includes(route.view)
+  const isTab = ['today', 'dawn', 'lists'].includes(route.view)
   const tabView = isTab ? route.view : 'today'
   // v3.6: header icons before the gear, on the three main pages only (owner);
   // a brief switched off in Settings has no icon. The amber dot: today's
@@ -144,8 +144,8 @@ function SignedInApp({ user }) {
                 pushOnThisDevice={pushOnThisDevice}
               />
             )}
-            {tabView === 'week' && (
-              <WeekView todos={todos} today={today} reminderText={reminders.reminderText} />
+            {tabView === 'dawn' && (
+              <DawnView todos={todos} today={today} reminderText={reminders.reminderText} />
             )}
             {tabView === 'lists' && <ListsView todos={todos} today={today} />}
           </div>
