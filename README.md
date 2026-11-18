@@ -4,7 +4,7 @@ A personal app for **habits, to-dos and a shopping list**, mobile-first and inst
 Android. The start page "What's up?" shows a folded IBKR portfolio card (the day's move; holdings and
 performance when opened; a daily morning news brief), the habits in groups (tap a day to tick it, again for a break that keeps the streak), the shopping list (folded) and every
 open to-do; the Dawn page (called Week until v3.8) has the tasks due today, in the next 6 days or overdue. Icons in the header open Garmin (steps, resting heart rate, elevation and activities for 7 days or the month; in Settings → Modules it can also be a card on What's up? or hidden, like the IBKR card)
-and two daily briefs (Canada jobs, world news), written each morning by Claude scheduled tasks. Data lives in the cloud and updates live on
+and two daily briefs (job market, world news), written each morning by Claude scheduled tasks. What each brief covers – countries, job titles, regions, symbols, topics, number of items, its name and icon – is set in Settings → Daily briefs. Data lives in the cloud and updates live on
 all your devices; reminders arrive by push, email or in the app.
 
 **Live app:** https://habits.mkalmutzke.com/ – sign in with your email, then "Install app" /

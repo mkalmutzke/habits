@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { briefDate, isNew, isOn, itemCount } from './briefs.js'
+import { briefDate, briefPrefs, briefTitle, iconShown, isNew, isOn, itemCount } from './briefs.js'
 
 const TODAY = '2026-11-03'
 
@@ -28,5 +28,23 @@ describe('briefs (v3.6)', () => {
   it('itemCount counts the headlines of all sections', () => {
     expect(itemCount({ sections: [{ items: [1, 2] }, { items: [3] }] })).toBe(3)
     expect(itemCount({})).toBe(0)
+  })
+})
+
+describe('brief settings in the app (v3.9)', () => {
+  it('the icon shows while the brief runs and its icon is on', () => {
+    expect(iconShown({}, 'world')).toBe(true)
+    expect(iconShown({ brief_prefs: { world: { icon: false } } }, 'world')).toBe(false)
+    expect(iconShown({ brief_world_on: false }, 'world')).toBe(false)
+  })
+
+  it('names: own title, the country of the job brief, or the usual name', () => {
+    expect(briefTitle({}, 'jobs')).toBe('Canada jobs brief')
+    expect(briefTitle({ brief_prefs: { jobs: { countries: ['Canada', 'Switzerland'] } } }, 'jobs')).toBe('Job market brief')
+    expect(briefTitle({ brief_prefs: { jobs: { countries: ['Switzerland'] } } }, 'jobs')).toBe('Switzerland jobs brief')
+    expect(briefTitle({ brief_prefs: { world: { title: 'My world' } } }, 'world')).toBe('My world')
+    expect(briefTitle({}, 'ibkr')).toBe('Morning brief')
+    expect(briefTitle({}, 'ibkr', { forSettings: true })).toBe('IBKR morning brief')
+    expect(briefPrefs({ brief_prefs: { jobs: { max: 12 } } }, 'jobs').max).toBe(12)
   })
 })

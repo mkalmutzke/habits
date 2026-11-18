@@ -9,12 +9,16 @@
 //       otherwise { run: true, today, holdings?, holdings_as_of?, fallback? }.
 //       The IBKR brief gets the holdings of the newest stored IBKR report –
 //       symbol and name only – or VT and VWO with fallback: true.
+//       v3.9: every run also gets `prefs`, the brief's settings from the app
+//       (Settings → Daily briefs: countries, job titles, regions, topics,
+//       number of items …), cleaned up by _shared/briefPrefs.js.
 //   { "action": "store", "kind": …, "brief": { … } }
 //     → checks and trims the brief (_shared/brief.js) and stores it as the
 //       owner's brief for today, replacing the previous one.
 // Logs only the kind, the day and counts – never the content.
 import { db } from '../_shared/admin.ts'
 import { KINDS, holdingsForBrief, normalizeBrief, sameText, shouldRun } from '../_shared/brief.js'
+import { prefsForRun } from '../_shared/briefPrefs.js'
 
 const FALLBACK_HOLDINGS = [
   { symbol: 'VT', name: 'Vanguard Total World Stock ETF', asset_class: 'STK' },
@@ -44,11 +48,12 @@ Deno.serve(async (req) => {
 
     if (body.action === 'start') {
       if (!run) return json({ run: false, reason, today: context.today })
-      if (kind !== 'ibkr') return json({ run: true, today: context.today })
+      const prefs = prefsForRun(kind, context.prefs?.[kind])
+      if (kind !== 'ibkr') return json({ run: true, today: context.today, prefs })
       const holdings = holdingsForBrief(context.holdings)
       return holdings.length
-        ? json({ run: true, today: context.today, holdings, holdings_as_of: context.holdings_as_of })
-        : json({ run: true, today: context.today, holdings: FALLBACK_HOLDINGS, fallback: true })
+        ? json({ run: true, today: context.today, prefs, holdings, holdings_as_of: context.holdings_as_of })
+        : json({ run: true, today: context.today, prefs, holdings: FALLBACK_HOLDINGS, fallback: true })
     }
 
     if (body.action === 'store') {

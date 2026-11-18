@@ -157,3 +157,147 @@
   line-height: 1.4;
   color: var(--ink-faint);
 }
+
+/* ---------- Settings → Daily briefs (v3.9) ---------- */
+.brief-card-settings {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.brief-card-settings:last-child {
+  border-bottom: none;
+}
+
+.brief-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 16px;
+}
+
+.brief-card-toggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 60px;
+  padding: 12px 0 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.brief-card-toggle .settings-row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.brief-card-settings.open .section-chevron {
+  transform: rotate(180deg);
+}
+
+.brief-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 16px 16px;
+}
+
+.brief-card-body .settings-row {
+  padding: 4px 0;
+  min-height: 0;
+  border-bottom: none;
+}
+
+.brief-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brief-field-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.brief-field textarea {
+  resize: vertical;
+}
+
+.brief-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brief-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-left: 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.85rem;
+}
+
+.brief-chip button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.brief-add {
+  display: flex;
+  gap: 8px;
+}
+
+.brief-add input {
+  flex: 1;
+  min-width: 0;
+}
+
+.brief-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.brief-topic {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.brief-topic[aria-pressed='true'] {
+  border-color: var(--amber);
+  background: rgb(198 138 61 / 0.14);
+  color: var(--ink);
+}
+
+.brief-topic:focus-visible,
+.brief-chip button:focus-visible,
+.brief-card-toggle:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.brief-count {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}

@@ -8,7 +8,7 @@ import NotificationSettings from './features/notifications/NotificationSettings.
 import ReminderRow from './features/notifications/ReminderRow.jsx'
 import { useInAppReminders, usePushOnThisDevice, useReminders } from './features/notifications/useReminders.js'
 import BriefWindow from './features/briefs/BriefWindow.jsx'
-import { BRIEFS, isNew, isOn } from './features/briefs/briefs.js'
+import { BRIEFS, briefTitle, iconShown, isNew } from './features/briefs/briefs.js'
 import { useBriefs } from './features/briefs/useBriefs.js'
 import GarminWindow from './features/garmin/GarminWindow.jsx'
 import { useGarmin } from './features/garmin/useGarmin.js'
@@ -90,10 +90,11 @@ function SignedInApp({ user }) {
   const tabView = isTab ? route.view : 'today'
   // v3.6: header icons before the gear, on the three main pages only (owner);
   // a brief switched off in Settings has no icon. The amber dot: today's
-  // brief not opened yet today.
+  // brief not opened yet today. v3.9: its icon can be hidden while it runs,
+  // and it carries the brief's own name (Settings → Daily briefs).
   const briefButton = (kind, className) =>
-    isOn(settings, kind) && (
-      <ToolButton key={kind} icon={BRIEFS[kind].icon} label={BRIEFS[kind].title} dot={isNew(briefs.byKind[kind], today)} onClick={() => setPanel(kind)} className={className} />
+    iconShown(settings, kind) && (
+      <ToolButton key={kind} icon={BRIEFS[kind].icon} label={briefTitle(settings, kind)} dot={isNew(briefs.byKind[kind], today)} onClick={() => setPanel(kind)} className={className} />
     )
   // v3.8 (Settings → Modules): the Garmin icon only in its "icon" form; with
   // the IBKR card hidden, the IBKR brief's icon moves to the header.
@@ -152,7 +153,7 @@ function SignedInApp({ user }) {
           {panel === 'garmin' && <GarminWindow garmin={garmin} today={today} onClose={() => setPanel(null)} />}
           {panel === 'server' && <ServerWindow servers={servers} onClose={() => setPanel(null)} />}
           {panel in BRIEFS && (
-            <BriefWindow kind={panel} brief={briefs.byKind[panel]} today={today} onSeen={briefs.markSeen} onClose={() => setPanel(null)} />
+            <BriefWindow kind={panel} title={briefTitle(settings, panel)} brief={briefs.byKind[panel]} today={today} onSeen={briefs.markSeen} onClose={() => setPanel(null)} />
           )}
         </>
       ) : (

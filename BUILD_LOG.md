@@ -782,3 +782,45 @@ git fetch origin main && git checkout -B claude/habits-app-updates-design-m8o858
 **Result:** No change in the app. Next topic in the list: configurable briefs.
 **Issues & fixes:** None.
 **Commit:** `docs: theme discarded (Step 26)`
+
+### Step 27 – Configurable daily briefs (v3.9)
+**Date:** 2026-11-18 18:36
+**Request:** Owner: make the briefs as configurable as possible from the app (last updates for today, together with iCal on Dawn).
+**Why:** What a brief covers was fixed text in `docs/briefs/*.md`. Now everything that decides a brief's content is a setting in the app, and the morning run reads it. Decisions:
+- **Per brief** (Settings → Daily briefs, each brief opens like a card):
+  - **All briefs:** run every morning (as before), show its icon (new, separate from running), a name of its own, topics to switch on and off, "items at most" (3–15), "also follow" (free text).
+  - **Job brief:** countries, job titles, "about me".
+  - **World news:** regions, "leave out".
+  - **IBKR brief:** extra symbols to watch.
+  - Only the run times stay in the Claude scheduled tasks; the app can't change those.
+- **One set of rules for both sides:** defaults, limits and cleaning are in `supabase/functions/_shared/briefPrefs.js`, plain JavaScript that the app imports and `brief-ingest` uses too, so the app and the server can't disagree. Without settings everything works as before (the defaults are the old texts).
+- **Storage:** one column `user_settings.brief_prefs` (a JSON object, at most 16 KB). The alternative, about 15 separate columns, would need a migration for every new option.
+- **To the run:** `brief_context()` now returns `prefs`, and `brief-ingest` passes them cleaned up to the run (topics as readable labels). The three prompts in `docs/briefs/` use them, with the old values as a fallback for an older `brief-ingest`.
+- **Name:** while Canada is the only country, the job brief keeps its name "Canada jobs brief"; with more countries it is the "Job market brief", unless the owner sets a name.
+
+**Commands run:**
+```bash
+npx supabase stop --no-backup && npm run db:start   # the local database had stopped
+npx vitest run                         # 321 tests passed
+npm run lint                           # no warnings
+npm run build                          # the shared file outside src/ is bundled
+npm run test:db                        # 18 files, 226 tests passed
+npx playwright test --trace off e2e/briefs.spec.js e2e/modules.spec.js
+```
+
+**Files changed:**
+- `supabase/migrations/20261118200000_v3_9_brief_prefs.sql` – created: `user_settings.brief_prefs`, `brief_context()` with `prefs`.
+- `supabase/tests/database/18_brief_prefs.test.sql` – created: default, saving, object only, size limit, handed to the run.
+- `supabase/functions/_shared/briefPrefs.js` (+ `briefPrefs.test.js`) – created: topics, lists, defaults, limits, `normalizePrefs`, `prefsForRun`.
+- `supabase/functions/brief-ingest/index.ts` – modified: `prefs` in every start answer.
+- `docs/briefs/jobs.md`, `world.md`, `ibkr.md`, `README.md` – modified: the runs use the settings.
+- `src/features/briefs/briefs.js` (+ test) – modified: `briefPrefs`, `iconShown`, `briefTitle`.
+- `src/features/briefs/BriefSettings.jsx` – modified; `BriefCard.jsx`, `ListField.jsx` – created; `briefs.css` – modified.
+- `src/features/briefs/BriefWindow.jsx`, `src/App.jsx`, `src/features/settings/useSettings.js` – modified: name and icon follow the settings.
+- `e2e/briefs.spec.js` – modified: the run switch's new label; new test for countries, topics, number, "also follow" and icon.
+- `src/features/about/databaseTables.js`, `README.md` – modified. `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Settings → Daily briefs → tap a brief to change what it covers. The next morning's run uses it.
+**Still to do (owner, at release):** `npx supabase db push`, `npx supabase functions deploy brief-ingest`, then **once** copy the new text of `docs/briefs/jobs.md`, `world.md` and `ibkr.md` into the three scheduled tasks.
+**Issues & fixes:** In the e2e test, "Countries" named both the input field and the chip list → the test addresses the field as a text box.
+**Commit:** `feat: configurable daily briefs (Step 27)`

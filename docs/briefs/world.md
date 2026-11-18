@@ -9,9 +9,11 @@ Step 0 – Ask whether to run. Write {"action":"start","kind":"world"} to a file
 curl -sS -X POST "$HABITS_BRIEF_URL" -H "Authorization: Bearer $HABITS_BRIEF_AUTH" -H "Content-Type: application/json" --data @start.json
 If the answer has "run": false, stop here and end with one line saying why. If the call fails, try once more after 30 seconds, then stop and report the error.
 
-Step 1 – Research: use web search to find the most important world news of the last 24 hours (politics, economy, conflicts and diplomacy, science and climate, technology). Prefer reliable news sources; skip duplicates, celebrity news and fluff.
+The answer has "prefs" – my settings from the app. Use them for everything below: "regions" (where to look – "World" means everywhere), "topics" (which kinds of news), "avoid" (what to leave out), "max" (the most headlines to send) and "extra" (anything else to follow, may be empty). If the answer has no "prefs", use: regions World; topics politics, economy, conflicts and diplomacy, science and climate, technology; max 8.
 
-Step 2 – Output: keep it simple – a very brief summary of the day (two or three sentences) and about 5–8 headlines, each one line in your own words with a link to the source article.
+Step 1 – Research: use web search to find the most important news of the last 24 hours in the regions in "regions", on the topics in "topics", plus "extra". Leave out everything in "avoid". Prefer reliable news sources; skip duplicates, celebrity news and fluff.
+
+Step 2 – Output: keep it simple – a very brief summary of the day (two or three sentences) and at most "max" headlines, each one line in your own words with a link to the source article.
 
 Step 3 – Send it: write this JSON to brief.json (valid JSON, real article URLs only – never invent a link) and send it with the same curl command as in Step 0, using --data @brief.json:
 {"action":"store","kind":"world","brief":{"summary":"…","sections":[{"heading":"Headlines","items":[{"headline":"…","url":"https://…","source":"site name"}]}]}}
