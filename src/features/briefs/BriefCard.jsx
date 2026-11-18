@@ -20,12 +20,18 @@ function BriefCard({ kind, settings, update, disabled }) {
   const on = isOn(settings, kind)
   const name = briefTitle(settings, kind, { forSettings: true })
 
+  // built on the newest settings, also changes still on their way (a quick
+  // second change must not undo the first)
   function save(patch) {
-    update({ brief_prefs: { ...(settings.brief_prefs ?? {}), [kind]: { ...prefs, ...patch } } })
+    update((current) => {
+      const base = briefPrefs(current, kind)
+      const values = typeof patch === 'function' ? patch(base) : patch
+      return { brief_prefs: { ...(current.brief_prefs ?? {}), [kind]: { ...base, ...values } } }
+    })
   }
 
   function toggleTopic(key) {
-    save({ topics: prefs.topics.includes(key) ? prefs.topics.filter((other) => other !== key) : [...prefs.topics, key] })
+    save((base) => ({ topics: base.topics.includes(key) ? base.topics.filter((other) => other !== key) : [...base.topics, key] }))
   }
 
   return (
