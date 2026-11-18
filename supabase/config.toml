@@ -450,3 +450,8 @@ verify_jwt = false
 # (checked inside against the stored fingerprint), not with a user sign-in.
 [functions.server-ingest]
 verify_jwt = false
+
+# v3.9: called by the scheduler (its token) or the app's Refresh button (a user
+# sign-in), both checked inside, like garmin-sync.
+[functions.calendar-sync]
+verify_jwt = false

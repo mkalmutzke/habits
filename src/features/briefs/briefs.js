@@ -1,4 +1,5 @@
 import { addDays, formatShortDate, formatWeekday, toTimeKey } from '../../shared/utils/date.js'
+import { normalizePrefs } from '../../../supabase/functions/_shared/briefPrefs.js'
 
 // The daily briefs (v3.6): plain helpers behind the brief windows, no React.
 
@@ -32,6 +33,23 @@ export const BRIEFS = {
 
 // Is the brief switched on in Settings? (on unless switched off)
 export const isOn = (settings, kind) => settings?.[BRIEFS[kind].setting] !== false
+
+// v3.9: one brief's settings (Settings → Daily briefs), complete with defaults.
+// The same rules as on the server (supabase/functions/_shared/briefPrefs.js).
+export const briefPrefs = (settings, kind) => normalizePrefs(kind, settings?.brief_prefs?.[kind])
+
+// v3.9: the icon shows when the brief runs and its icon isn't switched off.
+export const iconShown = (settings, kind) => isOn(settings, kind) && briefPrefs(settings, kind).icon
+
+// v3.9: the brief's name – the owner's own title, else the usual one; the
+// job brief is named after its country ("Canada jobs brief") while there is
+// only one, else "Job market brief".
+export function briefTitle(settings, kind, { forSettings = false } = {}) {
+  const prefs = briefPrefs(settings, kind)
+  if (prefs.title) return prefs.title
+  if (kind === 'jobs') return prefs.countries.length === 1 ? `${prefs.countries[0]} jobs brief` : 'Job market brief'
+  return forSettings ? BRIEFS[kind].settingsLabel : BRIEFS[kind].title
+}
 
 // The amber dot: today's brief has arrived and wasn't opened yet today.
 export const isNew = (brief, today) => Boolean(brief) && brief.for_day === today && brief.seen_on !== today

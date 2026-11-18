@@ -740,3 +740,175 @@ git fetch origin && git merge --no-edit origin/chore/agent-skills-setup   # into
 **Result:** On the owner's computer: `/mattpocock-skills:code-review v3.7.0` reviews all of v3.8. When it asks for the spec, answer with `BUILD_LOG.md` (Steps 14–21).
 **Issues & fixes:** `/setup-matt-pocock-skills` typed in the cloud session did nothing; the plugin isn't installed there.
 **Commit:** `docs: build log – engineering skills set up (Step 24)`
+
+### Step 25 – Dawn dark theme: interactive mockup page (v3.9, step 1)
+**Date:** 2026-11-18 18:11
+**Request:** Owner: start with the more modern dark theme and create a mockup page to go through and make changes.
+**Why:** Before the theme goes into the app's stylesheets, the owner should be able to see it on real screens and adjust it. So the first step is an interactive page outside the repository (like the design page from Step 14), "Dawn Theme Studio". Decisions:
+- It shows five app screens drawn from the same colour, corner and font settings the app will use: What's up?, Dawn (with Garmin as a card), Habit months, Servers, and Settings with buttons and a toast. Every change redraws them at once.
+- It has three starting points: "Dawn (proposed)" from the Step 14 style guide, "Today's look (v3.8)" for comparison, and "Midnight teal" as an alternative.
+- It has a readability check that shows the contrast of each text and outline colour against the cards, with the WCAG AA limits (4.5 : 1 for text, 3 : 1 for outlines) that the app's accessibility test enforces.
+- It has notes for Claude, one general field and one per screen.
+- **Saving:** the page keeps the choices in its own small database (one document `themes/dawn`), and only the owner can write to it. Claude reads that document back to build the theme from exactly those values. Others who open the page can only try things out without saving.
+- Nothing in the app changes in this step. The next step turns the saved values into the app's stylesheets.
+
+**Commands run:**
+```bash
+node shot2.cjs (Playwright screenshot of the page, in the session's scratch folder)
+git fetch origin main && git checkout -B claude/habits-app-updates-design-m8o858 origin/main   # the working branch was deleted after PR #16; restarted from main
+```
+
+**Files changed:**
+- `BUILD_LOG.md` – modified: this entry. (The page itself lives on the owner's claude.ai account, not in the repository.)
+
+**Result:** The owner opens the Dawn Theme Studio link, changes colours, corners and fonts, and writes notes; it saves by itself.
+**Issues & fixes:** The first screenshot showed the What's up? phone too wide (title row and habit grid cut off on the right) → the phone's content now shrinks to its width and the tabs are a little narrower.
+**Commit:** `docs: build log – Dawn theme mockup page (Step 25)`
+
+### Step 26 – Dawn dark theme discarded
+**Date:** 2026-11-18 18:29
+**Request:** Owner: "discard the theme change".
+**Why:** The owner tried the theme page from Step 25 (the saved version had other status colours) and decided not to change the app's look. Nothing from the theme ever reached the app's code, so nothing needs to be undone there. The app keeps its current warm charcoal and amber theme from v3.8. The topic is taken off the list of next topics. The theme page and its saved values stay on the owner's claude.ai account until the owner says otherwise.
+
+**Commands run:**
+```bash
+# ArtifactData list on the theme page (read only): one saved version, not used
+```
+
+**Files changed:**
+- `docs/NEXT_SESSION.md` – modified: the theme removed from the next topics.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** No change in the app. Next topic in the list: configurable briefs.
+**Issues & fixes:** None.
+**Commit:** `docs: theme discarded (Step 26)`
+
+### Step 27 – Configurable daily briefs (v3.9)
+**Date:** 2026-11-18 18:36
+**Request:** Owner: make the briefs as configurable as possible from the app (last updates for today, together with iCal on Dawn).
+**Why:** What a brief covers was fixed text in `docs/briefs/*.md`. Now everything that decides a brief's content is a setting in the app, and the morning run reads it. Decisions:
+- **Per brief** (Settings → Daily briefs, each brief opens like a card):
+  - **All briefs:** run every morning (as before), show its icon (new, separate from running), a name of its own, topics to switch on and off, "items at most" (3–15), "also follow" (free text).
+  - **Job brief:** countries, job titles, "about me".
+  - **World news:** regions, "leave out".
+  - **IBKR brief:** extra symbols to watch.
+  - Only the run times stay in the Claude scheduled tasks; the app can't change those.
+- **One set of rules for both sides:** defaults, limits and cleaning are in `supabase/functions/_shared/briefPrefs.js`, plain JavaScript that the app imports and `brief-ingest` uses too, so the app and the server can't disagree. Without settings everything works as before (the defaults are the old texts).
+- **Storage:** one column `user_settings.brief_prefs` (a JSON object, at most 16 KB). The alternative, about 15 separate columns, would need a migration for every new option.
+- **To the run:** `brief_context()` now returns `prefs`, and `brief-ingest` passes them cleaned up to the run (topics as readable labels). The three prompts in `docs/briefs/` use them, with the old values as a fallback for an older `brief-ingest`.
+- **Name:** while Canada is the only country, the job brief keeps its name "Canada jobs brief"; with more countries it is the "Job market brief", unless the owner sets a name.
+
+**Commands run:**
+```bash
+npx supabase stop --no-backup && npm run db:start   # the local database had stopped
+npx vitest run                         # 321 tests passed
+npm run lint                           # no warnings
+npm run build                          # the shared file outside src/ is bundled
+npm run test:db                        # 18 files, 226 tests passed
+npx playwright test --trace off e2e/briefs.spec.js e2e/modules.spec.js
+```
+
+**Files changed:**
+- `supabase/migrations/20261118200000_v3_9_brief_prefs.sql` – created: `user_settings.brief_prefs`, `brief_context()` with `prefs`.
+- `supabase/tests/database/18_brief_prefs.test.sql` – created: default, saving, object only, size limit, handed to the run.
+- `supabase/functions/_shared/briefPrefs.js` (+ `briefPrefs.test.js`) – created: topics, lists, defaults, limits, `normalizePrefs`, `prefsForRun`.
+- `supabase/functions/brief-ingest/index.ts` – modified: `prefs` in every start answer.
+- `docs/briefs/jobs.md`, `world.md`, `ibkr.md`, `README.md` – modified: the runs use the settings.
+- `src/features/briefs/briefs.js` (+ test) – modified: `briefPrefs`, `iconShown`, `briefTitle`.
+- `src/features/briefs/BriefSettings.jsx` – modified; `BriefCard.jsx`, `ListField.jsx` – created; `briefs.css` – modified.
+- `src/features/briefs/BriefWindow.jsx`, `src/App.jsx`, `src/features/settings/useSettings.js` – modified: name and icon follow the settings.
+- `e2e/briefs.spec.js` – modified: the run switch's new label; new test for countries, topics, number, "also follow" and icon.
+- `src/features/about/databaseTables.js`, `README.md` – modified. `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Settings → Daily briefs → tap a brief to change what it covers. The next morning's run uses it.
+**Still to do (owner, at release):** `npx supabase db push`, `npx supabase functions deploy brief-ingest`, then **once** copy the new text of `docs/briefs/jobs.md`, `world.md` and `ibkr.md` into the three scheduled tasks.
+**Issues & fixes:** In the e2e test, "Countries" named both the input field and the chip list → the test addresses the field as a text box.
+**Commit:** `feat: configurable daily briefs (Step 27)`
+
+### Step 28 – Calendars on Dawn via iCal (v3.9)
+**Date:** 2026-11-18 19:55
+**Request:** Owner: integrate iCal on the Dawn page (design question 5 from Step 14: iCal addresses first, Google sign-in later).
+**Why:** Each user adds calendars by their secret iCal address, and Dawn shows today and the next 6 days. Decisions:
+- **Several calendars** (up to 10), each with a name, one of 8 colours and an on/off switch; it works for Google, iCloud and Outlook (`webcal://` is read as `https://`). Read-only.
+- **The address works like a password**, so it goes into a private table (`private.calendar_addresses`). The app writes it only through `add_calendar()` / `change_calendar_address()` and can never read it back. The events are written only by the server function.
+- **Fetching is done by the server** (Edge Function `calendar-sync`): the browser can't fetch other sites' calendars (CORS), and the address must not reach the device. It runs every 15 minutes through the scheduler (like Garmin), plus Refresh on Dawn (at most once a minute; a calendar that was never read is exempt, so a new one shows at once).
+- **Safety of the fetch:** only `https` addresses to real host names (no IP addresses, no localhost or internal names, no other ports), checked again after every redirect (at most 3). At most 3 MB and 15 seconds per calendar. Logs only counts, never an address or event.
+- **Reading the iCal file** without extra packages (`_shared/ical.js`, 10 tests): folded lines, all-day and timed events, time zones (also Outlook's Windows names), repeats (daily, weekly by weekday, monthly by date or "last Friday", yearly, with INTERVAL, COUNT and UNTIL), skipped dates, moved or cancelled single dates. Repeats keep their wall-clock time across summer and winter time.
+- **Stored:** events from yesterday to two weeks ahead (`calendar_events`, at most 500 per calendar, replaced on each read). A failed read keeps the old events and shows the reason in plain words in Settings and on Dawn.
+- **No live message per event**, because a read replaces up to 500 rows. The calendar row's "last read" changes with every read and arrives live, and the app then reloads the events.
+- **Module:** Settings → Modules → Calendar (`user_settings.calendar_display`, on to start with). Settings → Calendars shows while it is on.
+
+**Commands run:**
+```bash
+npx supabase migration up --local
+npm run test:db                                   # 19 files, 241 tests passed
+npx vitest run                                    # 340 tests passed
+npm run lint && npm run build                     # no warnings; build ok
+sh scratchpad/push-setup.sh                       # local push settings + stack restart (new function served)
+npx playwright test --trace off                   # the whole suite: 80 passed
+npm run db:reset && npm run test:db               # fresh local database: passed
+```
+
+**Files changed:**
+- `supabase/migrations/20261118210000_v3_9_calendars.sql` – created: `calendar_sources`, `private.calendar_addresses`, `calendar_events`, `add_calendar`, `change_calendar_address`, `calendar_jobs`, `store_calendar_events`, the 15-minute schedule, `user_settings.calendar_display`.
+- `supabase/tests/database/19_calendars.test.sql` – created: private address, https and colours only, no direct inserts, server stores events, a failed read keeps them, isolation.
+- `supabase/functions/_shared/ical.js` (+ test), `supabase/functions/_shared/calendarSync.js` (+ test) – created.
+- `supabase/functions/calendar-sync/index.ts` – created. `supabase/config.toml` – modified: `calendar-sync` checks its callers itself.
+- `src/features/calendar/` – created: `calendar.js` (+ test), `useCalendars.js`, `CalendarSection.jsx`, `CalendarSettings.jsx`, `AddressForm.jsx`, `calendar.css`.
+- `src/features/dawn/DawnView.jsx`, `src/App.jsx`, `src/shared/data/tables.js`, `src/features/settings/` (`modules.js`, `ModuleSettings.jsx` + test, `SettingsView.jsx`, `useSettings.js`) – modified: wiring.
+- `src/features/about/databaseTables.js`, `README.md` – modified: the new tables, a "Calendars" section.
+- `e2e/calendars.spec.js` – created; `e2e/dawn.spec.js` – modified: Calendar card on top. `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Settings → Calendars → Add calendar (name, colour, secret iCal address) → Dawn shows today and the next 6 days, each calendar in its colour; Refresh reads them at once.
+**Issues & fixes:** The first version greyed out "Add calendar" for a wrong address without saying why → the button works and explains the problem on submit. "all day" broke onto two lines → kept on one. The plugin hook blocked a shell command (it contained "key") → ran it from a script file.
+**Still to do (owner, at release):** `npx supabase db push`, `npx supabase functions deploy calendar-sync`.
+**Commit:** `feat: calendars on Dawn via iCal (Step 28)`
+
+### Step 29 – v3.9.0: version bump and pull request (v3.9)
+**Date:** 2026-11-18 18:55
+**Request:** Owner: last updates for today – configurable briefs and iCal on Dawn.
+**Why:** Steps 25–28 are ready, so the version becomes 3.9.0. The work goes by pull request into the integration branch `release/v3.9`, made from `main`, with one commit per step. Going live (`release/v3.9` → `main`) waits for the owner's OK. It will need the owner's bypass while `npm audit` is red (picomatch).
+
+**Commands run:**
+```bash
+npm version 3.9.0 --no-git-tag-version
+npx vitest run src/features/about                 # 3 passed
+npx playwright test --trace off e2e/shell.spec.js  # 6 passed ("Version 3.9.0")
+```
+
+**Files changed:**
+- `package.json`, `package-lock.json` – modified: version 3.9.0.
+- `src/features/about/AboutPage.test.jsx`, `e2e/shell.spec.js` – modified: expect "Version 3.9.0".
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Pull request from the working branch into `release/v3.9`.
+**Still to do (owner, at release):** production first: `npx supabase db push`, `npx supabase functions deploy brief-ingest`, `npx supabase functions deploy calendar-sync`; then the merge; then copy the new `docs/briefs/*.md` texts into the three scheduled tasks; tag `v3.9.0`.
+**Issues & fixes:** None.
+**Commit:** `chore: version 3.9.0 (Step 29)`
+
+### Step 30 – Fix: quick settings changes overwrote each other (v3.9)
+**Date:** 2026-11-18 19:24
+**Request:** Found by CI on the release PR #18. The new brief settings test failed there (it passed locally and on PR #17): after switching off "Remote work" and quickly changing "Items at most", "Remote work" was back on.
+**Why:** Root cause in `useSettings.update`, true for **every** setting, not just the briefs. Each save sent the **whole** settings row as it was at the last screen update, and the screen copy only updates a moment after a save (the save first waits for running loads to stop). So a second change within that moment was built on the old row and undid the first. On fast CI machines the test hit that moment. The fix:
+- A save sends **only the columns it changes**. The database keeps the others, so changes to different settings can never undo each other. The database's defaults match the app's, so a first save of a single field is fine.
+- Changes still on their way count as current: `update(current => values)` builds on them. The brief settings use that, because a brief's settings are one column holding several fields.
+- Alternative not taken: waiting in the screen until each save is confirmed. That would make every switch feel slow.
+
+**Commands run:**
+```bash
+git fetch origin release/v3.9 && git stash && git checkout -B claude/habits-app-updates-design-m8o858 origin/release/v3.9 && git stash pop   # the working branch was deleted after PR #17
+npx vitest run                  # 341 tests passed (new: useSettings.test.jsx)
+npm run lint                    # no warnings
+sh scratchpad/push-setup.sh     # local push settings + stack restart (the container had slept)
+npx playwright test --trace off # the whole suite: 80 passed
+```
+
+**Files changed:**
+- `src/features/settings/useSettings.js` – modified: saves only the changed columns; `update` takes a function and counts changes still on their way.
+- `src/features/settings/useSettings.test.jsx` – created: three quick saves without a screen update in between; the third keeps the second's change.
+- `src/features/briefs/BriefCard.jsx` – modified: brief changes are built on the newest settings.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Quick changes in Settings (also on a slow phone or connection) all stay. The release PR #18 gets this fix through `release/v3.9`.
+**Issues & fixes:** The linter flagged reading the "changes on their way" note during rendering → it is now checked inside the save.
+**Commit:** `fix: quick settings changes no longer overwrite each other (Step 30)`

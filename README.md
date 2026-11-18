@@ -3,8 +3,8 @@
 A personal app for **habits, to-dos and a shopping list**, mobile-first and installable on
 Android. The start page "What's up?" shows a folded IBKR portfolio card (the day's move; holdings and
 performance when opened; a daily morning news brief), the habits in groups (tap a day to tick it, again for a break that keeps the streak), the shopping list (folded) and every
-open to-do; the Dawn page (called Week until v3.8) has the tasks due today, in the next 6 days or overdue. Icons in the header open Garmin (steps, resting heart rate, elevation and activities for 7 days or the month; in Settings → Modules it can also be a card on What's up? or hidden, like the IBKR card)
-and two daily briefs (Canada jobs, world news), written each morning by Claude scheduled tasks. Data lives in the cloud and updates live on
+open to-do; the Dawn page (called Week until v3.8) has your calendars for today and the next 6 days (v3.9) and the tasks due today, in the next 6 days or overdue. Icons in the header open Garmin (steps, resting heart rate, elevation and activities for 7 days or the month; in Settings → Modules it can also be a card on What's up? or hidden, like the IBKR card)
+and two daily briefs (job market, world news), written each morning by Claude scheduled tasks. What each brief covers – countries, job titles, regions, symbols, topics, number of items, its name and icon – is set in Settings → Daily briefs. Data lives in the cloud and updates live on
 all your devices; reminders arrive by push, email or in the app.
 
 **Live app:** https://habits.mkalmutzke.com/ – sign in with your email, then "Install app" /
@@ -54,6 +54,7 @@ src/
     todos/                 sources, lists, groups, task details, deleted tasks
     dawn/, shopping/       Dawn page (due tasks; Week until v3.8), shopping list
     servers/               server health: window from the header icon, Settings → Servers, status rules
+    calendar/              calendars on Dawn: the Calendar card, Settings → Calendars, the agenda
     garmin/                Garmin window from the header: 7 days or month, steps chart, resting heart rate, elevation, activities, Refresh
     briefs/                daily briefs (IBKR, Canada jobs, world news): windows, amber dot, Settings switches
     notifications/         reminders, push on this device, in-app pop-ups
@@ -63,7 +64,7 @@ src/
   storage/                 small per-device preferences (localStorage)
 supabase/
   migrations/              tables, row level security, functions, scheduler
-  functions/               Edge Functions: send-reminders, send-test-notification, ibkr-sync, garmin-sync, brief-ingest, server-ingest
+  functions/               Edge Functions: send-reminders, send-test-notification, ibkr-sync, garmin-sync, brief-ingest, server-ingest, calendar-sync
   tests/database/          pgTAP tests
 scripts/server-agent/      the server health agent and its installer (runs on your own server)
 e2e/                       Playwright tests
@@ -84,6 +85,19 @@ watched services, Docker containers, pending updates (Debian/Ubuntu) and the TLS
 days left every 5 minutes to the Edge Function `server-ingest`. It only sends; it opens no port.
 The database keeps only the token's fingerprint. Remove the agent with
 `sudo sh habits-install.sh --remove`; *New token* in Settings makes the old one stop working.
+
+## Calendars (v3.9)
+
+Settings → **Calendars** → *Add calendar*: a name, a colour and the calendar's secret
+address in iCal format (Google Calendar: Settings → your calendar → Integrate calendar;
+iCloud and Outlook: the published calendar's `webcal://` or ICS link). Add as many as you
+like (up to 10). The Edge Function `calendar-sync` reads them every 15 minutes and on
+Refresh, keeps the events from yesterday to two weeks ahead, and Dawn shows today and the
+next 6 days. Read-only. The address works like a password: it is kept in a private table the
+app can't read back, only `https` addresses to real host names are fetched (checked again
+after every redirect), and the function logs only counts. Repeating events, time zones
+(also Outlook's Windows names), moved and cancelled dates are handled in
+`supabase/functions/_shared/ical.js`, without extra packages.
 
 ## Environments and deployment
 

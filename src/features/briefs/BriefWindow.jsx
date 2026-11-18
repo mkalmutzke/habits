@@ -6,7 +6,8 @@ import './briefs.css'
 // One daily brief in a window (v3.6): IBKR morning brief, Canada jobs brief
 // or world news. Headlines grouped under short headings, each a link to its
 // source (opens in a new tab). Opening it marks it as seen for today.
-function BriefWindow({ kind, brief, today, onSeen, onClose }) {
+// v3.9: `title` is the brief's name from Settings (default: the usual one).
+function BriefWindow({ kind, title, brief, today, onSeen, onClose }) {
   const meta = BRIEFS[kind]
   const content = brief?.content
 
@@ -18,7 +19,7 @@ function BriefWindow({ kind, brief, today, onSeen, onClose }) {
   }, [])
 
   return (
-    <Modal open wide className={`brief-window brief-${kind}`} onClose={onClose} title={meta.title} subtitle={briefDate(brief, today)}>
+    <Modal open wide className={`brief-window brief-${kind}`} onClose={onClose} title={title ?? meta.title} subtitle={briefDate(brief, today)}>
       {content ? (
         <div className="brief-body">
           {brief.for_day !== today && <p className="brief-old">This is the last brief – today’s hasn’t arrived (yet).</p>}
