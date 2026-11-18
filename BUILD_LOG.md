@@ -885,3 +885,30 @@ npx playwright test --trace off e2e/shell.spec.js  # 6 passed ("Version 3.9.0")
 **Still to do (owner, at release):** production first: `npx supabase db push`, `npx supabase functions deploy brief-ingest`, `npx supabase functions deploy calendar-sync`; then the merge; then copy the new `docs/briefs/*.md` texts into the three scheduled tasks; tag `v3.9.0`.
 **Issues & fixes:** None.
 **Commit:** `chore: version 3.9.0 (Step 29)`
+
+### Step 30 – Fix: quick settings changes overwrote each other (v3.9)
+**Date:** 2026-11-18 19:24
+**Request:** Found by CI on the release PR #18. The new brief settings test failed there (it passed locally and on PR #17): after switching off "Remote work" and quickly changing "Items at most", "Remote work" was back on.
+**Why:** Root cause in `useSettings.update`, true for **every** setting, not just the briefs. Each save sent the **whole** settings row as it was at the last screen update, and the screen copy only updates a moment after a save (the save first waits for running loads to stop). So a second change within that moment was built on the old row and undid the first. On fast CI machines the test hit that moment. The fix:
+- A save sends **only the columns it changes**. The database keeps the others, so changes to different settings can never undo each other. The database's defaults match the app's, so a first save of a single field is fine.
+- Changes still on their way count as current: `update(current => values)` builds on them. The brief settings use that, because a brief's settings are one column holding several fields.
+- Alternative not taken: waiting in the screen until each save is confirmed. That would make every switch feel slow.
+
+**Commands run:**
+```bash
+git fetch origin release/v3.9 && git stash && git checkout -B claude/habits-app-updates-design-m8o858 origin/release/v3.9 && git stash pop   # the working branch was deleted after PR #17
+npx vitest run                  # 341 tests passed (new: useSettings.test.jsx)
+npm run lint                    # no warnings
+sh scratchpad/push-setup.sh     # local push settings + stack restart (the container had slept)
+npx playwright test --trace off # the whole suite: 80 passed
+```
+
+**Files changed:**
+- `src/features/settings/useSettings.js` – modified: saves only the changed columns; `update` takes a function and counts changes still on their way.
+- `src/features/settings/useSettings.test.jsx` – created: three quick saves without a screen update in between; the third keeps the second's change.
+- `src/features/briefs/BriefCard.jsx` – modified: brief changes are built on the newest settings.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** Quick changes in Settings (also on a slow phone or connection) all stay. The release PR #18 gets this fix through `release/v3.9`.
+**Issues & fixes:** The linter flagged reading the "changes on their way" note during rendering → it is now checked inside the save.
+**Commit:** `fix: quick settings changes no longer overwrite each other (Step 30)`
