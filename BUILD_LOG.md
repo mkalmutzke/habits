@@ -671,3 +671,22 @@ npx playwright test --trace off e2e/shell.spec.js    # 6 passed ("Version 3.8.0"
 **Still to do (owner):** see the PR description – `db push` and two function deploys on `habits-test`, check, then the OK for production.
 **Issues & fixes:** None.
 **Commit:** `chore: version 3.8.0 (Step 21)`
+
+### Step 22 – PR #14 merged into release/v3.8, with npm audit red
+**Date:** 2026-11-18 13:15
+**Request:** Owner: "merge anyways" (after being told that `npm audit` is red), then "other tests are green".
+**Why:** In CI, lint, unit tests, build, database tests, end-to-end tests, Semgrep and gitleaks were green. Only `npm audit` failed, because of advisory GHSA-fc5q-39xc-vjpf (ReDoS in `picomatch` ≤ 4.0.7, high). 4.0.7 is the newest version, so no fix exists yet. It comes through the build and test tools `vite`, `vitest` and `vite-plugin-pwa` and isn't in the app the browser loads. The PR changed no package versions, so `main` fails the same way. npm's `--force` fix would downgrade `vitest` and `vite-plugin-pwa` by a major version and was not used. The owner decided to merge anyway; the reason is in a comment on PR #14 and in the merge commit.
+- Integration branch `release/v3.8` created from `main`; PR #14 (working branch → `release/v3.8`) merged.
+
+**Commands run:**
+```bash
+# GitHub (tools, not shell): create branch release/v3.8 from main, open PR #14, comment on the audit failure, merge PR #14
+```
+
+**Files changed:**
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** `release/v3.8` holds v3.8.0. Nothing is live yet.
+**Still to do:** as soon as `picomatch` 4.0.8 or newer is out: `npm update picomatch`, push, audit green again. Owner: `db push` and `functions deploy server-ingest` on `habits-test`, check, then "merge v3.8" for `main`.
+**Issues & fixes:** `npm audit` red in CI (see above), merged with the owner's OK.
+**Commit:** `docs: build log – PR #14 merged (Step 22)`
