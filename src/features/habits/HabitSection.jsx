@@ -9,6 +9,7 @@ import EmptyState from './EmptyState.jsx'
 import { groupHabits, isMarked, nextStatus } from './habitData.js'
 import HabitGroups from './HabitGroups.jsx'
 import HabitModal from './HabitModal.jsx'
+import HabitMonthWindow from './HabitMonthWindow.jsx'
 import HabitWeekGrid from './HabitWeekGrid.jsx'
 import { MILESTONES, getStreak } from './streak.js'
 import { defaultChannels } from '../notifications/reminderTime.js'
@@ -44,6 +45,8 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
   const [adding, setAdding] = useState(null)
   const [editing, setEditing] = useState(null)
   const [confetti, setConfetti] = useState(null)
+  // v3.8: the month overview window
+  const [showMonths, setShowMonths] = useState(false)
   const doneToday = habits.filter((habit) => habit.completions.includes(today)).length
   // v3.8: a break counts as looked after in "x of y today"
   const markedToday = habits.filter((habit) => isMarked(habit, today)).length
@@ -93,6 +96,12 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
         alwaysOpen={habits.length === 0}
         actions={
           <>
+            {/* v3.8 (owner): this month and last month, from the calendar icon */}
+            {habits.length > 0 && (
+              <button type="button" className="section-icon-button" aria-label="Habit months" onClick={() => setShowMonths(true)}>
+                <Icon name="calendar" />
+              </button>
+            )}
             {open && hasGroups && habits.length > 0 && (
               <button
                 type="button"
@@ -133,6 +142,10 @@ function HabitSection({ page, habits: model, today, settings, pushOnThisDevice }
 
       {confetti && (
         <Confetti key={`confetti-${confetti.id}`} x={confetti.x} y={confetti.y} count={confetti.count} spread={confetti.spread} />
+      )}
+
+      {showMonths && (
+        <HabitMonthWindow habits={habits} groups={groups} defaultGroupName={defaultGroupName} today={today} onClose={() => setShowMonths(false)} />
       )}
 
       {adding && (

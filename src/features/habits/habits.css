@@ -579,3 +579,204 @@ span.wg-habit {
   padding: 4px 10px 10px;
   animation: section-open 260ms var(--ease-out);
 }
+
+/* ---------- Habit months (v3.8, owner) ---------- */
+
+.hm-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hm-filter button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.hm-filter button[aria-pressed='true'] {
+  border-color: var(--ring);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.hm-month {
+  display: grid;
+  gap: 6px;
+}
+
+.hm-month-title {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.hm-month-title span {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+.hm-weekdays,
+.hm-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.hm-weekdays span {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}
+
+.hm-day {
+  height: 38px;
+  min-width: 0;
+  border: none;
+  border-radius: 10px;
+  background: var(--line-soft);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.hm-day.full {
+  background: var(--success);
+  color: var(--on-success);
+  font-weight: 600;
+}
+
+.hm-day.breaks {
+  background: linear-gradient(135deg, var(--success) 0 55%, var(--break) 55%);
+  color: var(--on-success);
+  font-weight: 600;
+}
+
+.hm-day.some {
+  box-shadow: inset 0 0 0 2px var(--success);
+  color: var(--ink);
+}
+
+.hm-day.empty,
+.hm-day.future {
+  background: none;
+  color: var(--ink-faint);
+}
+
+.hm-day.future {
+  cursor: default;
+}
+
+.hm-day.is-today {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+
+.hm-day[aria-pressed='true'] {
+  outline: 2px solid var(--amber);
+  outline-offset: 1px;
+}
+
+.hm-day:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.hm-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.hm-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hm-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: var(--line);
+}
+
+.hm-swatch.full {
+  background: var(--success);
+}
+
+.hm-swatch.breaks {
+  background: linear-gradient(135deg, var(--success) 0 55%, var(--break) 55%);
+}
+
+.hm-swatch.some {
+  background: none;
+  box-shadow: inset 0 0 0 2px var(--success);
+}
+
+.hm-detail {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.hm-detail-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+
+.hm-detail-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hm-detail-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.hm-detail-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.hm-detail-status {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+.hm-detail-status.done {
+  color: var(--success);
+}
+
+.hm-detail-status.break {
+  color: var(--break);
+}

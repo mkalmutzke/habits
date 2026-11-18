@@ -5,6 +5,9 @@ import { createUser, openSettingsSection, openSignedIn, restAs } from './helpers
 // Test plan v3 TS-H (habit week grid on What's up?), v2 TS-H/TS-O (cloud,
 // offline) and TS-S5 (isolation).
 
+const shot = (page, name) =>
+  page.screenshot({ path: `test-results/screens/${test.info().project.name}-${name}.png`, fullPage: true })
+
 // The day buttons of a habit's row (4 since v3.1), oldest first – the last one is today.
 const dayButtons = (page, name) => page.getByRole('button', { name: new RegExp(`^${name}, \\w+ \\d+ \\w+: (done|not done|on a break)`) })
 const todayButton = (page, name) => dayButtons(page, name).last()
@@ -97,6 +100,26 @@ test('v3.8 breaks: a break today counts in “x of y”; the monthly limit in Se
   await expect(todayButton(page, 'Gym')).toHaveAccessibleName(/: done – tap to clear$/)
   await todayButton(page, 'Gym').click()
   await expect(todayButton(page, 'Gym')).toHaveAttribute('aria-pressed', 'false')
+})
+
+test('v3.8 month view: the calendar icon opens this and last month; days show done and breaks; readable', async ({ page }) => {
+  const user = await createUser('months')
+  await openSignedIn(page, user)
+  await addHabit(page, 'Walk')
+  await todayButton(page, 'Walk').click()
+  await expect(page.getByText('1 of 1 today')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Habit months' }).click()
+  const window = page.getByRole('dialog', { name: 'Habit months' })
+  await expect(window.getByRole('region')).toHaveCount(2)
+  await expect(window.getByRole('button', { name: /: all done, 1 of 1 done$/ })).toHaveCount(1)
+  await expect(window.getByRole('heading', { level: 3 }).first()).toContainText('1 complete')
+  await page.waitForTimeout(400)
+  await shot(page, 'habit-months')
+  const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
+  expect(axe.violations.map((violation) => `${violation.id}: ${violation.nodes.length}`)).toEqual([])
+  await window.getByRole('button', { name: 'Close' }).click()
+  await expect(window).toHaveCount(0)
 })
 
 test('TS-H5 starts folded; folded shows only the count, no icons', async ({ page }) => {

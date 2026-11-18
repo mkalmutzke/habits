@@ -511,3 +511,32 @@ npx playwright test --trace off e2e/habits.spec.js e2e/habit-groups.spec.js e2e/
 **Issues & fixes:** One of my own unit tests had a gap day in its data, so its expected "on a break" was wrong; fixed the test. The e2e run had the same single known failure as in Step 15 (dragging on the phone, container only).
 **Still to do (owner, at release):** `npx supabase db push` – `habits-test` first, then production.
 **Commit:** `feat: habit breaks – tap cycle done → break → clear (Step 16)`
+
+### Step 17 – Habit month view (v3.8)
+**Date:** 2026-11-18 12:40
+**Request:** Owner: a monthly overview of the habits as a popup (an icon in the Habits header) showing the current and previous calendar month and which days were fully marked or had breaks.
+**Why:** A calendar icon on the Habits card opens "Habit months": this month and last month, Monday first. Decisions:
+- A day is **complete** when every habit that existed on that day was done (green) or done-or-on-a-break with at least one break (green/violet). Partly done days have a green ring, empty days a dark fill. Habits count only from the day they were added, so a new habit doesn't spoil the past.
+- With habit groups, a filter row shows all habits or one group. Tapping a day lists its habits (Done / Break / –) below the calendars.
+- The logic is plain functions in `monthOverview.js` (unit-tested). No database change: the window uses the check-offs the app already has. The icon shows whenever there are habits, also on the folded card.
+
+**Commands run:**
+```bash
+npx vitest run                           # 297 tests passed
+npm run lint                             # no warnings
+npx playwright test --trace off e2e/habits.spec.js -g "month view|breaks|TS-H1"   # 6 passed (phone and laptop)
+```
+
+**Files changed:**
+- `src/features/habits/monthOverview.js` – created: `monthStart`, `monthDays`, `dayOverview`, `monthOverview`.
+- `src/features/habits/monthOverview.test.js` – created: months across the year, leap year, day states, habits added mid-month, Monday-first blanks.
+- `src/features/habits/HabitMonthWindow.jsx` – created: the window (two calendars, legend, group filter, day details).
+- `src/features/habits/HabitMonthWindow.test.jsx` – created: complete days and breaks, day details, group filter.
+- `src/features/habits/HabitSection.jsx` – modified: the "Habit months" calendar icon in the card header.
+- `src/features/habits/habits.css` – modified: styles of the month window.
+- `e2e/habits.spec.js` – modified: opens the window, checks today as "all done", accessibility check (axe), screenshot.
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** What's up? → Habits → calendar icon: two month calendars with complete days in green (with breaks green/violet); tap a day to see each habit's state.
+**Issues & fixes:** The first screenshot showed very tall day cells (square cells on a wide phone) and an invisible "nothing" swatch → cells are now 38 px high and empty days have a visible fill. `HabitSection.jsx` is now 188 lines, above the ~150 aim; it is worth splitting when it is touched next.
+**Commit:** `feat: habit month view – this and last month (Step 17)`
