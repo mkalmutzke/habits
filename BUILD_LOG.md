@@ -953,3 +953,24 @@ git status -sb && git log --oneline origin/main..HEAD
 **Result:** The next session starts from `docs/NEXT_SESSION.md` – next topic: per-user connections for IBKR/Garmin + invite screen.
 **Issues & fixes:** None.
 **Commit:** `docs: session handoff (Step 32)`
+
+### Step 33 – Codebase audit: complexity, duplication, outdated assumptions
+**Date:** 2026-11-26 14:28
+**Request:** Owner: audit the codebase for unnecessary complexity, duplicated logic and assumptions that no longer hold; show what could be removed or simplified, with evidence, and propose the smallest changes that keep behaviour.
+**Why:** After v3.9 the code has grown feature by feature. Before the next big step (per-user connections) it helps to know where the same thing is written several times, so later changes only need to be made once. This step only reads code – nothing was changed yet.
+
+**Commands run:**
+```bash
+git status -sb
+find src supabase/functions scripts -type f \( -name '*.js' -o -name '*.jsx' -o -name '*.ts' -o -name '*.mjs' \) ! -name '*.test.*' | xargs wc -l | sort -n
+# read the shared data layer, the feature hooks and every Edge Function
+# grep for: RETIRED, moveTask, brief_*_on, show_in_all, *_display, getRollingDays, the Swiss number regex, todayIn/dayIn, KINDS/BRIEF_KINDS, localStorage
+# a small loop listing every export that no other file imports
+```
+
+**Files changed:**
+- `BUILD_LOG.md` – modified: this entry.
+
+**Result:** A list of findings with file and line evidence, ranked by value (see the session chat). Biggest wins are in the Edge Functions: the scheduler-token check is written 4 times, the "push to every device" loop 3 times, the `json` answer helper 6 times. In the app: two refresh hooks (Garmin, Calendars) are near copies, and the Swiss number format exists twice. No code changed yet – the owner chooses which changes to make.
+**Issues & fixes:** The `/simplify` and `/code-review` skills review a diff; this branch had none, so the audit was done by reading the code directly.
+**Commit:** not committed yet – goes in with the first change it leads to.
